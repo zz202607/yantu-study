@@ -255,6 +255,54 @@ def _clean_page(im):
     return im.convert("RGB")
 
 
+def split_z_answer(path, question_path=None, answer_path=None, engine=None):
+    """Cut a knowledge-book crop at its 【答案】 line.
+
+    Z-family questions print question, answer and solution on one page.  The
+    review flow must show the question alone.  Returns a dict with the cut
+    height and the two PIL images, or None when no answer line is found (the
+    caller then degrades to the whole crop rather than guessing).
+    """
+    from PIL import Image
+    import numpy as np
+
+    im = Image.open(path).convert("RGB")
+    arr = np.ascontiguousarray(np.array(im)[:, :, ::-1])
+    if engine is None:
+        from rapidocr import RapidOCR
+
+        engine = RapidOCR(
+            params={"Global.log_level": "warning", "Rec.rec_batch_num": 32}
+        )
+    try:
+        res = engine(arr)
+    except Exception:  # noqa: BLE001 - no answer line beats a crashed crop
+        return None
+    txts = list(res.txts) if getattr(res, "txts", None) is not None else []
+    boxes = list(res.boxes) if getattr(res, "boxes", None) is not None else []
+    ys = [box[0][1] for text, box in zip(txts, boxes) if "答案" in text]
+    if not ys:
+        return None
+    cut = max(0, int(min(ys)) - 8)
+    # An answer line pressed against the top means the crop starts in the
+    # answer section already; splitting there would leave next to no question.
+    if cut < im.height * 0.03:
+        return None
+    question = im.crop((0, 0, im.width, cut))
+    answer = im.crop((0, cut, im.width, im.height))
+    if question_path:
+        question.save(question_path)
+    if answer_path:
+        answer.save(answer_path)
+    return {
+        "cut": cut,
+        "width": im.width,
+        "height": im.height,
+        "question": question,
+        "answer": answer,
+    }
+
+
 def render_segments(book, segments, out, dpi=RENDER_DPI):
     """Render [(page_no, y0, y1)] and stitch them into one image."""
     from PIL import Image

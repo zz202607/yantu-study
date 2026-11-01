@@ -94,28 +94,11 @@ def clean_and_trim(path):
     im.convert("RGB").save(path)
 
 
-def split_z_answer(path, question_path, answer_path):
+def split_z_answer(path, question_path, answer_path, engine=None):
     """Split a knowledge-book page at its 【答案】 line."""
-    import numpy as np
-    from PIL import Image
-    from rapidocr import RapidOCR
+    from crop_question import split_z_answer as cut
 
-    im = Image.open(path).convert("RGB")
-    arr = np.ascontiguousarray(np.array(im)[:, :, ::-1])
-    engine = RapidOCR(params={"Global.log_level": "warning", "Rec.rec_batch_num": 32})
-    try:
-        res = engine(arr)
-    except Exception:
-        return False
-    txts = list(res.txts) if res.txts is not None else []
-    boxes = list(res.boxes) if res.boxes is not None else []
-    ys = [box[0][1] for text, box in zip(txts, boxes) if "答案" in text]
-    if not ys:
-        return False
-    y = max(0, int(min(ys)) - 8)
-    im.crop((0, 0, im.width, y)).save(question_path)
-    im.crop((0, y, im.width, im.height)).save(answer_path)
-    return True
+    return cut(path, question_path, answer_path, engine=engine) is not None
 
 
 def image_size(path):
@@ -141,17 +124,26 @@ class Sheet:
         self.items = []
         self.pages = []
 
-    def add(self, label, source, image_path):
+    def add(self, label, source, image_path, min_write=None):
         w, h = image_size(image_path)
         scale = min(1.25, (A4[0] - 2 * MARGIN) / w)
-        self.items.append((label, source, image_path, w * scale, h * scale))
+        self.items.append(
+            (
+                label,
+                source,
+                image_path,
+                w * scale,
+                h * scale,
+                self.min_write if min_write is None else min_write,
+            )
+        )
 
     def _plan(self):
         """Split items into pages that each fit with min_write per item."""
         pages, current, used = [], [], 0.0
         for item in self.items:
             h = item[4]
-            need = LABEL_H + h + GAP + self.min_write
+            need = LABEL_H + h + GAP + item[5]
             if current and used + need > BOTTOM - TOP:
                 pages.append(current)
                 current, used = [], 0.0
@@ -168,9 +160,13 @@ class Sheet:
             heights = [item[4] for item in group]
             used = sum(LABEL_H + h + GAP for h in heights)
             spare = BOTTOM - TOP - used
-            write = max(self.min_write, spare / len(group))
+            # Every item keeps its own minimum; the leftover is split evenly.
+            # With uniform minimums this is exactly the old even distribution.
+            extra = spare - sum(item[5] for item in group)
             y = TOP
-            for label, source, path, w, h in group:
+            for item in group:
+                label, source, path, w, h, min_write = item
+                write = min_write + max(0.0, extra) / len(group)
                 caption = label + ("  ·  " + source if source else "")
                 text_line(page, caption, y + 10, 8, color=(0.35, 0.35, 0.35))
                 y += LABEL_H

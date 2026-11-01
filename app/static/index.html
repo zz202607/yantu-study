@@ -226,19 +226,72 @@
   .import-row .name { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ok { color: var(--good); }
   .warn { color: var(--warn); }
-  @media (max-width: 380px) {
+
+  /* review */
+  .review-cta {
+    display: block; width: 100%; text-align: left; cursor: pointer;
+    border: 0; border-radius: 14px; padding: 16px 18px; margin-bottom: 14px;
+    background: linear-gradient(135deg, #0f2a3f, #1667d9);
+    color: #fff; font-family: inherit;
+  }
+  .review-cta span { display: block; font-size: 20px; font-weight: 700; letter-spacing: .02em; }
+  .review-cta small { display: block; margin-top: 4px; font-size: 12.5px; opacity: .8; }
+  .review-paper { max-height: 62vh; }
+  .answer-label {
+    margin: 14px 0 6px; font-size: 12px; font-weight: 600;
+    color: var(--muted); letter-spacing: .05em;
+  }
+  .review-bar {
+    position: sticky; bottom: 0; z-index: 4;
+    display: flex; gap: 10px; padding: 12px 0 6px;
+    background: linear-gradient(rgba(255,255,255,0), var(--card) 42%);
+  }
+  .review-bar .big {
+    flex: 1; padding: 15px 10px; font-size: 17px; border-radius: 12px;
+  }
+  .review-tools { margin-top: 4px; }
+  .summary-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  }
+  .summary-grid div {
+    background: var(--paper); border: 1px solid var(--line);
+    border-radius: 11px; padding: 10px 6px; text-align: center;
+  }
+  .summary-grid b { display: block; font-size: 22px; line-height: 1.2; }
+  .summary-grid span { font-size: 11.5px; color: var(--muted); }
+  .summary-block { margin-top: 14px; }
+  .summary-block h3 { font-size: 13px; margin: 0 0 4px; color: var(--muted); font-weight: 600; }
+  .summary-block p { margin: 0; font-size: 14.5px; }
+  .encourage { background: rgba(29,122,79,.07); border-radius: 12px; padding: 12px; }
+  .encourage h3 { color: var(--good); }
+  .print-options { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .print-opt {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+    text-align: left; border: 1px solid var(--line); background: #fff;
+    border-radius: 12px; padding: 12px 14px; font-family: inherit; font-size: 15px;
+    color: var(--ink);
+  }
+  .print-opt span { color: var(--muted); font-size: 12px; flex: 0 0 auto; }
+  @media (max-width: 520px) {
+    header { padding: 9px 12px; gap: 6px; }
     header h1 { font-size: 15px; }
     header .badge { display: none; }
+    .nav button { padding: 6px 9px; font-size: 13px; }
+    select { padding: 6px 6px; font-size: 12.5px; }
+  }
+  @media (max-width: 380px) {
+    .nav button { padding: 6px 7px; font-size: 12px; }
     .cand { min-width: 84px; padding: 9px 11px; }
   }
 </style>
 </head>
 <body>
 <header>
-  <h1>岩土错题本 <span class="badge">M2</span></h1>
+  <h1>岩土错题本 <span class="badge">M3</span></h1>
   <nav class="nav">
     <button id="navLook" class="on" type="button">查题</button>
     <button id="navBook" type="button">错题本</button>
+    <button id="navReview" type="button">复习</button>
   </nav>
   <select id="family" aria-label="当前册别">
     <option value="C">案例 C</option>
@@ -249,6 +302,10 @@
 <main>
   <!-- 1. capture -->
   <section id="home" class="card">
+    <button id="startReview" type="button" class="review-cta">
+      <span id="reviewCtaTitle">今日复习</span>
+      <small id="reviewCtaHint">正在统计…</small>
+    </button>
     <label class="shot" for="camera">
       拍照识题号
       <small>拍题号那几行即可 · 不用改名</small>
@@ -307,11 +364,72 @@
     <p class="hint" id="viewerHint"></p>
   </section>
 
-  <!-- 4. wrong book -->
+  <!-- 4. review -->
+  <section id="review" class="card hidden">
+    <div class="viewer-head">
+      <h2 id="rQid">—</h2>
+      <span id="rPos" class="pos"></span>
+    </div>
+    <p class="hint" id="rWhere"></p>
+    <div class="paper-wrap review-paper"><img id="rPaper" alt="题面"></div>
+    <p class="hint" id="rHint">先自己做一遍，再点「看答案」。</p>
+    <div id="rAnswerWrap" class="hidden">
+      <div class="answer-label">答案 / 解析</div>
+      <div class="paper-wrap"><img id="rAnswer" alt="解析"></div>
+    </div>
+    <div id="rTagBox" class="chips hidden">
+      <span class="hint" style="align-self:center">错因（选「没做对」时记录，可不选）</span>
+    </div>
+    <div class="review-bar">
+      <button id="rShowAnswer" class="primary big">看答案</button>
+      <button id="rWrong" class="ghost big danger hidden">没做对 (1)</button>
+      <button id="rRight" class="ghost big hidden">做对了 (2)</button>
+    </div>
+    <div class="toolbar review-tools">
+      <button id="rUndo" class="ghost small">撤销上一题</button>
+      <button id="rSkip" class="ghost small">跳过</button>
+      <span class="grow"></span>
+      <button id="rExit" class="ghost small">退出</button>
+    </div>
+  </section>
+
+  <!-- 5. review summary -->
+  <section id="summary" class="card hidden">
+    <div class="viewer-head">
+      <h2>本轮复习完成</h2>
+      <span id="sDay" class="pos"></span>
+    </div>
+    <div class="summary-grid">
+      <div><b id="sDone">0</b><span>完成</span></div>
+      <div><b id="sCorrect">0</b><span>做对</span></div>
+      <div><b id="sWrong">0</b><span>做错</span></div>
+      <div><b id="sAccuracy">—</b><span>正确率</span></div>
+      <div><b id="sMinutes">0</b><span>分钟</span></div>
+      <div><b id="sSkipped">0</b><span>跳过</span></div>
+    </div>
+    <div id="sMastered" class="summary-block hidden"></div>
+    <div id="sStubborn" class="summary-block hidden"></div>
+    <div class="summary-block">
+      <h3>下一步</h3>
+      <p id="sNext">—</p>
+    </div>
+    <div class="summary-block encourage">
+      <h3>今天扎实的一点</h3>
+      <p id="sEncourage">—</p>
+    </div>
+    <div class="toolbar wrap">
+      <button id="sPrint" class="primary">打印这一卷</button>
+      <button id="sAgain" class="ghost">再复习一轮</button>
+      <button id="sHome" class="ghost">回首页</button>
+    </div>
+  </section>
+
+  <!-- 6. wrong book -->
   <section id="book" class="card hidden">
     <div class="book-head">
       <h2>错题本</h2>
       <a class="ghost small" href="/api/backup">备份</a>
+      <button id="openPrint" class="ghost small">打印卷</button>
       <button id="openImport" class="ghost small">导入旧照片</button>
     </div>
     <div class="filters">
@@ -349,6 +467,7 @@
       <span id="dTimes" class="badge2"></span>
     </div>
     <p class="hint" id="dWhere"></p>
+    <p class="hint" id="dSchedule"></p>
     <div class="tabs" style="margin-bottom: 8px">
       <button id="dTabQ" class="on">题面</button>
       <button id="dTabA">解析</button>
@@ -401,6 +520,33 @@
   </div>
 </div>
 
+<div id="printSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="printTitle">
+  <div class="sheet-panel">
+    <div class="sheet-head">
+      <h3 id="printTitle">打印 A4 卷</h3>
+      <span class="hint">题面与答案分开</span>
+    </div>
+    <p class="hint">默认按原尺寸排版，每题留手写区，答案单独成页。最多 30 题。</p>
+    <div class="print-options">
+      <button type="button" class="print-opt" data-scope="filter">
+        <b>当前筛选</b><span id="printFilterCount">—</span>
+      </button>
+      <button type="button" class="print-opt" data-scope="recent">
+        <b>最近 7 天</b><span>最多 30 题</span>
+      </button>
+      <button type="button" class="print-opt" data-scope="review">
+        <b>今日复习</b><span id="printReviewCount">—</span>
+      </button>
+    </div>
+    <div class="status hidden" id="printStatus">
+      <span class="spinner"></span><span>生成中，题目多时需要几十秒…</span>
+    </div>
+    <div class="sheet-actions">
+      <button id="printCancel" class="ghost">取消</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const $ = (id) => document.getElementById(id);
 const state = {
@@ -433,6 +579,14 @@ const state = {
   detailAnswer: 0,
   importItems: [],
   meta: null,
+  review: {
+    session: null,
+    overview: null,
+    summary: null,
+    tags: new Set(),
+    shown: false,
+    busy: false,
+  },
 };
 
 const FAMILY_NAME = {
@@ -479,7 +633,7 @@ function setFamily(f) {
   $("familyName").textContent = FAMILY_NAME[f] || f;
 }
 
-const SCREENS = ["home", "pick", "viewer", "book", "detail", "import"];
+const SCREENS = ["home", "pick", "viewer", "review", "summary", "book", "detail", "import"];
 const LOOK_SCREENS = ["home", "pick", "viewer"];
 
 function show(section) {
@@ -487,9 +641,11 @@ function show(section) {
     $(id).classList.toggle("hidden", id !== section);
   }
   const look = LOOK_SCREENS.includes(section);
+  const reviewish = section === "review" || section === "summary";
   if (look) state.look = section;
   $("navLook").classList.toggle("on", look);
-  $("navBook").classList.toggle("on", !look);
+  $("navBook").classList.toggle("on", !look && !reviewish);
+  $("navReview").classList.toggle("on", reviewish);
   // The family picker belongs to the lookup flow only; the book has its own.
   $("family").classList.toggle("hidden", !look);
   window.scrollTo(0, 0);
@@ -497,6 +653,8 @@ function show(section) {
 
 $("navLook").addEventListener("click", () => show(state.look || "home"));
 $("navBook").addEventListener("click", openBook);
+$("navReview").addEventListener("click", startReview);
+$("startReview").addEventListener("click", startReview);
 
 $("family").addEventListener("change", (e) => {
   setFamily(e.target.value);
@@ -856,11 +1014,13 @@ async function refreshBadge(qid) {
 async function refreshNavCount() {
   try {
     const res = await fetch("/api/attempts?limit=1");
-    if (!res.ok) return;
-    const data = await res.json();
-    const n = data.stats.total;
-    $("navBook").textContent = n ? "错题本 " + n : "错题本";
+    if (res.ok) {
+      const data = await res.json();
+      const n = data.stats.total;
+      $("navBook").textContent = n ? "错题本 " + n : "错题本";
+    }
   } catch (err) { /* offline is fine */ }
+  loadReviewToday();
 }
 
 // --- mark sheet -----------------------------------------------------------
@@ -1106,7 +1266,11 @@ function renderBook() {
       '<span class="main"><span class="qid">' + escapeHtml(item.qid) + "</span>"
       + tags
       + '<div class="meta">' + escapeHtml(where || item.family_name || "")
-      + " · 错 " + item.times + " 次 · " + shortDate(item.last_at) + "</div></span>"
+      + " · 错 " + item.times + " 次 · " + shortDate(item.last_at)
+      + (item.status === "mastered"
+        ? " · 已掌握"
+        : (item.next_at ? " · 下次 " + shortDate(item.next_at) : ""))
+      + "</div></span>"
       + (item.photo
         ? '<img class="mini" src="' + escapeHtml(item.photo.thumb) + '" alt="">'
         : "");
@@ -1161,6 +1325,11 @@ function renderDetail() {
   $("dTimes").textContent = "错 " + d.times + " 次";
   $("dWhere").textContent = [d.chapter, d.section, d.book]
     .filter(Boolean).join(" · ");
+  $("dSchedule").textContent = d.status === "mastered"
+    ? "已掌握 · 连续两次做对且间隔 ≥7 天"
+    : "下次复习 " + shortDate(d.next_at)
+      + " · 连续做对 " + (d.streak || 0) + " 次 · 错 " + d.times + " 次"
+      + (d.stuck ? " · 顽固题（建议回书/规范）" : "");
   $("dTabQ").classList.toggle("on", state.detailAnswer === 0);
   $("dTabA").classList.toggle("on", state.detailAnswer === 1);
   $("dPaper").src = "/api/crop?qid=" + encodeURIComponent(d.qid)
@@ -1264,6 +1433,492 @@ $("dDelete").addEventListener("click", async () => {
   }
 });
 
+// --- review ---------------------------------------------------------------
+
+function cropUrl(qid, answer, mask) {
+  return "/api/crop?qid=" + encodeURIComponent(qid)
+    + "&family=" + encodeURIComponent((qid || "C")[0])
+    + "&answer=" + (answer ? 1 : 0)
+    + "&mask=" + (mask ? 1 : 0);
+}
+
+function currentReviewItem() {
+  const s = state.review.session;
+  if (!s || !s.queue || s.cursor >= s.queue.length) return null;
+  const qid = s.queue[s.cursor];
+  return (s.items || []).find((item) => item.qid === qid) || null;
+}
+
+async function loadReviewToday() {
+  try {
+    const res = await fetch("/api/review/today");
+    if (!res.ok) return;
+    const data = await res.json();
+    state.review.overview = data;
+    renderReviewCta(data);
+  } catch (err) { /* offline: the tab still works once reachable */ }
+}
+
+function renderReviewCta(data) {
+  const s = data.session;
+  const title = $("reviewCtaTitle");
+  const hint = $("reviewCtaHint");
+  $("navReview").textContent = data.count ? "复习 " + data.count : "复习";
+  if (s && s.id && s.finished && !data.count) {
+    title.textContent = "今日已完成 · 看总结";
+    hint.textContent = "完成 " + s.graded_count + " / " + s.count
+      + " 题 · 点开看数据与下一步";
+    return;
+  }
+  if (s && s.id && !s.finished) {
+    title.textContent = "继续复习 (" + s.cursor + "/" + s.count + ")";
+    hint.textContent = "还剩 " + Math.max(0, s.count - s.cursor) + " 题 · 进度已保存";
+    return;
+  }
+  if (data.count) {
+    const r = data.reasons || {};
+    title.textContent = "今日复习 (" + data.count + ")";
+    hint.textContent = "预计 " + data.est_minutes + " 分钟 · 到期 "
+      + (r.due || 0) + " · 新错 " + (r.new || 0) + " · 顽固 " + (r.stuck || 0);
+    return;
+  }
+  const stats = data.stats || {};
+  title.textContent = "今日复习";
+  hint.textContent = "今天没有到期错题 · 全部 " + (stats.total ?? "—")
+    + " 题 · 已掌握 " + (stats.mastered ?? "—");
+}
+
+async function startReview() {
+  const overview = state.review.overview;
+  const active = overview && overview.session;
+  if (active && active.id && active.finished && !overview.count) {
+    showSummary(active.id);
+    return;
+  }
+  try {
+    const res = await fetch("/api/review/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    if (!data.queue || !data.queue.length) {
+      toast("今天没有到期错题");
+      loadReviewToday();
+      show("home");
+      return;
+    }
+    if (data.finished) {
+      showSummary(data.id);
+      return;
+    }
+    state.review.session = data;
+    state.review.summary = null;
+    renderReview();
+  } catch (err) {
+    toast("打开复习失败：" + err.message);
+  }
+}
+
+function renderReviewTags() {
+  const box = $("rTagBox");
+  box.innerHTML = '<span class="hint" style="align-self:center">错因（可选）</span>';
+  for (const key of Object.keys(TAG_LABELS)) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip";
+    b.dataset.tag = key;
+    b.textContent = tagLabel(key);
+    b.addEventListener("click", () => {
+      if (state.review.tags.has(key)) state.review.tags.delete(key);
+      else state.review.tags.add(key);
+      b.classList.toggle("on", state.review.tags.has(key));
+    });
+    box.appendChild(b);
+  }
+}
+
+function renderReview() {
+  const s = state.review.session;
+  if (!s || !s.queue || !s.queue.length) {
+    show("home");
+    return;
+  }
+  if (s.cursor >= s.queue.length) {
+    showSummary(s.id);
+    return;
+  }
+  const item = currentReviewItem();
+  if (!item) {
+    // The question was deleted after the queue was frozen; skip it quietly.
+    skipReview(true);
+    return;
+  }
+  state.review.shown = false;
+  state.review.tags = new Set();
+  for (const chip of $("rTagBox").querySelectorAll(".chip")) {
+    chip.classList.remove("on");
+  }
+  $("rQid").textContent = item.qid;
+  $("rPos").textContent = (s.cursor + 1) + " / " + s.count;
+  const where = [item.chapter, item.section, item.book].filter(Boolean).join(" · ");
+  $("rWhere").textContent = where + " · 错 " + item.times + " 次"
+    + (item.stuck ? " · 顽固题" : "");
+  $("rHint").textContent = "先自己做一遍，再点「看答案」。";
+  const paper = $("rPaper");
+  paper.onerror = () => {
+    $("rHint").textContent = "题面加载失败（答案遮罩不可用）。点「跳过」继续，不会记分。";
+    $("rShowAnswer").classList.add("hidden");
+    $("rWrong").classList.add("hidden");
+    $("rRight").classList.add("hidden");
+  };
+  paper.src = cropUrl(item.qid, false, true);
+  const answer = $("rAnswer");
+  answer.onerror = null;
+  answer.removeAttribute("src");
+  $("rAnswerWrap").classList.add("hidden");
+  $("rTagBox").classList.add("hidden");
+  $("rShowAnswer").classList.remove("hidden");
+  $("rShowAnswer").disabled = false;
+  $("rWrong").classList.add("hidden");
+  $("rRight").classList.add("hidden");
+  $("rWrong").disabled = false;
+  $("rRight").disabled = false;
+  $("rUndo").disabled = (s.graded_count || 0) === 0;
+  $("rPos").textContent = (s.cursor + 1) + " / " + s.count;
+  show("review");
+  const nextQid = s.queue[s.cursor + 1];
+  if (nextQid) new Image().src = cropUrl(nextQid, false, true);
+}
+
+function showReviewAnswer() {
+  const item = currentReviewItem();
+  if (!item) return;
+  const answer = $("rAnswer");
+  answer.onerror = () => {
+    $("rAnswerWrap").classList.add("hidden");
+    $("rShowAnswer").classList.add("hidden");
+    $("rWrong").classList.add("hidden");
+    $("rRight").classList.add("hidden");
+    $("rHint").textContent = "这题的答案遮罩失败，先跳过（不会记分）。";
+  };
+  answer.src = cropUrl(item.qid, true, true);
+  $("rAnswerWrap").classList.remove("hidden");
+  $("rShowAnswer").classList.add("hidden");
+  $("rWrong").classList.remove("hidden");
+  $("rRight").classList.remove("hidden");
+  $("rTagBox").classList.remove("hidden");
+  $("rHint").textContent = "看完答案选一个评分，自动进入下一题。标签可不选。";
+  state.review.shown = true;
+  answer.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function nextReviewStep(session, fallbackId) {
+  if (session.finished || session.cursor >= session.queue.length) {
+    showSummary(session.id || fallbackId);
+  } else {
+    renderReview();
+  }
+}
+
+async function gradeReview(result) {
+  const r = state.review;
+  if (r.busy) return;
+  const s = r.session;
+  const item = currentReviewItem();
+  if (!s || !item) return;
+  r.busy = true;
+  $("rWrong").disabled = true;
+  $("rRight").disabled = true;
+  try {
+    const body = { session_id: s.id, qid: item.qid, result };
+    if (result === "wrong" && r.tags.size) body.tags = [...r.tags];
+    const res = await fetch("/api/review/grade", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    r.session = data.session;
+    const attempt = data.attempt || {};
+    if (result === "correct") {
+      toast(attempt.status === "mastered"
+        ? "已掌握 · 连续两次做对且间隔 ≥7 天"
+        : "做对了 · " + attempt.interval_days + " 天后再见");
+    } else {
+      toast("记下 · " + attempt.interval_days + " 天后再练"
+        + (attempt.stuck ? " · 已标顽固" : ""));
+    }
+    refreshNavCount();
+    nextReviewStep(r.session, s.id);
+  } catch (err) {
+    toast("记录失败：" + err.message);
+  } finally {
+    r.busy = false;
+    $("rWrong").disabled = false;
+    $("rRight").disabled = false;
+  }
+}
+
+async function skipReview(auto) {
+  const r = state.review;
+  const s = r.session;
+  if (!s || !s.id) return;
+  const item = currentReviewItem();
+  if (!auto && !confirm("跳过这题？本轮不会再出现。")) return;
+  const qid = item ? item.qid : s.queue[s.cursor];
+  try {
+    const res = await fetch("/api/review/skip", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: s.id, qid }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    r.session = data;
+    if (!auto) toast("已跳过");
+    nextReviewStep(data, s.id);
+  } catch (err) {
+    toast("跳过失败：" + err.message);
+  }
+}
+
+async function undoReview() {
+  const s = state.review.session;
+  if (!s || !s.id) return;
+  try {
+    const res = await fetch("/api/review/undo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: s.id }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    state.review.session = data.session;
+    toast("已撤销 " + data.undone);
+    renderReview();
+  } catch (err) {
+    toast(err.message || "没有可撤销的评分");
+  }
+}
+
+function exitReview() {
+  show("home");
+  refreshNavCount();
+}
+
+function showSummary(sessionId) {
+  fetch("/api/review/summary?session_id=" + encodeURIComponent(sessionId))
+    .then(async (res) => {
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || res.statusText);
+      state.review.summary = data;
+      renderSummary(data);
+      show("summary");
+      loadReviewToday();
+    })
+    .catch((err) => toast("总结加载失败：" + err.message));
+}
+
+function renderSummary(data) {
+  $("sDay").textContent = data.day || "";
+  $("sDone").textContent = data.graded;
+  $("sCorrect").textContent = data.correct;
+  $("sWrong").textContent = data.wrong;
+  $("sAccuracy").textContent = data.graded
+    ? Math.round(data.accuracy * 100) + "%" : "—";
+  $("sMinutes").textContent = data.graded
+    ? Math.max(1, Math.round(data.duration / 60)) : 0;
+  $("sSkipped").textContent = data.skipped;
+
+  const mastered = data.mastered_items || [];
+  const masterBox = $("sMastered");
+  if (mastered.length) {
+    masterBox.classList.remove("hidden");
+    masterBox.innerHTML = "<h3>新掌握</h3><p>"
+      + mastered.map((m) => escapeHtml(m.qid)).join("、")
+      + " · 连续两次做对且间隔 ≥7 天，可以划掉。</p>";
+  } else {
+    masterBox.classList.add("hidden");
+  }
+
+  const stubborn = data.stubborn || [];
+  const stubbornBox = $("sStubborn");
+  if (stubborn.length) {
+    stubbornBox.classList.remove("hidden");
+    stubbornBox.innerHTML = "<h3>顽固题（错 ≥3 次）</h3><p>"
+      + stubborn.map((s) => escapeHtml(s.qid) + " 错 " + s.times + " 次").join("；")
+      + " · 建议先回书/规范看概念，不再机械刷。</p>";
+  } else {
+    stubbornBox.classList.add("hidden");
+  }
+
+  let next;
+  if (stubborn.length) {
+    next = "先回书/规范看 " + stubborn[0].qid + "（错 " + stubborn[0].times + " 次）"
+      + (data.next_due
+        ? "；下次复习 " + shortDate(data.next_due) + "，共 " + data.next_due_count + " 题。"
+        : "；看完回来标记掌握。");
+  } else if (data.next_due) {
+    next = shortDate(data.next_due) + " 再复习 " + data.next_due_count
+      + " 题，已经自动排好，不用手动记。";
+  } else {
+    next = "今天没有更多到期题；保持节奏，明天再来。";
+  }
+  $("sNext").textContent = next;
+
+  let encourage;
+  if (mastered.length) {
+    encourage = mastered.map((m) => m.qid).join("、")
+      + " 连续两次做对、间隔 ≥7 天，正式算掌握——这是能真正划掉的题。";
+  } else if ((data.recovered_count || 0) >= 2) {
+    encourage = data.recovered_count + " 道题从上次做错后第一次做对，说明回看的点在起作用。";
+  } else if (data.graded >= 3 && data.accuracy === 1) {
+    encourage = data.graded + " 题全对，而且都是先自己做再看答案，不是背答案。";
+  } else if (data.correct > 0) {
+    encourage = data.correct + "/" + data.graded + " 做对；错的 "
+      + data.wrong + " 道已按错题排进后面几天的复习，不会漏。";
+  } else if (data.wrong > 0) {
+    encourage = "今天 " + data.wrong
+      + " 道全错，但每道都定位到了具体题号和日期——比留在书里没整理强。";
+  } else {
+    encourage = "今天还没有评分记录。休息一下，明天从到期题开始。";
+  }
+  $("sEncourage").textContent = encourage;
+
+  const again = $("sAgain");
+  again.classList.toggle("hidden", !(data.queue_now > 0));
+}
+
+$("rShowAnswer").addEventListener("click", showReviewAnswer);
+$("rWrong").addEventListener("click", () => gradeReview("wrong"));
+$("rRight").addEventListener("click", () => gradeReview("correct"));
+$("rSkip").addEventListener("click", () => skipReview(false));
+$("rUndo").addEventListener("click", undoReview);
+$("rExit").addEventListener("click", exitReview);
+$("sHome").addEventListener("click", () => {
+  show("home");
+  refreshNavCount();
+});
+$("sAgain").addEventListener("click", startReview);
+$("sPrint").addEventListener("click", () => downloadPrint("review"));
+
+document.addEventListener("keydown", (e) => {
+  if ($("review").classList.contains("hidden")) return;
+  if (e.key === " ") {
+    e.preventDefault();
+    if (!state.review.shown) showReviewAnswer();
+    return;
+  }
+  if (e.key.toLowerCase() === "u") {
+    undoReview();
+    return;
+  }
+  if (!state.review.shown) return;
+  if (e.key === "1") {
+    e.preventDefault();
+    gradeReview("wrong");
+  } else if (e.key === "2") {
+    e.preventDefault();
+    gradeReview("correct");
+  }
+});
+
+let reviewTouch = null;
+$("review").addEventListener("touchstart", (e) => {
+  if (e.touches.length === 1) {
+    reviewTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }
+}, { passive: true });
+$("review").addEventListener("touchend", (e) => {
+  if (!reviewTouch || !state.review.shown) {
+    reviewTouch = null;
+    return;
+  }
+  const t = e.changedTouches[0];
+  const dx = t.clientX - reviewTouch.x;
+  const dy = t.clientY - reviewTouch.y;
+  reviewTouch = null;
+  if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+  gradeReview(dx > 0 ? "correct" : "wrong");
+}, { passive: true });
+
+// --- print ----------------------------------------------------------------
+
+function openPrintSheet() {
+  $("printFilterCount").textContent = state.book.total
+    ? state.book.total + " 题（最多 30）" : "—";
+  const overview = state.review.overview;
+  $("printReviewCount").textContent = overview
+    ? (overview.count ? overview.count + " 题" : "今天没有到期题")
+    : "—";
+  $("printStatus").classList.add("hidden");
+  $("printSheet").classList.remove("hidden");
+}
+
+function closePrintSheet() {
+  $("printSheet").classList.add("hidden");
+}
+
+async function downloadPrint(scope) {
+  const q = new URLSearchParams({ scope });
+  if (scope === "filter") {
+    const f = state.book.filters;
+    if (f.family) q.set("family", f.family);
+    if (f.tag) q.set("tag", f.tag);
+    if (f.chapter) q.set("chapter", f.chapter);
+    q.set("status", f.status || "");
+    if (f.days) q.set("days", String(f.days));
+  }
+  if (scope === "review" && state.review.summary) {
+    q.set("session_id", String(state.review.summary.session_id));
+  }
+  const status = $("printStatus");
+  const buttons = [...$("printSheet").querySelectorAll(".print-opt")];
+  status.classList.remove("hidden");
+  for (const b of buttons) b.disabled = true;
+  try {
+    const res = await fetch("/api/print?" + q.toString());
+    if (!res.ok) {
+      let detail = res.statusText;
+      try { detail = (await res.json()).detail || detail; } catch (err) { /* pdf error */ }
+      throw new Error(detail);
+    }
+    const blob = await res.blob();
+    let stats = {};
+    try { stats = JSON.parse(res.headers.get("X-Print-Stats") || "{}"); } catch (err) { /* header is a nicety */ }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "错题打印卷.pdf";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    toast(stats.pages
+      ? "已生成 " + stats.pages + " 页（题面 " + stats.question_pages
+        + " + 答案 " + stats.answer_pages + "）"
+      : "已生成打印卷");
+    closePrintSheet();
+  } catch (err) {
+    toast("生成失败：" + err.message);
+  } finally {
+    status.classList.add("hidden");
+    for (const b of buttons) b.disabled = false;
+  }
+}
+
+$("openPrint").addEventListener("click", openPrintSheet);
+$("printCancel").addEventListener("click", closePrintSheet);
+$("printSheet").addEventListener("click", (e) => {
+  if (e.target === $("printSheet")) closePrintSheet();
+});
+for (const button of $("printSheet").querySelectorAll(".print-opt")) {
+  button.addEventListener("click", () => downloadPrint(button.dataset.scope));
+}
+
 // --- legacy photo import --------------------------------------------------
 
 $("openImport").addEventListener("click", openImport);
@@ -1352,6 +2007,7 @@ $("importGo").addEventListener("click", async () => {
 });
 
 setFamily(state.family);
+renderReviewTags();
 show("home");
 loadMeta();
 refreshNavCount();

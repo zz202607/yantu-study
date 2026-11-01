@@ -1,8 +1,10 @@
-"""Photo -> question number -> crops, plus the M2 wrong book.
+"""Photo -> question number -> crops, wrong book, review and print.
 
 M1 proved the lookup loop.  M2 adds the study data: marked questions, four
-error tags, notes, photo attachments, filters and a one-zip backup.  The
-catalog stays read-only; only `data/` is user data (decision D5).
+error tags, notes, photo attachments, filters and a one-zip backup.  M3 adds
+the zero-decision review queue (sessions, grading, undo), the Z-family answer
+mask, and one-click A4 question/answer sheets.  The catalog stays read-only;
+only `data/` is user data (decision D5).
 
 Run:
     py -3 app/server.py
@@ -16,6 +18,7 @@ import os
 import re
 import socket
 import sys
+import tempfile
 import threading
 import time
 from pathlib import Path
@@ -33,6 +36,7 @@ import crop_question as CQ  # noqa: E402
 import recognize_qid as RQ  # noqa: E402
 from app.catalog import Catalog  # noqa: E402
 from app.photo_import import import_photos, scan_photos  # noqa: E402
+from app.print_export import MAX_QUESTIONS, export_pdf  # noqa: E402
 from app.store import Store, TAGS  # noqa: E402
 
 INDEX = ROOT / "index"
@@ -40,6 +44,7 @@ CACHE = ROOT / ".cache" / "crops"
 STATIC = Path(__file__).resolve().parent / "static"
 # YANTU_DATA lets tests point at a scratch database; production uses data/.
 DATA = Path(os.environ.get("YANTU_DATA", str(ROOT / "data")))
+EXPORTS = DATA / "exports"
 LEGACY_PHOTOS = ROOT / "拍照错题"
 
 store = Store(DATA)
@@ -128,12 +133,27 @@ def qid_exists(qid):
     return False
 
 
-def crop_path(qid, answer):
-    return CACHE / ("%s%s.png" % (qid, "_a" if answer else ""))
+def crop_path(qid, answer, mask=False):
+    suffix = ""
+    if mask:
+        # Masked halves need their own names: `Z1-10_a.png` is the whole
+        # page-with-answer crop used by the lookup tab.
+        suffix = "_ma" if answer else "_mq"
+    elif answer:
+        suffix = "_a"
+    return CACHE / ("%s%s.png" % (qid, suffix))
 
 
-def build_crop(qid, answer):
-    """Render one question (or its solution) into the cache; return the path."""
+def build_crop(qid, answer, mask=False):
+    """Render one question (or its solution) into the cache; return the path.
+
+    `mask=True` is the review view of a Z question: the crop is split at its
+    【答案】 line so the question image can never spoil the answer.  Other
+    families already keep question and solution in separate places.
+    """
+    if mask and qid[0] == "Z":
+        return build_z_mask(qid, answer)
+
     path = crop_path(qid, answer)
     if path.exists():
         return path
@@ -163,6 +183,37 @@ def build_crop(qid, answer):
             raise HTTPException(404, "题 %s 找不到题号位置" % qid)
         CQ.render_segments(book, segments, str(path))
         return path
+
+
+def build_z_mask(qid, answer):
+    """Split a Z crop at 【答案】 once, then serve the question or answer half."""
+    qpath = crop_path(qid, False, mask=True)
+    apath = crop_path(qid, True, mask=True)
+    if qpath.exists() and apath.exists():
+        return apath if answer else qpath
+
+    with _crop_guard:
+        lock = _crop_locks.setdefault(("mask", qid), threading.Lock())
+    with lock:
+        if qpath.exists() and apath.exists():
+            return apath if answer else qpath
+        full = build_crop(qid, False)
+        # Reuse the warmed recognizer; the crop lock is already free here.
+        with _ocr_lock:
+            try:
+                split = CQ.split_z_answer(
+                    str(full), str(qpath), str(apath), engine=RQ.engine()
+                )
+            except Exception as exc:  # noqa: BLE001 - report, never leak
+                raise HTTPException(409, "答案遮罩失败：%s" % exc)
+        if not split:
+            for path in (qpath, apath):
+                try:
+                    path.unlink()
+                except OSError:
+                    pass
+            raise HTTPException(409, "题 %s 没找到【答案】行，无法遮罩" % qid)
+    return apath if answer else qpath
 
 
 @app.get("/")
@@ -435,6 +486,125 @@ def delete_attempt(attempt_id: int):
     return {"deleted": True, "stats": store.stats()}
 
 
+def _review_item(item):
+    """One queue/session item with catalog display fields and its schedule."""
+    described = _describe(item)
+    for key in (
+        "id",
+        "times",
+        "status",
+        "interval_days",
+        "next_at",
+        "streak",
+        "reviews",
+        "last_review_at",
+        "last_result",
+        "stuck",
+        "tags",
+    ):
+        described[key] = item.get(key)
+    return described
+
+
+def _session_view(session):
+    view = dict(session)
+    view["items"] = [_review_item(item) for item in session.get("items", [])]
+    view["count"] = len(view.get("queue") or [])
+    return view
+
+
+@app.get("/api/review/today")
+def review_today():
+    """Queue size, reasons and the resumable session; answers stay out."""
+    overview = store.review_overview()
+    overview["session"] = _session_view(store.session())
+    return overview
+
+
+@app.post("/api/review/session")
+def review_start(payload: dict = Body(default={})):
+    """One tap enters today's review: resume, or freeze a fresh queue."""
+    try:
+        limit = int(payload.get("limit") or 0) or None
+        session = store.start_session(limit=limit)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(400, str(exc))
+    return _session_view(session)
+
+
+@app.get("/api/review/session")
+def review_session(session_id: int = None):
+    return _session_view(store.session(session_id=session_id))
+
+
+@app.post("/api/review/grade")
+def review_grade(payload: dict = Body(...)):
+    try:
+        session_id = int(payload.get("session_id") or 0)
+    except (TypeError, ValueError):
+        raise HTTPException(400, "session_id 不对")
+    qid = (payload.get("qid") or "").strip().upper()
+    if not session_id or not qid:
+        raise HTTPException(400, "缺 session_id 或题号")
+    try:
+        result = store.grade(
+            session_id, qid, payload.get("result"), tags=payload.get("tags")
+        )
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    item = result["attempt"]
+    item.update(_describe(item))
+    result["attempt"] = item
+    result["session"] = _session_view(result["session"])
+    return result
+
+
+@app.post("/api/review/skip")
+def review_skip(payload: dict = Body(...)):
+    try:
+        session_id = int(payload.get("session_id") or 0)
+    except (TypeError, ValueError):
+        raise HTTPException(400, "session_id 不对")
+    qid = (payload.get("qid") or "").strip().upper()
+    if not session_id or not qid:
+        raise HTTPException(400, "缺 session_id 或题号")
+    try:
+        return _session_view(store.skip(session_id, qid))
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+
+
+@app.post("/api/review/undo")
+def review_undo(payload: dict = Body(...)):
+    try:
+        session_id = int(payload.get("session_id") or 0)
+    except (TypeError, ValueError):
+        raise HTTPException(400, "session_id 不对")
+    if not session_id:
+        raise HTTPException(400, "缺 session_id")
+    try:
+        result = store.undo(session_id)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    result["session"] = _session_view(result["session"])
+    return result
+
+
+@app.get("/api/review/summary")
+def review_summary(session_id: int):
+    try:
+        summary = store.session_summary(session_id)
+    except ValueError as exc:
+        raise HTTPException(404, str(exc))
+    summary["mastered_items"] = [
+        catalog.describe(qid) for qid in summary["mastered"]
+    ]
+    summary["recovered_items"] = [
+        catalog.describe(qid) for qid in summary["recovered"]
+    ]
+    return summary
+
+
 @app.get("/api/import/preview")
 def import_preview(family: str = "C"):
     items = scan_photos(store, catalog, LEGACY_PHOTOS, family)
@@ -465,13 +635,82 @@ def backup():
     )
 
 
+@app.get("/api/print")
+def print_questions(
+    scope: str = "filter",
+    session_id: int = None,
+    family: str = None,
+    tag: str = None,
+    chapter: str = None,
+    status: str = "active",
+    days: int = 0,
+):
+    """One-click A4 sheet: question pages first, answers on their own pages."""
+    scope = (scope or "filter").lower()
+    if scope == "review":
+        session = store.session(session_id=session_id) if session_id else store.session()
+        qids = list(session.get("queue") or [])
+        if not qids:
+            qids = [item["qid"] for item in store.review_queue()]
+        title = "错题复习卷"
+    elif scope == "recent":
+        qids = [
+            item["qid"]
+            for item in store.list_attempts(
+                status="active", days=7, limit=MAX_QUESTIONS
+            )["items"]
+        ]
+        title = "最近 7 天错题卷"
+    else:
+        qids = [
+            item["qid"]
+            for item in store.list_attempts(
+                family=family or None,
+                tag=tag or None,
+                chapter=chapter or None,
+                status=status or None,
+                days=days or None,
+                limit=MAX_QUESTIONS,
+            )["items"]
+        ]
+        title = "错题筛选卷"
+    qids = list(dict.fromkeys(qids))[:MAX_QUESTIONS]
+    if not qids:
+        raise HTTPException(404, "没有可打印的题")
+    try:
+        EXPORTS.mkdir(parents=True, exist_ok=True)
+        cutoff = time.time() - 7 * 86400
+        for old in EXPORTS.glob("yantu-print-*.pdf"):
+            try:
+                if old.stat().st_mtime < cutoff:
+                    old.unlink()
+            except OSError:
+                pass
+        stamp = time.strftime("%Y%m%d-%H%M%S")
+        out = EXPORTS / ("yantu-print-%s.pdf" % stamp)
+        header = "%s · %s" % (title, time.strftime("%Y-%m-%d"))
+        scratch_root = CACHE.parent
+        scratch_root.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=str(scratch_root)) as tmp:
+            stats = export_pdf(
+                qids, out, header, tmp, engine=RQ.engine(), ocr_lock=_ocr_lock
+            )
+    except HTTPException:
+        raise
+    except Exception as exc:  # noqa: BLE001 - one bad crop must not 500 the page
+        raise HTTPException(500, "生成打印卷失败：%s" % exc)
+    response = FileResponse(out, media_type="application/pdf", filename=out.name)
+    response.headers["X-Print-Stats"] = json.dumps(stats, ensure_ascii=True)
+    return response
+
+
 @app.get("/api/crop")
-def crop(qid: str, family: str = "C", answer: int = 0):
+def crop(qid: str, family: str = "C", answer: int = 0, mask: int = 0):
     key = normalize_qid(qid, family)
     if not key or not qid_exists(key):
         raise HTTPException(404, "题号不存在")
     try:
-        path = build_crop(key, bool(answer))
+        path = build_crop(key, bool(answer), mask=bool(mask))
     except HTTPException:
         raise
     except Exception as exc:  # noqa: BLE001
@@ -494,5 +733,5 @@ if __name__ == "__main__":
     import uvicorn
 
     port = int(os.environ.get("PORT", "8000"))
-    print("岩土错题本 M2  ->  http://%s:%d" % (lan_ip(), port), flush=True)
+    print("岩土错题本 M3  ->  http://%s:%d" % (lan_ip(), port), flush=True)
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="warning")

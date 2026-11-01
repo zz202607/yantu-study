@@ -38,6 +38,16 @@ TAG_KEYS = tuple(TAGS)
 STATUSES = ("active", "mastered")
 SOURCES = ("batch", "single", "import")
 
+# M3 scheduling.  A wrong answer comes back in a day (three when it was a
+# relapse after a long gap); correct answers climb a short ladder.  Mastery
+# needs two correct reviews at least seven days apart, so a single lucky pass
+# can never retire a question.
+REVIEW_DAY_LIMIT = 20
+NEW_ERROR_WINDOW_DAYS = 3
+STUCK_TIMES = 3
+STUCK_IN_QUEUE = 3
+CORRECT_LADDER = (7, 15, 30)
+
 PHOTO_MAX_SIDE = 3200
 THUMB_MAX_SIDE = 640
 NOTE_MAX = 2000
@@ -68,7 +78,13 @@ CREATE TABLE IF NOT EXISTS attempts (
     times INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL,
     last_at TEXT NOT NULL,
-    photo_id INTEGER REFERENCES photos(id) ON DELETE SET NULL
+    photo_id INTEGER REFERENCES photos(id) ON DELETE SET NULL,
+    interval_days INTEGER NOT NULL DEFAULT 1,
+    next_at TEXT,
+    streak INTEGER NOT NULL DEFAULT 0,
+    reviews INTEGER NOT NULL DEFAULT 0,
+    last_review_at TEXT,
+    last_result TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_attempts_last ON attempts(last_at DESC);
 CREATE INDEX IF NOT EXISTS idx_attempts_family ON attempts(family);
@@ -77,12 +93,89 @@ CREATE TABLE IF NOT EXISTS attempt_tags (
     tag TEXT NOT NULL,
     PRIMARY KEY (attempt_id, tag)
 );
-INSERT OR IGNORE INTO meta(key, value) VALUES ('schema_version', '1');
+CREATE TABLE IF NOT EXISTS review_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    day TEXT NOT NULL,
+    queue TEXT NOT NULL,
+    cursor INTEGER NOT NULL DEFAULT 0,
+    started_at TEXT NOT NULL,
+    finished_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_day ON review_sessions(day, id DESC);
+CREATE TABLE IF NOT EXISTS review_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id INTEGER NOT NULL REFERENCES review_sessions(id) ON DELETE CASCADE,
+    attempt_id INTEGER NOT NULL,
+    qid TEXT NOT NULL,
+    at TEXT NOT NULL,
+    result TEXT NOT NULL,
+    interval_before INTEGER,
+    interval_after INTEGER,
+    streak_before INTEGER,
+    streak_after INTEGER,
+    status_before TEXT,
+    status_after TEXT,
+    times_before INTEGER,
+    times_after INTEGER,
+    next_before TEXT,
+    next_after TEXT,
+    last_at_before TEXT,
+    last_at_after TEXT,
+    last_review_before TEXT,
+    last_review_after TEXT,
+    last_result_before TEXT,
+    last_result_after TEXT,
+    tags_before TEXT,
+    tags_after TEXT,
+    UNIQUE (session_id, qid)
+);
+INSERT OR IGNORE INTO meta(key, value) VALUES ('schema_version', '2');
 """
 
 
 def now_iso(moment=None):
     return (moment or datetime.now().astimezone()).isoformat(timespec="seconds")
+
+
+def _parse_iso(value):
+    """Best-effort parse; malformed stamps never break a scheduling decision."""
+    try:
+        parsed = datetime.fromisoformat(str(value))
+    except (TypeError, ValueError):
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.astimezone()
+    return parsed
+
+
+def _add_days(value, days):
+    parsed = _parse_iso(value) or datetime.now().astimezone()
+    return (parsed + timedelta(days=days)).isoformat(timespec="seconds")
+
+
+def _chapter_key(qid):
+    """Group key for chapter interleaving: C3, Z10, A2015-P, M12."""
+    parts = (qid or "").split("-")
+    if len(parts) >= 2 and parts[0][0] in "AK":
+        return parts[0] + "-" + parts[1]
+    return parts[0]
+
+
+def _next_correct_interval(current):
+    for step in CORRECT_LADDER:
+        if current < step:
+            return step
+    return CORRECT_LADDER[-1]
+
+
+def _next_wrong_interval(current):
+    # A first failure is retried tomorrow; a relapse after a long interval
+    # gets a little more room so it is not a nightly grind.
+    return 1 if (current or 0) <= 3 else 3
+
+
+def _local_day(moment=None):
+    return (moment or datetime.now().astimezone()).strftime("%Y-%m-%d")
 
 
 def _clean_note(note):
@@ -141,9 +234,38 @@ class Store:
         try:
             conn.execute("PRAGMA journal_mode = WAL")
             conn.executescript(SCHEMA)
+            self._migrate(conn)
             conn.commit()
         finally:
             conn.close()
+
+    @staticmethod
+    def _migrate(conn):
+        """Bring an M2 database up to the M3 schedule columns in place."""
+        columns = {row["name"] for row in conn.execute("PRAGMA table_info(attempts)")}
+        additions = {
+            "interval_days": "INTEGER NOT NULL DEFAULT 1",
+            "next_at": "TEXT",
+            "streak": "INTEGER NOT NULL DEFAULT 0",
+            "reviews": "INTEGER NOT NULL DEFAULT 0",
+            "last_review_at": "TEXT",
+            "last_result": "TEXT",
+        }
+        added_next = False
+        for name, decl in additions.items():
+            if name not in columns:
+                conn.execute("ALTER TABLE attempts ADD COLUMN %s %s" % (name, decl))
+                added_next = added_next or name == "next_at"
+        if added_next:
+            # M2 rows carry no schedule: treat the record time as the due date,
+            # so yesterday's errors are waiting today.
+            conn.execute("UPDATE attempts SET next_at = last_at WHERE next_at IS NULL")
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_attempts_next ON attempts(next_at)"
+        )
+        conn.execute(
+            "UPDATE meta SET value = '2' WHERE key = 'schema_version'"
+        )
 
     # -- photos -----------------------------------------------------------
 
@@ -327,11 +449,29 @@ class Store:
                             if skip_existing:
                                 skipped.append(qid)
                                 continue
+                            # Marking a question wrong again is another failure:
+                            # it resets the streak, re-activates a mastered row
+                            # and re-enters the schedule at the short interval.
+                            interval = _next_wrong_interval(
+                                existing["interval_days"] or 1
+                            )
                             conn.execute(
                                 "UPDATE attempts SET times = times + 1, last_at = ?,"
                                 " source = ?, note = CASE WHEN ? IS NULL THEN note ELSE ? END,"
-                                " photo_id = COALESCE(?, photo_id) WHERE id = ?",
-                                (at, source, note, note, photo_id, existing["id"]),
+                                " photo_id = COALESCE(?, photo_id),"
+                                " status = 'active', interval_days = ?, next_at = ?,"
+                                " streak = 0, last_result = 'wrong'"
+                                " WHERE id = ?",
+                                (
+                                    at,
+                                    source,
+                                    note,
+                                    note,
+                                    photo_id,
+                                    interval,
+                                    _add_days(at, interval),
+                                    existing["id"],
+                                ),
                             )
                             if tags is not None:
                                 self._set_tags(conn, existing["id"], tags)
@@ -340,8 +480,9 @@ class Store:
                             cur = conn.execute(
                                 "INSERT INTO attempts"
                                 " (qid, family, source, note, status, times,"
-                                "  created_at, last_at, photo_id)"
-                                " VALUES (?, ?, ?, ?, 'active', 1, ?, ?, ?)",
+                                "  created_at, last_at, photo_id, interval_days,"
+                                "  next_at, streak, reviews, last_result)"
+                                " VALUES (?, ?, ?, ?, 'active', 1, ?, ?, ?, 1, ?, 0, 0, 'wrong')",
                                 (
                                     qid,
                                     qid[0],
@@ -350,6 +491,7 @@ class Store:
                                     at,
                                     at,
                                     photo_id,
+                                    _add_days(at, 1),
                                 ),
                             )
                             if tags:
@@ -415,6 +557,13 @@ class Store:
                     "times": row["times"],
                     "created_at": row["created_at"],
                     "last_at": row["last_at"],
+                    "interval_days": row["interval_days"],
+                    "next_at": row["next_at"] or row["last_at"],
+                    "streak": row["streak"],
+                    "reviews": row["reviews"],
+                    "last_review_at": row["last_review_at"],
+                    "last_result": row["last_result"],
+                    "stuck": row["times"] >= STUCK_TIMES and row["status"] != "mastered",
                     "tags": sorted(tags.get(row["id"], []), key=TAG_KEYS.index),
                     "photo": photos.get(row["photo_id"]),
                 }
@@ -488,7 +637,7 @@ class Store:
             "stats": stats,
         }
 
-    def _stats(self, conn):
+    def _stats(self, conn, now=None):
         by_tag = {key: 0 for key in TAG_KEYS}
         for row in conn.execute(
             "SELECT tag, COUNT(*) AS n FROM attempt_tags GROUP BY tag"
@@ -504,19 +653,569 @@ class Store:
         mastered = conn.execute(
             "SELECT COUNT(*) AS n FROM attempts WHERE status = 'mastered'"
         ).fetchone()["n"]
+        stamp = now_iso(now)
+        due = conn.execute(
+            "SELECT COUNT(*) AS n FROM attempts WHERE status = 'active'"
+            " AND (next_at IS NULL OR next_at <= ?)",
+            (stamp,),
+        ).fetchone()["n"]
+        stuck = conn.execute(
+            "SELECT COUNT(*) AS n FROM attempts WHERE status = 'active'"
+            " AND times >= ?",
+            (STUCK_TIMES,),
+        ).fetchone()["n"]
         return {
             "total": total,
             "mastered": mastered,
             "active": total - mastered,
+            "due": due,
+            "stuck": stuck,
             "by_tag": by_tag,
             "by_family": by_family,
             "tags": TAGS,
         }
 
-    def stats(self):
+    def stats(self, now=None):
         conn = self._connect()
         try:
-            return self._stats(conn)
+            return self._stats(conn, now)
+        finally:
+            conn.close()
+
+    # -- review schedule ---------------------------------------------------
+
+    @staticmethod
+    def _interleave(rows):
+        """Round-robin rows by chapter so one chapter cannot monopolize a day."""
+        groups, order = {}, []
+        for row in rows:
+            key = _chapter_key(row["qid"])
+            if key not in groups:
+                groups[key] = []
+                order.append(key)
+            groups[key].append(row)
+        out, pending = [], list(order)
+        while pending:
+            following = []
+            for key in pending:
+                bucket = groups[key]
+                if bucket:
+                    out.append(bucket.pop(0))
+                if bucket:
+                    following.append(key)
+            pending = following
+        return out
+
+    def review_queue(self, now=None, limit=REVIEW_DAY_LIMIT):
+        """Today's zero-decision queue: due, then fresh errors, then a few stuck.
+
+        Mastered questions stay out until a v2 revival rule exists.  The order
+        is chapter-interleaved inside each bucket, and the hard cap is 20 so a
+        backlog never turns into a guilt pile.
+        """
+        stamp = now_iso(now)
+        now_dt = _parse_iso(stamp)
+        recent_cut = (now_dt - timedelta(days=NEW_ERROR_WINDOW_DAYS)).isoformat(
+            timespec="seconds"
+        )
+        limit = max(1, min(int(limit or REVIEW_DAY_LIMIT), REVIEW_DAY_LIMIT))
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                "SELECT * FROM attempts WHERE status = 'active'"
+            ).fetchall()
+            due, fresh, stuck = [], [], []
+            for row in rows:
+                next_at = row["next_at"] or row["last_at"]
+                if next_at <= stamp:
+                    due.append(row)
+                elif not row["reviews"] and row["last_at"] >= recent_cut:
+                    fresh.append(row)
+                elif row["times"] >= STUCK_TIMES:
+                    stuck.append(row)
+            due.sort(key=lambda r: (r["next_at"] or r["last_at"], -r["times"], r["id"]))
+            fresh.sort(key=lambda r: (r["last_at"], r["id"]), reverse=True)
+            stuck.sort(key=lambda r: (-r["times"], r["last_at"], r["id"]))
+
+            chosen, reasons = [], {}
+
+            def take(bucket, reason, cap=None):
+                for row in self._interleave(bucket):
+                    if len(chosen) >= limit:
+                        return
+                    if cap is not None and cap <= 0:
+                        return
+                    chosen.append(row)
+                    reasons[row["id"]] = reason
+                    if cap is not None:
+                        cap -= 1
+
+            take(due, "due")
+            take(fresh, "new")
+            if len(chosen) < limit:
+                seen = {row["id"] for row in chosen}
+                spare = [row for row in stuck if row["id"] not in seen]
+                take(spare, "stuck", cap=STUCK_IN_QUEUE)
+
+            items = self._items(conn, [row["id"] for row in chosen])
+            for item in items:
+                item["review_reason"] = reasons.get(item["id"], "due")
+            return items
+        finally:
+            conn.close()
+
+    def review_overview(self, now=None):
+        items = self.review_queue(now)
+        reasons = {"due": 0, "new": 0, "stuck": 0}
+        for item in items:
+            reasons[item["review_reason"]] = reasons.get(item["review_reason"], 0) + 1
+        stats = self.stats(now)
+        return {
+            "day": _local_day(now),
+            "count": len(items),
+            "est_minutes": max(1, round(len(items) * 2)) if items else 0,
+            "reasons": reasons,
+            "stats": stats,
+        }
+
+    def _session_row(self, conn, session_id=None, day=None):
+        if session_id is not None:
+            return conn.execute(
+                "SELECT * FROM review_sessions WHERE id = ?", (session_id,)
+            ).fetchone()
+        day = day or _local_day()
+        row = conn.execute(
+            "SELECT * FROM review_sessions WHERE day = ? AND finished_at IS NULL"
+            " ORDER BY id DESC LIMIT 1",
+            (day,),
+        ).fetchone()
+        if row is None:
+            row = conn.execute(
+                "SELECT * FROM review_sessions WHERE day = ? ORDER BY id DESC LIMIT 1",
+                (day,),
+            ).fetchone()
+        return row
+
+    def _session_payload(self, conn, row, now=None):
+        if row is None:
+            day = _local_day(now)
+            return {
+                "id": None,
+                "day": day,
+                "queue": [],
+                "cursor": 0,
+                "current_qid": None,
+                "graded": {},
+                "graded_count": 0,
+                "finished": False,
+                "started_at": None,
+                "finished_at": None,
+                "items": [],
+            }
+        queue = json.loads(row["queue"])
+        logs = conn.execute(
+            "SELECT qid, result FROM review_log WHERE session_id = ?",
+            (row["id"],),
+        ).fetchall()
+        graded = {log["qid"]: log["result"] for log in logs}
+        cursor = row["cursor"]
+        while cursor < len(queue) and queue[cursor] in graded:
+            cursor += 1
+        current = queue[cursor] if cursor < len(queue) else None
+        attempts = []
+        for qid in queue:
+            found = conn.execute(
+                "SELECT id FROM attempts WHERE qid = ?", (qid,)
+            ).fetchone()
+            if found:
+                attempts.append(found["id"])
+        items = {item["qid"]: item for item in self._items(conn, attempts)}
+        return {
+            "id": row["id"],
+            "day": row["day"],
+            "queue": queue,
+            "cursor": cursor,
+            "current_qid": current,
+            "graded": graded,
+            "graded_count": len(graded),
+            "finished": bool(row["finished_at"]),
+            "started_at": row["started_at"],
+            "finished_at": row["finished_at"],
+            "items": [items[qid] for qid in queue if qid in items],
+        }
+
+    def session(self, session_id=None, now=None):
+        conn = self._connect()
+        try:
+            row = self._session_row(conn, session_id=session_id, day=_local_day(now))
+            return self._session_payload(conn, row, now)
+        finally:
+            conn.close()
+
+    def start_session(self, now=None, limit=REVIEW_DAY_LIMIT):
+        """Resume today's unfinished round, or freeze a new queue for today."""
+        day = _local_day(now)
+        conn = self._connect()
+        try:
+            row = conn.execute(
+                "SELECT * FROM review_sessions WHERE day = ? AND finished_at IS NULL"
+                " ORDER BY id DESC LIMIT 1",
+                (day,),
+            ).fetchone()
+            if row:
+                return self._session_payload(conn, row, now)
+        finally:
+            conn.close()
+
+        queue = [item["qid"] for item in self.review_queue(now, limit)]
+        if not queue:
+            return self.session(now=now)
+        stamp = now_iso(now)
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    cur = conn.execute(
+                        "INSERT INTO review_sessions (day, queue, cursor, started_at)"
+                        " VALUES (?, ?, 0, ?)",
+                        (day, json.dumps(queue, ensure_ascii=False), stamp),
+                    )
+                    row = conn.execute(
+                        "SELECT * FROM review_sessions WHERE id = ?", (cur.lastrowid,)
+                    ).fetchone()
+                return self._session_payload(conn, row, now)
+            finally:
+                conn.close()
+
+    def _queue_for_session(self, conn, session_id):
+        row = self._session_row(conn, session_id=session_id)
+        if not row:
+            raise ValueError("复习会话不存在")
+        if row["finished_at"]:
+            raise ValueError("这轮复习已经结束")
+        return row, json.loads(row["queue"])
+
+    def grade(self, session_id, qid, result, tags=None, now=None):
+        """Apply one review verdict and advance the session cursor."""
+        result = (result or "").strip().lower()
+        if result not in ("correct", "wrong"):
+            raise ValueError("评分只能是 correct / wrong")
+        qid = (qid or "").strip().upper()
+        clean_tags = _normalize_tags(tags) if tags else None
+        stamp = now_iso(now)
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    session, queue = self._queue_for_session(conn, session_id)
+                    if qid not in queue:
+                        raise ValueError("题 %s 不在本轮复习里" % qid)
+                    index = queue.index(qid)
+                    attempt = conn.execute(
+                        "SELECT * FROM attempts WHERE qid = ?", (qid,)
+                    ).fetchone()
+                    if not attempt:
+                        raise ValueError("题 %s 已经被删除" % qid)
+                    duplicate = conn.execute(
+                        "SELECT id FROM review_log WHERE session_id = ? AND qid = ?",
+                        (session_id, qid),
+                    ).fetchone()
+                    if duplicate:
+                        cursor = max(session["cursor"], index + 1)
+                        conn.execute(
+                            "UPDATE review_sessions SET cursor = ? WHERE id = ?",
+                            (cursor, session_id),
+                        )
+                        row = conn.execute(
+                            "SELECT * FROM review_sessions WHERE id = ?", (session_id,)
+                        ).fetchone()
+                        payload = self._session_payload(conn, row, now)
+                        item = self._items(conn, [attempt["id"]])[0]
+                        return {"duplicate": True, "session": payload, "attempt": item}
+
+                    tags_before = [
+                        row["tag"]
+                        for row in conn.execute(
+                            "SELECT tag FROM attempt_tags WHERE attempt_id = ?",
+                            (attempt["id"],),
+                        )
+                    ]
+                    interval_before = attempt["interval_days"] or 1
+                    streak_before = attempt["streak"] or 0
+                    reviews_before = attempt["reviews"] or 0
+                    if result == "correct":
+                        previous = _parse_iso(attempt["last_review_at"])
+                        gap_ok = bool(
+                            previous
+                            and (_parse_iso(stamp) - previous) >= timedelta(days=7)
+                        )
+                        streak_after = streak_before + 1
+                        interval_after = _next_correct_interval(interval_before)
+                        status_after = attempt["status"]
+                        if status_after != "mastered" and streak_after >= 2 and gap_ok:
+                            status_after = "mastered"
+                        times_after = attempt["times"]
+                        last_at_after = attempt["last_at"]
+                    else:
+                        streak_after = 0
+                        interval_after = _next_wrong_interval(interval_before)
+                        status_after = "active"
+                        times_after = attempt["times"] + 1
+                        last_at_after = stamp
+                    next_at = _add_days(stamp, interval_after)
+                    conn.execute(
+                        "UPDATE attempts SET status = ?, times = ?,"
+                        " interval_days = ?, next_at = ?, streak = ?, reviews = ?,"
+                        " last_review_at = ?, last_result = ?, last_at = ?"
+                        " WHERE id = ?",
+                        (
+                            status_after,
+                            times_after,
+                            interval_after,
+                            next_at,
+                            streak_after,
+                            reviews_before + 1,
+                            stamp,
+                            result,
+                            last_at_after,
+                            attempt["id"],
+                        ),
+                    )
+                    tags_after = tags_before
+                    if result == "wrong" and clean_tags is not None:
+                        self._set_tags(conn, attempt["id"], clean_tags)
+                        tags_after = list(clean_tags)
+                    conn.execute(
+                        "INSERT INTO review_log"
+                        " (session_id, attempt_id, qid, at, result,"
+                        "  interval_before, interval_after, streak_before, streak_after,"
+                        "  status_before, status_after, times_before, times_after,"
+                        "  next_before, next_after, last_at_before, last_at_after,"
+                        "  last_review_before, last_review_after,"
+                        "  last_result_before, last_result_after, tags_before, tags_after)"
+                        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+                        "         ?, ?, ?, ?, ?, ?)",
+                        (
+                            session_id,
+                            attempt["id"],
+                            qid,
+                            stamp,
+                            result,
+                            interval_before,
+                            interval_after,
+                            streak_before,
+                            streak_after,
+                            attempt["status"],
+                            status_after,
+                            attempt["times"],
+                            times_after,
+                            attempt["next_at"] or attempt["last_at"],
+                            next_at,
+                            attempt["last_at"],
+                            last_at_after,
+                            attempt["last_review_at"],
+                            stamp,
+                            attempt["last_result"],
+                            result,
+                            json.dumps(tags_before, ensure_ascii=False),
+                            json.dumps(tags_after, ensure_ascii=False),
+                        ),
+                    )
+                    cursor = max(session["cursor"], index + 1)
+                    finished = stamp if cursor >= len(queue) else None
+                    conn.execute(
+                        "UPDATE review_sessions SET cursor = ?,"
+                        " finished_at = COALESCE(finished_at, ?) WHERE id = ?",
+                        (cursor, finished, session_id),
+                    )
+                    row = conn.execute(
+                        "SELECT * FROM review_sessions WHERE id = ?", (session_id,)
+                    ).fetchone()
+                    payload = self._session_payload(conn, row, now)
+                    item = self._items(conn, [attempt["id"]])[0]
+                return {"duplicate": False, "session": payload, "attempt": item}
+            finally:
+                conn.close()
+
+    def skip(self, session_id, qid, now=None):
+        qid = (qid or "").strip().upper()
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    session, queue = self._queue_for_session(conn, session_id)
+                    if qid not in queue:
+                        raise ValueError("题 %s 不在本轮复习里" % qid)
+                    cursor = max(session["cursor"], queue.index(qid) + 1)
+                    finished = now_iso(now) if cursor >= len(queue) else None
+                    conn.execute(
+                        "UPDATE review_sessions SET cursor = ?,"
+                        " finished_at = COALESCE(finished_at, ?) WHERE id = ?",
+                        (cursor, finished, session_id),
+                    )
+                    row = conn.execute(
+                        "SELECT * FROM review_sessions WHERE id = ?", (session_id,)
+                    ).fetchone()
+                    return self._session_payload(conn, row, now)
+            finally:
+                conn.close()
+
+    def undo(self, session_id, now=None):
+        """Revert the last verdict in this session, schedule included."""
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    session = self._session_row(conn, session_id=session_id)
+                    if not session:
+                        raise ValueError("复习会话不存在")
+                    log = conn.execute(
+                        "SELECT * FROM review_log WHERE session_id = ?"
+                        " ORDER BY id DESC LIMIT 1",
+                        (session_id,),
+                    ).fetchone()
+                    if not log:
+                        raise ValueError("这轮还没有可撤销的评分")
+                    queue = json.loads(session["queue"])
+                    exists = conn.execute(
+                        "SELECT id FROM attempts WHERE id = ?", (log["attempt_id"],)
+                    ).fetchone()
+                    if exists:
+                        conn.execute(
+                            "UPDATE attempts SET status = ?, times = ?,"
+                            " interval_days = ?, next_at = ?, streak = ?,"
+                            " last_review_at = ?, last_result = ?, last_at = ?"
+                            " WHERE id = ?",
+                            (
+                                log["status_before"],
+                                log["times_before"],
+                                log["interval_before"],
+                                log["next_before"],
+                                log["streak_before"],
+                                log["last_review_before"],
+                                log["last_result_before"],
+                                log["last_at_before"],
+                                log["attempt_id"],
+                            ),
+                        )
+                        # `reviews` only counts up; one log means one increment.
+                        conn.execute(
+                            "UPDATE attempts SET reviews = MAX(0, reviews - 1)"
+                            " WHERE id = ?",
+                            (log["attempt_id"],),
+                        )
+                        try:
+                            before = json.loads(log["tags_before"] or "[]")
+                        except ValueError:
+                            before = []
+                        self._set_tags(conn, log["attempt_id"], before)
+                    # A deleted question only needs its log and cursor rewound.
+                    conn.execute("DELETE FROM review_log WHERE id = ?", (log["id"],))
+                    cursor = queue.index(log["qid"]) if log["qid"] in queue else 0
+                    conn.execute(
+                        "UPDATE review_sessions SET cursor = ?, finished_at = NULL"
+                        " WHERE id = ?",
+                        (cursor, session_id),
+                    )
+                    row = conn.execute(
+                        "SELECT * FROM review_sessions WHERE id = ?", (session_id,)
+                    ).fetchone()
+                    payload = self._session_payload(conn, row, now)
+                    return {"undone": log["qid"], "session": payload}
+            finally:
+                conn.close()
+
+    def session_summary(self, session_id, now=None):
+        stamp = now_iso(now)
+        conn = self._connect()
+        try:
+            session = self._session_row(conn, session_id=session_id)
+            if not session:
+                raise ValueError("复习会话不存在")
+            queue = json.loads(session["queue"])
+            logs = conn.execute(
+                "SELECT * FROM review_log WHERE session_id = ? ORDER BY id",
+                (session_id,),
+            ).fetchall()
+            graded = [log["qid"] for log in logs]
+            correct = [log["qid"] for log in logs if log["result"] == "correct"]
+            wrong = [log["qid"] for log in logs if log["result"] == "wrong"]
+            mastered = [
+                log["qid"]
+                for log in logs
+                if log["status_before"] != "mastered" and log["status_after"] == "mastered"
+            ]
+            recovered = [
+                log["qid"]
+                for log in logs
+                if log["result"] == "correct" and not (log["streak_before"] or 0)
+            ]
+            attempts = []
+            for qid in queue:
+                found = conn.execute(
+                    "SELECT id FROM attempts WHERE qid = ?", (qid,)
+                ).fetchone()
+                if found:
+                    attempts.append(found["id"])
+            items = self._items(conn, attempts)
+            stubborn = sorted(
+                [item for item in items if item["stuck"]],
+                key=lambda item: (-item["times"], item["qid"]),
+            )[:3]
+            started = _parse_iso(session["started_at"])
+            ended = _parse_iso(session["finished_at"]) or _parse_iso(stamp)
+            duration = int((ended - started).total_seconds()) if started and ended else 0
+
+            next_row = conn.execute(
+                "SELECT MIN(next_at) AS nxt FROM attempts WHERE status = 'active'"
+            ).fetchone()
+            next_at = next_row["nxt"] if next_row else None
+            next_count = 0
+            next_day = ""
+            if next_at:
+                day = str(next_at)[:10]
+                next_day = day
+                next_count = conn.execute(
+                    "SELECT COUNT(*) AS n FROM attempts WHERE status = 'active'"
+                    " AND substr(next_at, 1, 10) = ?",
+                    (day,),
+                ).fetchone()["n"]
+            chapters = sorted({_chapter_key(qid) for qid in graded})
+            queue_now = conn.execute(
+                "SELECT COUNT(*) AS n FROM attempts WHERE status = 'active'"
+                " AND (next_at IS NULL OR next_at <= ?)",
+                (stamp,),
+            ).fetchone()["n"]
+            return {
+                "session_id": session["id"],
+                "day": session["day"],
+                "queue": len(queue),
+                "graded": len(graded),
+                "skipped": len(queue) - len(graded),
+                "correct": len(correct),
+                "wrong": len(wrong),
+                "accuracy": round(len(correct) / len(graded), 3) if graded else 0,
+                "duration": duration,
+                "mastered": mastered,
+                "recovered": recovered,
+                "recovered_count": len(recovered),
+                "stubborn": [
+                    {
+                        "qid": item["qid"],
+                        "times": item["times"],
+                        "chapter": _chapter_key(item["qid"]),
+                    }
+                    for item in stubborn
+                ],
+                "chapters": chapters,
+                "next_due": next_day or None,
+                "next_due_count": next_count,
+                "queue_now": queue_now,
+                "finished": bool(session["finished_at"]),
+                "results": [
+                    {"qid": log["qid"], "result": log["result"]} for log in logs
+                ],
+            }
         finally:
             conn.close()
 
@@ -564,10 +1263,20 @@ class Store:
                             (clean_note, attempt_id),
                         )
                     if status is not None:
-                        conn.execute(
-                            "UPDATE attempts SET status = ? WHERE id = ?",
-                            (status, attempt_id),
-                        )
+                        if status == "active":
+                            # Manually un-mastering puts the question back in
+                            # today's queue with a clean streak.
+                            conn.execute(
+                                "UPDATE attempts SET status = 'active',"
+                                " interval_days = 1, streak = 0, next_at = ?"
+                                " WHERE id = ?",
+                                (now_iso(), attempt_id),
+                            )
+                        else:
+                            conn.execute(
+                                "UPDATE attempts SET status = ? WHERE id = ?",
+                                (status, attempt_id),
+                            )
                     if clean_tags is not None:
                         self._set_tags(conn, attempt_id, clean_tags)
             finally:
