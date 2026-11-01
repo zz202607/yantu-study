@@ -1,0 +1,32 @@
+# Large source scans — 1.5 GB, local only. Rebuild checks use compressed/.
+compressed/
+*.pdf
+
+# Generated print output (hundreds of MB)
+print_samples/
+
+# Local OCR render cache
+.cache/
+
+# Scratch probes (screenshots, debug PDFs, one-off scripts)
+.probe/
+
+# User data: wrongbook DB, photo attachments, backups. Backed up via /api/backup.
+data/
+
+# Seed error photos (80 MB, ground truth for eval)
+拍照错题/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local tool state
+.claude/scheduled_tasks.json
+.claude/scheduled_tasks.lock
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store

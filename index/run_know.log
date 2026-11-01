@@ -1,0 +1,31 @@
+start: 0/536 pages done | 536 to go
+[33m[WARNING] 2026-10-30 23:44:33,569 [RapidOCR] main.py:164: The text detection result is empty[0m
+[33m[WARNING] 2026-10-30 23:44:56,172 [RapidOCR] main.py:164: The text detection result is empty[0m
+    20/536 | 202s | 10.08 s/page
+    40/536 | 356s | 8.89 s/page
+    60/536 | 463s | 7.72 s/page
+    80/536 | 562s | 7.02 s/page
+   100/536 | 696s | 6.96 s/page
+   120/536 | 776s | 6.47 s/page
+   140/536 | 841s | 6.01 s/page
+   160/536 | 905s | 5.66 s/page
+   180/536 | 970s | 5.39 s/page
+   200/536 | 1034s | 5.17 s/page
+   220/536 | 1098s | 4.99 s/page
+   240/536 | 1163s | 4.85 s/page
+   260/536 | 1228s | 4.72 s/page
+   280/536 | 1293s | 4.62 s/page
+   300/536 | 1367s | 4.56 s/page
+   320/536 | 1455s | 4.55 s/page
+   340/536 | 1540s | 4.53 s/page
+   360/536 | 1622s | 4.50 s/page
+   380/536 | 1716s | 4.52 s/page
+   400/536 | 1805s | 4.51 s/page
+   420/536 | 1890s | 4.50 s/page
+   440/536 | 1953s | 4.44 s/page
+   460/536 | 2018s | 4.39 s/page
+   480/536 | 2081s | 4.33 s/page
+   500/536 | 2143s | 4.29 s/page
+   520/536 | 2204s | 4.24 s/page
+[33m[WARNING] 2026-10-31 00:21:46,757 [RapidOCR] main.py:164: The text detection result is empty[0m
+done | 2254s

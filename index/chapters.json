@@ -1,0 +1,692 @@
+{
+ "C1": {
+  "title": "第一篇 土力学",
+  "volume": "案例习题集上",
+  "sections": [
+   {
+    "name": "第1章 土的物理性质与工程分类",
+    "first": "C1-1",
+    "last": "C1-76",
+    "count": 76,
+    "page": 19,
+    "blank_page": 11,
+    "book_page": 1
+   },
+   {
+    "name": "第2章 土的渗透性和渗流问题",
+    "first": "C1-77",
+    "last": "C1-126",
+    "count": 50,
+    "page": 47,
+    "blank_page": 38,
+    "book_page": 30
+   },
+   {
+    "name": "第3章 土体中的应力计算",
+    "first": "C1-127",
+    "last": "C1-181",
+    "count": 55,
+    "page": 75,
+    "blank_page": 63,
+    "book_page": 58
+   },
+   {
+    "name": "第4章 土的变形特性和地基沉降计算",
+    "first": "C1-182",
+    "last": "C1-235",
+    "count": 54,
+    "page": 100,
+    "blank_page": 87,
+    "book_page": 83
+   },
+   {
+    "name": "第5章 土的抗剪强度",
+    "first": "C1-236",
+    "last": "C1-276",
+    "count": 41,
+    "page": 129,
+    "blank_page": 113,
+    "book_page": 112
+   },
+   {
+    "name": "第6章 挡土结构物上的土压力",
+    "first": "C1-277",
+    "last": "C1-323",
+    "count": 47,
+    "page": 150,
+    "blank_page": 131,
+    "book_page": 133
+   },
+   {
+    "name": "第7章 边坡稳定分析",
+    "first": "C1-324",
+    "last": "C1-356",
+    "count": 33,
+    "page": 178,
+    "blank_page": 154,
+    "book_page": 161
+   },
+   {
+    "name": "第8章 地基承载力",
+    "first": "C1-357",
+    "last": "C1-373",
+    "count": 17,
+    "page": 197,
+    "blank_page": 171,
+    "book_page": 180
+   }
+  ]
+ },
+ "C2": {
+  "title": "第二篇 岩土工程勘察",
+  "volume": "案例习题集上",
+  "sections": [
+   {
+    "name": "第一章 勘探、取样和土的分类、参数统计",
+    "first": "C2-8",
+    "last": "C2-50",
+    "count": 43,
+    "page": 212,
+    "blank_page": 183,
+    "book_page": 195
+   },
+   {
+    "name": "第二章 原位测试",
+    "first": "C2-51",
+    "last": "C2-123",
+    "count": 73,
+    "page": 230,
+    "blank_page": 199,
+    "book_page": 213
+   },
+   {
+    "name": "第三章 土工试验",
+    "first": "C2-124",
+    "last": "C2-181",
+    "count": 58,
+    "page": 262,
+    "blank_page": 228,
+    "book_page": 245
+   },
+   {
+    "name": "第四章 工程岩体试验方法标准",
+    "first": "C2-182",
+    "last": "C2-209",
+    "count": 28,
+    "page": 290,
+    "blank_page": 253,
+    "book_page": 273
+   },
+   {
+    "name": "第五章 工程地质、岩石分类和岩体分级",
+    "first": "C2-210",
+    "last": "C2-258",
+    "count": 49,
+    "page": 303,
+    "blank_page": 266,
+    "book_page": 285
+   },
+   {
+    "name": "第六章 地下水勘察、腐蚀性评价",
+    "first": "C2-259",
+    "last": "C2-304",
+    "count": 46,
+    "page": 329,
+    "blank_page": 291,
+    "book_page": 312
+   },
+   {
+    "name": "第七章 工程勘察其它相关偏僻规范",
+    "first": "C2-305",
+    "last": "C2-345",
+    "count": 41,
+    "page": 353,
+    "blank_page": 314,
+    "book_page": 336
+   }
+  ]
+ },
+ "C3": {
+  "title": "第三篇 浅基础",
+  "volume": "案例习题集上",
+  "sections": [
+   {
+    "name": "第一节 地基承载力计算与修正",
+    "first": "C3-8",
+    "last": "C3-39",
+    "count": 32,
+    "page": 382,
+    "blank_page": 11,
+    "book_page": 365
+   },
+   {
+    "name": "第一节 基底压力/持力层验算",
+    "first": "C3-40",
+    "last": "C3-89",
+    "count": 50,
+    "page": 397,
+    "blank_page": 24,
+    "book_page": 380
+   },
+   {
+    "name": "第一节 软弱下卧层验算",
+    "first": "C3-90",
+    "last": "C3-114",
+    "count": 25,
+    "page": 424,
+    "blank_page": 47,
+    "book_page": 407
+   },
+   {
+    "name": "第二节 地基稳定性/抗浮",
+    "first": "C3-115",
+    "last": "C3-131",
+    "count": 17,
+    "page": 439,
+    "blank_page": 59,
+    "book_page": 422
+   },
+   {
+    "name": "第三节 变形与沉降",
+    "first": "C3-132",
+    "last": "C3-178",
+    "count": 47,
+    "page": 449,
+    "blank_page": 68,
+    "book_page": 432
+   },
+   {
+    "name": "第四节 基础设计（冲切/剪切/受弯）",
+    "first": "C3-179",
+    "last": "C3-222",
+    "count": 44,
+    "page": 479,
+    "blank_page": 93,
+    "book_page": 462
+   },
+   {
+    "name": "第二章 公路桥涵基础",
+    "first": "C3-223",
+    "last": "C3-259",
+    "count": 37,
+    "page": 508,
+    "blank_page": 115,
+    "book_page": 491
+   },
+   {
+    "name": "第三章 铁路桥涵基础",
+    "first": "C3-260",
+    "last": "C3-273",
+    "count": 14,
+    "page": 525,
+    "blank_page": 131,
+    "book_page": 508
+   }
+  ]
+ },
+ "C4": {
+  "title": "第四篇 深基础",
+  "volume": "案例习题集中",
+  "sections": [
+   {
+    "name": "第一节 桩基承载力（竖向/群桩/负摩阻/抗拔/桩身/水平）",
+    "first": "C4-6",
+    "last": "C4-140",
+    "count": 135,
+    "page": 16,
+    "blank_page": 142,
+    "book_page": 523
+   },
+   {
+    "name": "第二节 桩基沉降",
+    "first": "C4-141",
+    "last": "C4-169",
+    "count": 29,
+    "page": 101,
+    "blank_page": 219,
+    "book_page": 608
+   },
+   {
+    "name": "第三节 承台计算",
+    "first": "C4-170",
+    "last": "C4-191",
+    "count": 22,
+    "page": 126,
+    "blank_page": 241,
+    "book_page": 633
+   },
+   {
+    "name": "第二章 公路桥涵桩基",
+    "first": "C4-192",
+    "last": "C4-218",
+    "count": 27,
+    "page": 144,
+    "blank_page": 255,
+    "book_page": 651
+   },
+   {
+    "name": "第三章 铁路桥涵桩基",
+    "first": "C4-219",
+    "last": "C4-227",
+    "count": 9,
+    "page": 162,
+    "blank_page": 271,
+    "book_page": 669
+   }
+  ]
+ },
+ "C5": {
+  "title": "第五篇 地基处理",
+  "volume": "案例习题集中",
+  "sections": [
+   {
+    "name": "第一节 基本规定（承载力修正）",
+    "first": "C5-9",
+    "last": "C5-10",
+    "count": 2,
+    "page": 173,
+    "blank_page": 12,
+    "book_page": 680
+   },
+   {
+    "name": "第二节 换填垫层",
+    "first": "C5-11",
+    "last": "C5-26",
+    "count": 16,
+    "page": 174,
+    "blank_page": 12,
+    "book_page": 681
+   },
+   {
+    "name": "第三节 压实与夯实地基",
+    "first": "C5-27",
+    "last": "C5-32",
+    "count": 6,
+    "page": 183,
+    "blank_page": 19,
+    "book_page": 690
+   },
+   {
+    "name": "第四节 预压地基",
+    "first": "C5-33",
+    "last": "C5-95",
+    "count": 63,
+    "page": 187,
+    "blank_page": 22,
+    "book_page": 694
+   },
+   {
+    "name": "第五节 复合地基",
+    "first": "C5-96",
+    "last": "C5-234",
+    "count": 139,
+    "page": 217,
+    "blank_page": 48,
+    "book_page": 724
+   },
+   {
+    "name": "第六节 注浆加固",
+    "first": "C5-235",
+    "last": "C5-248",
+    "count": 14,
+    "page": 287,
+    "blank_page": 111,
+    "book_page": 794
+   }
+  ]
+ },
+ "C6": {
+  "title": "第六篇 土工结构与边坡防护",
+  "volume": "案例习题集中",
+  "sections": [
+   {
+    "name": "第一节 岩土压力计算",
+    "first": "C6-7",
+    "last": "C6-89",
+    "count": 83,
+    "page": 298,
+    "blank_page": 119,
+    "book_page": 805
+   },
+   {
+    "name": "第二节 边坡稳定性",
+    "first": "C6-90",
+    "last": "C6-166",
+    "count": 77,
+    "page": 355,
+    "blank_page": 163,
+    "book_page": 862
+   },
+   {
+    "name": "第三节 重力式挡土墙",
+    "first": "C6-167",
+    "last": "C6-200",
+    "count": 34,
+    "page": 401,
+    "blank_page": 201,
+    "book_page": 908
+   },
+   {
+    "name": "第四节 锚杆（索）与板桩",
+    "first": "C6-201",
+    "last": "C6-222",
+    "count": 22,
+    "page": 424,
+    "blank_page": 221,
+    "book_page": 931
+   },
+   {
+    "name": "第五节 板桩式挡墙",
+    "first": "C6-223",
+    "last": "C6-224",
+    "count": 2,
+    "page": 437,
+    "blank_page": 233,
+    "book_page": 944
+   },
+   {
+    "name": "第二章 铁路路基/支挡结构",
+    "first": "C6-225",
+    "last": "C6-264",
+    "count": 40,
+    "page": 439,
+    "blank_page": 235,
+    "book_page": 946
+   },
+   {
+    "name": "第三章 公路路基",
+    "first": "C6-265",
+    "last": "C6-287",
+    "count": 23,
+    "page": 463,
+    "blank_page": 256,
+    "book_page": 970
+   },
+   {
+    "name": "第四章 土工合成材料",
+    "first": "C6-288",
+    "last": "C6-321",
+    "count": 34,
+    "page": 475,
+    "blank_page": 267,
+    "book_page": 982
+   },
+   {
+    "name": "第五章 其他边坡规范",
+    "first": "C6-322",
+    "last": "C6-323",
+    "count": 2,
+    "page": 494,
+    "blank_page": 282,
+    "book_page": 1001
+   }
+  ]
+ },
+ "C7": {
+  "title": "第七篇 基坑工程与地下工程",
+  "volume": "案例习题集下",
+  "sections": [
+   {
+    "name": "第一节 水平荷载（水土压力）",
+    "first": "C7-4",
+    "last": "C7-28",
+    "count": 25,
+    "page": 12,
+    "blank_page": 285,
+    "book_page": 1007
+   },
+   {
+    "name": "第二节 支挡式结构",
+    "first": "C7-29",
+    "last": "C7-78",
+    "count": 50,
+    "page": 30,
+    "blank_page": 298,
+    "book_page": 1025
+   },
+   {
+    "name": "第三节 土钉墙",
+    "first": "C7-79",
+    "last": "C7-89",
+    "count": 11,
+    "page": 58,
+    "blank_page": 322,
+    "book_page": 1053
+   },
+   {
+    "name": "第四节 重力式水泥土墙",
+    "first": "C7-90",
+    "last": "C7-105",
+    "count": 16,
+    "page": 65,
+    "blank_page": 329,
+    "book_page": 1060
+   },
+   {
+    "name": "第五节 地下水控制",
+    "first": "C7-106",
+    "last": "C7-119",
+    "count": 14,
+    "page": 78,
+    "blank_page": 340,
+    "book_page": 1073
+   },
+   {
+    "name": "第二章 铁路隧道",
+    "first": "C7-120",
+    "last": "C7-141",
+    "count": 22,
+    "page": 88,
+    "blank_page": 349,
+    "book_page": 1083
+   },
+   {
+    "name": "第三章 公路隧道",
+    "first": "C7-142",
+    "last": "C7-153",
+    "count": 12,
+    "page": 103,
+    "blank_page": 363,
+    "book_page": 1098
+   }
+  ]
+ },
+ "C8": {
+  "title": "第八篇 特殊条件下的岩土工程",
+  "volume": "案例习题集下",
+  "sections": [
+   {
+    "name": "第一章 湿陷性黄土",
+    "first": "C8-4",
+    "last": "C8-67",
+    "count": 64,
+    "page": 114,
+    "blank_page": 9,
+    "book_page": 1109
+   },
+   {
+    "name": "第二章 膨胀土",
+    "first": "C8-68",
+    "last": "C8-119",
+    "count": 52,
+    "page": 148,
+    "blank_page": 40,
+    "book_page": 1143
+   },
+   {
+    "name": "第三章 盐渍土",
+    "first": "C8-120",
+    "last": "C8-154",
+    "count": 35,
+    "page": 175,
+    "blank_page": 64,
+    "book_page": 1170
+   },
+   {
+    "name": "第四章 冻土",
+    "first": "C8-155",
+    "last": "C8-188",
+    "count": 34,
+    "page": 194,
+    "blank_page": 81,
+    "book_page": 1189
+   },
+   {
+    "name": "第五章 其他特殊性土",
+    "first": "C8-189",
+    "last": "C8-204",
+    "count": 16,
+    "page": 207,
+    "blank_page": 93,
+    "book_page": 1202
+   },
+   {
+    "name": "第六章 岩溶和土洞",
+    "first": "C8-205",
+    "last": "C8-214",
+    "count": 10,
+    "page": 215,
+    "blank_page": 99,
+    "book_page": 1210
+   },
+   {
+    "name": "第六章 滑坡和崩塌",
+    "first": "C8-215",
+    "last": "C8-227",
+    "count": 13,
+    "page": 220,
+    "blank_page": 103,
+    "book_page": 1215
+   },
+   {
+    "name": "第六章 泥石流",
+    "first": "C8-228",
+    "last": "C8-247",
+    "count": 20,
+    "page": 227,
+    "blank_page": 109,
+    "book_page": 1222
+   },
+   {
+    "name": "第六章 采空区",
+    "first": "C8-248",
+    "last": "C8-258",
+    "count": 11,
+    "page": 235,
+    "blank_page": 116,
+    "book_page": 1230
+   },
+   {
+    "name": "第六章 地面沉降",
+    "first": "C8-259",
+    "last": "C8-267",
+    "count": 9,
+    "page": 240,
+    "blank_page": 120,
+    "book_page": 1235
+   }
+  ]
+ },
+ "C9": {
+  "title": "第九篇 地震工程",
+  "volume": "案例习题集下",
+  "sections": [
+   {
+    "name": "第一节 场地、地基与场地类别",
+    "first": "C9-3",
+    "last": "C9-35",
+    "count": 33,
+    "page": 248,
+    "blank_page": 126,
+    "book_page": 1243
+   },
+   {
+    "name": "第一节 液化判别与液化指数",
+    "first": "C9-36",
+    "last": "C9-79",
+    "count": 44,
+    "page": 264,
+    "blank_page": 141,
+    "book_page": 1259
+   },
+   {
+    "name": "第二节 地震作用与地震影响系数",
+    "first": "C9-80",
+    "last": "C9-118",
+    "count": 39,
+    "page": 290,
+    "blank_page": 167,
+    "book_page": 1285
+   },
+   {
+    "name": "第二章 公路工程抗震",
+    "first": "C9-119",
+    "last": "C9-146",
+    "count": 28,
+    "page": 308,
+    "blank_page": 182,
+    "book_page": 1303
+   },
+   {
+    "name": "第三章 水电工程抗震",
+    "first": "C9-147",
+    "last": "C9-180",
+    "count": 34,
+    "page": 324,
+    "blank_page": 196,
+    "book_page": 1319
+   },
+   {
+    "name": "第四章 中国地震动参数区划图",
+    "first": "C9-181",
+    "last": "C9-182",
+    "count": 2,
+    "page": 340,
+    "blank_page": 212,
+    "book_page": 1335
+   },
+   {
+    "name": "第五章 地基动力特性测试",
+    "first": "C9-183",
+    "last": "C9-186",
+    "count": 4,
+    "page": 341,
+    "blank_page": 213,
+    "book_page": 1336
+   }
+  ]
+ },
+ "C10": {
+  "title": "第十篇 岩土工程检测与监测",
+  "volume": "案例习题集下",
+  "sections": [
+   {
+    "name": "第一章 建筑基桩检测",
+    "first": "C10-4",
+    "last": "C10-62",
+    "count": 59,
+    "page": 346,
+    "blank_page": 217,
+    "book_page": 1341
+   },
+   {
+    "name": "第二章 其他规范检测内容",
+    "first": "C10-63",
+    "last": "C10-103",
+    "count": 41,
+    "page": 374,
+    "blank_page": 239,
+    "book_page": 1369
+   },
+   {
+    "name": "第三节 锚杆抗拔检测",
+    "first": "C10-104",
+    "last": "C10-107",
+    "count": 4,
+    "page": 398,
+    "blank_page": 261,
+    "book_page": 1393
+   }
+  ]
+ }
+}

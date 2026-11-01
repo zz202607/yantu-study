@@ -1,0 +1,306 @@
+{
+ "books": [
+  {
+   "id": "case_sol_1",
+   "file": "2026【正版高清扫】华S案例习题集上_扫描版.pdf",
+   "short": "案例习题集·上",
+   "family": "C",
+   "role": "solutions",
+   "chapters": [
+    1,
+    2,
+    3
+   ],
+   "pages": 532,
+   "page_pt": [
+    515.9,
+    728.5
+   ],
+   "image_px": [
+    1376,
+    1943
+   ],
+   "text_layer": false,
+   "size_mb": 157,
+   "note": ""
+  },
+  {
+   "id": "case_sol_2",
+   "file": "2026【正版高清扫】华S案例习题集中_扫描版.pdf",
+   "short": "案例习题集·中",
+   "family": "C",
+   "role": "solutions",
+   "chapters": [
+    4,
+    5,
+    6
+   ],
+   "pages": 494,
+   "page_pt": [
+    515.9,
+    728.5
+   ],
+   "image_px": [
+    1376,
+    1943
+   ],
+   "text_layer": false,
+   "size_mb": 141,
+   "note": ""
+  },
+  {
+   "id": "case_sol_3",
+   "file": "2026【正版高清扫】华S案例习题集下_扫描版.pdf",
+   "short": "案例习题集·下",
+   "family": "C",
+   "role": "solutions",
+   "chapters": [
+    7,
+    8,
+    9,
+    10
+   ],
+   "pages": 400,
+   "page_pt": [
+    515.9,
+    728.5
+   ],
+   "image_px": [
+    1376,
+    1943
+   ],
+   "text_layer": false,
+   "size_mb": 123,
+   "note": ""
+  },
+  {
+   "id": "case_blank_1",
+   "file": "26华山空白习题第一册_扫描版.pdf",
+   "short": "空白习题·1",
+   "family": "C",
+   "role": "blank",
+   "chapters": [
+    1,
+    2
+   ],
+   "pages": 332,
+   "page_pt": [
+    535.7,
+    765.4
+   ],
+   "image_px": [
+    1429,
+    2041
+   ],
+   "text_layer": false,
+   "size_mb": 65,
+   "note": "土力学~岩土工程勘察"
+  },
+  {
+   "id": "case_blank_2",
+   "file": "26华山空白习题第二册_扫描版.pdf",
+   "short": "空白习题·2",
+   "family": "C",
+   "role": "blank",
+   "chapters": [
+    3,
+    4
+   ],
+   "pages": 274,
+   "page_pt": [
+    538.6,
+    762.5
+   ],
+   "image_px": [
+    1436,
+    2033
+   ],
+   "text_layer": false,
+   "size_mb": 57,
+   "note": "封面误印「第三册」，以文件名和内部目录为准"
+  },
+  {
+   "id": "case_blank_3",
+   "file": "26华山空白习题第三册_扫描版.pdf",
+   "short": "空白习题·3",
+   "family": "C",
+   "role": "blank",
+   "chapters": [
+    5,
+    6,
+    7
+   ],
+   "pages": 368,
+   "page_pt": [
+    535.7,
+    762.5
+   ],
+   "image_px": [
+    1429,
+    2033
+   ],
+   "text_layer": false,
+   "size_mb": 76,
+   "note": "地基处理~基坑"
+  },
+  {
+   "id": "case_blank_4",
+   "file": "26华山空白习题第四册_扫描版.pdf",
+   "short": "空白习题·4",
+   "family": "C",
+   "role": "blank",
+   "chapters": [
+    8,
+    9,
+    10
+   ],
+   "pages": 264,
+   "page_pt": [
+    535.7,
+    765.4
+   ],
+   "image_px": [
+    1429,
+    2041
+   ],
+   "text_layer": false,
+   "size_mb": 59,
+   "note": "特殊土~检测"
+  },
+  {
+   "id": "know_sol_1",
+   "file": "华S26专业知识习题册上_扫描版.pdf",
+   "short": "知识习题册·上",
+   "family": "Z",
+   "role": "self-contained",
+   "chapters": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ],
+   "pages": 436,
+   "page_pt": [
+    515.9,
+    728.5
+   ],
+   "image_px": [
+    1376,
+    1943
+   ],
+   "text_layer": false,
+   "size_mb": 148,
+   "note": "自包含答案"
+  },
+  {
+   "id": "know_sol_2",
+   "file": "华S26专业知识习题册下_扫描版.pdf",
+   "short": "知识习题册·下",
+   "family": "Z",
+   "role": "self-contained",
+   "chapters": [
+    9,
+    10,
+    11,
+    12,
+    13
+   ],
+   "pages": 420,
+   "page_pt": [
+    515.9,
+    728.5
+   ],
+   "image_px": [
+    1376,
+    1943
+   ],
+   "text_layer": false,
+   "size_mb": 148,
+   "note": "自包含答案"
+  },
+  {
+   "id": "case_exam",
+   "file": "2025【正版高清扫】华S案例真题12-25套题_扫描版.pdf",
+   "short": "案例真题12-25",
+   "family": "A",
+   "role": "exam",
+   "chapters": [],
+   "pages": 488,
+   "page_pt": [
+    515.9,
+    728.5
+   ],
+   "image_px": [
+    1376,
+    1943
+   ],
+   "text_layer": false,
+   "size_mb": 155,
+   "note": ""
+  },
+  {
+   "id": "know_exam",
+   "file": "华S26专业知识13~25真题解析_扫描版.pdf",
+   "short": "知识真题13-25",
+   "family": "K",
+   "role": "exam",
+   "chapters": [],
+   "pages": 536,
+   "page_pt": [
+    515.9,
+    728.5
+   ],
+   "image_px": [
+    1376,
+    1943
+   ],
+   "text_layer": false,
+   "size_mb": 197,
+   "note": ""
+  },
+  {
+   "id": "mock",
+   "file": "26华S案例模拟题集高清版.pdf",
+   "short": "案例模拟33套",
+   "family": "M",
+   "role": "mock",
+   "chapters": [],
+   "pages": 576,
+   "page_pt": [
+    1650.7,
+    2331.1
+   ],
+   "image_px": [
+    1558,
+    2200
+   ],
+   "text_layer": false,
+   "size_mb": 205,
+   "note": "576dpi 存档扫描，压缩需降采样"
+  },
+  {
+   "id": "handbook",
+   "file": "工程地质手册（第五版）.pdf",
+   "short": "工程地质手册",
+   "family": "H",
+   "role": "reference",
+   "chapters": [],
+   "pages": 1426,
+   "page_pt": [
+    595.3,
+    842.2
+   ],
+   "image_px": [
+    2940,
+    4158
+   ],
+   "text_layer": true,
+   "size_mb": 88,
+   "note": "唯一带文字层与书签"
+  }
+ ]
+}

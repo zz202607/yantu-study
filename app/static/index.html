@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
+<meta name="theme-color" content="#0f2a3f">
+<title>岩土错题本 · 查题</title>
+<style>
+  :root {
+    --ink: #14212b;
+    --muted: #5b6b78;
+    --line: #dbe3e8;
+    --paper: #f6f8f9;
+    --card: #ffffff;
+    --accent: #1667d9;
+    --accent-ink: #ffffff;
+    --good: #1d7a4f;
+    --warn: #a35a00;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); }
+  body {
+    font-family: "Segoe UI", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  header {
+    position: sticky; top: 0; z-index: 5;
+    background: #0f2a3f; color: #fff;
+    padding: 10px 14px;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  header h1 {
+    font-size: 16px; margin: 0; font-weight: 600; letter-spacing: .02em;
+    flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  header .badge { font-size: 11px; opacity: .7; border: 1px solid rgba(255,255,255,.35); padding: 1px 6px; border-radius: 999px; }
+  .nav {
+    display: flex; gap: 3px; flex: 0 0 auto;
+    background: rgba(255,255,255,.12); border-radius: 9px; padding: 3px;
+  }
+  .nav button {
+    border: 0; background: transparent; color: #cfe3f2;
+    font-size: 13px; padding: 6px 11px; border-radius: 7px; font-family: inherit;
+  }
+  .nav button.on { background: #fff; color: #0f2a3f; font-weight: 600; }
+  select {
+    flex: 0 0 auto;
+    background: #16374f; color: #fff; border: 1px solid rgba(255,255,255,.3);
+    border-radius: 8px; padding: 6px 8px; font-size: 13px;
+  }
+  main { padding: 14px; max-width: 760px; margin: 0 auto; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px; margin-bottom: 14px;
+  }
+  .shot {
+    display: block; width: 100%;
+    border: 0; border-radius: 12px;
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 18px; font-weight: 600; padding: 22px;
+    text-align: center;
+  }
+  .shot small { display: block; font-weight: 400; font-size: 12px; opacity: .75; margin-top: 4px; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row > * { min-width: 0; }
+  input[type=text] {
+    flex: 1 1 auto; min-width: 0; font-size: 16px; padding: 12px 12px;
+    border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink);
+  }
+  input[type=text]:focus { outline: 2px solid rgba(22,103,217,.25); border-color: var(--accent); }
+  button.ghost, a.ghost {
+    background: #fff; color: var(--ink); border: 1px solid var(--line);
+    border-radius: 10px; padding: 10px 14px; font-size: 15px;
+    text-decoration: none; display: inline-block;
+  }
+  button.ghost:active, a.ghost:active { background: var(--paper); }
+  .hint { color: var(--muted); font-size: 12.5px; }
+  .muted { color: var(--muted); }
+  .status { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  .spinner {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid var(--line); border-top-color: var(--accent);
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .thumbs { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0; }
+  .thumb {
+    flex: 0 0 auto; max-height: 120px; border-radius: 8px; border: 1px solid var(--line);
+  }
+  .candidates { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .cand {
+    position: relative;
+    display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+    border: 1px solid var(--line); background: #fff; border-radius: 12px;
+    padding: 10px 26px 10px 14px; min-width: 96px; text-align: left;
+  }
+  .cand b { font-size: 18px; letter-spacing: .02em; }
+  .cand span { font-size: 11px; color: var(--muted); }
+  .cand.top { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(22,103,217,.12); }
+  .cand .tag { color: var(--warn); }
+  .cand.on { border-color: var(--accent); background: rgba(22,103,217,.07); }
+  .cand .tick {
+    position: absolute; top: 9px; right: 9px;
+    width: 15px; height: 15px; border-radius: 50%;
+    border: 1.5px solid var(--line); background: #fff;
+    font-size: 10px; line-height: 15px; text-align: center;
+    color: transparent;
+  }
+  .cand.on .tick { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.primary {
+    background: var(--accent); color: var(--accent-ink); border: 0;
+    border-radius: 10px; padding: 10px 16px; font-size: 15px; font-weight: 600;
+  }
+  button.primary:disabled { opacity: .4; }
+  button.ghost.small { padding: 8px 11px; font-size: 13.5px; }
+  .toolbar.wrap { flex-wrap: wrap; }
+  .viewer-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .viewer-head h2 {
+    font-size: 18px; margin: 0; flex: 1; min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .viewer-head .pos { flex: 0 0 auto; font-size: 13px; color: var(--muted); }
+  .tabs {
+    display: flex; flex: 0 0 auto; background: var(--paper); border-radius: 10px;
+    padding: 3px; border: 1px solid var(--line);
+  }
+  .tabs button {
+    border: 0; background: transparent; padding: 7px 12px; border-radius: 8px;
+    font-size: 14px; color: var(--muted);
+  }
+  .tabs button.on { background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+  .paper-wrap {
+    border: 1px solid var(--line); border-radius: 12px; background: #fff;
+    overflow: auto; max-height: 75vh;
+  }
+  .paper-wrap img { display: block; width: 100%; height: auto; }
+  .paper-wrap.zoom img { width: 200%; max-width: none; }
+  .toolbar { display: flex; gap: 8px; align-items: center; margin: 10px 0; }
+  .toolbar .grow { flex: 1; }
+  .toolbar button { flex: 0 0 auto; }
+  /* Four buttons + a page counter have to share one line on a 390 px phone. */
+  #viewer .toolbar { gap: 6px; }
+  #viewer .toolbar .ghost { padding: 9px 11px; }
+  .toast {
+    position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%);
+    background: #14212b; color: #fff; padding: 10px 16px; border-radius: 999px;
+    font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none;
+    z-index: 30;
+  }
+  .toast.show { opacity: .95; }
+  .hidden { display: none !important; }
+
+  /* wrong book */
+  .book-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .book-head h2 { font-size: 17px; margin: 0; flex: 1; min-width: 0; }
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+  .filters select {
+    flex: 0 0 auto; background: #fff; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; font-size: 13px;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .chip {
+    border: 1px solid var(--line); background: #fff; color: var(--ink);
+    border-radius: 999px; padding: 6px 11px; font-size: 13px; font-family: inherit;
+  }
+  .chip.on { border-color: var(--accent); background: rgba(22,103,217,.08); color: var(--accent); font-weight: 600; }
+  .chip .n { color: var(--muted); font-size: 11px; margin-left: 3px; }
+  .chip.on .n { color: inherit; }
+  .item {
+    display: flex; gap: 10px; width: 100%; text-align: left; align-items: flex-start;
+    border: 0; border-bottom: 1px solid var(--line); background: transparent;
+    padding: 11px 2px; font-family: inherit;
+  }
+  .item:active { background: var(--paper); }
+  .item .main { flex: 1; min-width: 0; }
+  .item .qid { font-weight: 700; font-size: 15.5px; letter-spacing: .01em; }
+  .item .meta {
+    color: var(--muted); font-size: 12px; margin-top: 2px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .mini {
+    width: 54px; height: 40px; object-fit: cover;
+    border-radius: 6px; border: 1px solid var(--line); flex: 0 0 auto; background: var(--paper);
+  }
+  .tagmini {
+    display: inline-block; font-size: 11px; padding: 0 6px; border-radius: 5px;
+    background: rgba(163,90,0,.1); color: var(--warn); margin-left: 5px; font-weight: 400;
+  }
+  .mastered .qid { color: var(--good); }
+  .empty { color: var(--muted); text-align: center; padding: 26px 0; font-size: 14px; }
+  .badge2 {
+    font-size: 11px; color: var(--warn); border: 1px solid rgba(163,90,0,.3);
+    background: rgba(163,90,0,.07); padding: 1px 7px; border-radius: 999px;
+    flex: 0 0 auto;
+  }
+  .photo { margin-top: 10px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .photo img { display: block; width: 100%; height: auto; max-height: 60vh; object-fit: contain; }
+  .danger { color: #b3261e; border-color: #e7c3c0; }
+  textarea {
+    width: 100%; border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px; font-size: 15px; font-family: inherit; resize: vertical;
+    color: var(--ink); background: #fff;
+  }
+  textarea:focus { outline: 2px solid rgba(22,103,217,.25); border-color: var(--accent); }
+  .sheet {
+    position: fixed; inset: 0; z-index: 20;
+    background: rgba(15,42,63,.45);
+    display: flex; align-items: flex-end;
+  }
+  .sheet-panel {
+    background: #fff; width: 100%; max-width: 760px; margin: 0 auto;
+    border-radius: 16px 16px 0 0; padding: 16px 16px 22px;
+  }
+  .sheet-panel h3 { margin: 0; font-size: 17px; }
+  .sheet-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  .sheet-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .sheet-actions .primary { flex: 1; padding: 12px; }
+  .sheet-actions .ghost { flex: 0 0 auto; }
+  .check { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--muted); margin-top: 10px; }
+  .detail-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .detail-head h2 { font-size: 18px; margin: 0; }
+  .import-row { display: flex; gap: 10px; align-items: flex-start; padding: 10px 2px; border-bottom: 1px solid var(--line); }
+  .import-row input { margin-top: 5px; width: 18px; height: 18px; flex: 0 0 auto; }
+  .import-row .main { flex: 1; min-width: 0; font-size: 13.5px; }
+  .import-row .name { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ok { color: var(--good); }
+  .warn { color: var(--warn); }
+  @media (max-width: 380px) {
+    header h1 { font-size: 15px; }
+    header .badge { display: none; }
+    .cand { min-width: 84px; padding: 9px 11px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>岩土错题本 <span class="badge">M2</span></h1>
+  <nav class="nav">
+    <button id="navLook" class="on" type="button">查题</button>
+    <button id="navBook" type="button">错题本</button>
+  </nav>
+  <select id="family" aria-label="当前册别">
+    <option value="C">案例 C</option>
+    <option value="Z">知识 Z</option>
+  </select>
+</header>
+
+<main>
+  <!-- 1. capture -->
+  <section id="home" class="card">
+    <label class="shot" for="camera">
+      拍照识题号
+      <small>拍题号那几行即可 · 不用改名</small>
+    </label>
+    <input id="camera" type="file" accept="image/*" capture="environment" class="hidden">
+    <div class="toolbar">
+      <input id="manual" type="text" inputmode="text" placeholder="手输题号，如 3-11" autocomplete="off">
+      <button id="go" class="ghost">查</button>
+    </div>
+    <p class="hint">当前册：<b id="familyName">案例习题集</b> · 题号按「篇-题」，跨册同号时以当前册为准。</p>
+  </section>
+
+  <!-- 2. recognizing / candidates -->
+  <section id="pick" class="card hidden">
+    <div class="thumbs"><img id="preview" class="thumb" alt="刚拍的照片"></div>
+    <div id="busy" class="status"><span class="spinner"></span><span id="busyText">识别中…</span></div>
+    <div id="pickBody" class="hidden">
+      <div class="status" id="pickMeta"></div>
+      <div class="candidates" id="candidates"></div>
+      <div class="toolbar wrap">
+        <button id="selectAll" class="ghost small">全选</button>
+        <button id="clearSel" class="ghost small">清空</button>
+        <button id="markSel" class="ghost small" disabled>记错</button>
+        <span class="grow"></span>
+        <button id="openSel" class="primary" disabled>查看所选</button>
+      </div>
+      <div class="toolbar">
+        <input id="manual2" type="text" placeholder="都不对？手输题号" autocomplete="off">
+        <button id="go2" class="ghost">查</button>
+        <button id="retry" class="ghost">重拍</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. viewer -->
+  <section id="viewer" class="card hidden">
+    <div class="viewer-head">
+      <h2 id="qidTitle">—</h2>
+      <span id="wrongBadge" class="badge2 hidden"></span>
+      <span id="pos" class="pos"></span>
+      <div class="tabs">
+        <button id="tabQ" class="on">题面</button>
+        <button id="tabA">解析</button>
+      </div>
+    </div>
+    <div class="toolbar wrap">
+      <button id="prev" class="ghost hidden">‹ 上一题</button>
+      <button id="next" class="ghost hidden">下一题 ›</button>
+      <span class="grow"></span>
+      <button id="markOne" class="ghost">记错</button>
+      <button id="zoom" class="ghost">放大</button>
+      <button id="back" class="ghost">回候选</button>
+      <button id="again" class="ghost">再拍</button>
+    </div>
+    <div id="paperWrap" class="paper-wrap"><img id="paper" alt="题目"></div>
+    <p class="hint" id="viewerHint"></p>
+  </section>
+
+  <!-- 4. wrong book -->
+  <section id="book" class="card hidden">
+    <div class="book-head">
+      <h2>错题本</h2>
+      <a class="ghost small" href="/api/backup">备份</a>
+      <button id="openImport" class="ghost small">导入旧照片</button>
+    </div>
+    <div class="filters">
+      <select id="fFamily" aria-label="筛选册别">
+        <option value="">全部册</option>
+        <option value="C">案例 C</option>
+        <option value="Z">知识 Z</option>
+        <option value="A">真题 A</option>
+        <option value="K">真题 K</option>
+        <option value="M">模拟 M</option>
+      </select>
+      <select id="fChapter" aria-label="筛选篇" class="hidden"></select>
+      <select id="fTime" aria-label="筛选时间">
+        <option value="0">全部时间</option>
+        <option value="7">最近 7 天</option>
+        <option value="30">最近 30 天</option>
+      </select>
+      <select id="fStatus" aria-label="筛选掌握">
+        <option value="">全部状态</option>
+        <option value="active">未掌握</option>
+        <option value="mastered">已掌握</option>
+      </select>
+    </div>
+    <div class="chips" id="fTags"></div>
+    <div class="status" id="bookMeta">—</div>
+    <div id="bookList"></div>
+    <button id="bookMore" class="ghost small hidden">加载更多</button>
+  </section>
+
+  <!-- 5. detail -->
+  <section id="detail" class="card hidden">
+    <div class="detail-head">
+      <button id="detailBack" class="ghost small">‹ 列表</button>
+      <h2 id="dQid">—</h2>
+      <span id="dTimes" class="badge2"></span>
+    </div>
+    <p class="hint" id="dWhere"></p>
+    <div class="tabs" style="margin-bottom: 8px">
+      <button id="dTabQ" class="on">题面</button>
+      <button id="dTabA">解析</button>
+    </div>
+    <div class="paper-wrap"><img id="dPaper" alt="题目"></div>
+    <div class="photo hidden" id="dPhotoWrap"><img id="dPhoto" alt="手写过程照片"></div>
+    <div class="chips" id="dTags"></div>
+    <textarea id="dNote" rows="2" placeholder="一句话备注（可不填）"></textarea>
+    <div class="toolbar">
+      <button id="dMaster" class="ghost small">标记已掌握</button>
+      <span class="grow"></span>
+      <button id="dDelete" class="ghost small danger">删除</button>
+      <button id="dSave" class="primary">保存</button>
+    </div>
+  </section>
+
+  <!-- 6. legacy photo import -->
+  <section id="import" class="card hidden">
+    <div class="book-head">
+      <button id="importBack" class="ghost small">‹ 返回</button>
+      <h2>导入旧照片</h2>
+    </div>
+    <p class="hint" id="importHint">扫描 拍照错题/ …</p>
+    <div id="importList"></div>
+    <div class="toolbar">
+      <button id="importAll" class="ghost small">全选</button>
+      <span class="grow"></span>
+      <button id="importGo" class="primary">导入所选</button>
+    </div>
+  </section>
+</main>
+
+<div id="toast" class="toast"></div>
+
+<div id="sheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="sheet-panel">
+    <div class="sheet-head">
+      <h3 id="sheetTitle">记入错题本</h3>
+      <span id="sheetCount" class="hint"></span>
+    </div>
+    <div class="chips" id="sheetTags"></div>
+    <textarea id="sheetNote" rows="2" placeholder="一句话备注（可不填）"></textarea>
+    <label class="check" id="sheetPhotoRow">
+      <input type="checkbox" id="sheetPhoto" checked> 附上这张照片（原题/手写）
+    </label>
+    <div class="sheet-actions">
+      <button id="sheetCancel" class="ghost">取消</button>
+      <button id="sheetSave" class="primary">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const state = {
+  family: localStorage.getItem("family") || "C",
+  qid: null,
+  answer: 0,
+  cands: [],
+  sel: new Set(),   // qids ticked on the pick screen
+  off: new Set(),   // qids the user unticked; every stage must respect them
+  order: [],        // qids the viewer steps through, page order
+  at: 0,
+  source: "",       // where the open question came from, shown under the crop
+  touched: false,   // the user edited the ticks; stop re-seeding them
+  timer: null,
+  picked: false,
+  look: "home",     // last lookup screen, so the 查题 tab returns where you were
+  file: null,       // photo taken this session, offered as an attachment
+  recogFamily: null, // family the candidates were read under
+  sheet: null,      // { qids, from, tags:Set, family } while the mark sheet is open
+  book: {
+    items: [],
+    total: 0,
+    stats: null,
+    loading: false,
+    pending: false,      // a filter changed while a request was in flight
+    pendingReset: false,
+    filters: { family: "", tag: "", chapter: "", status: "", days: 0 },
+  },
+  detail: null,
+  detailAnswer: 0,
+  importItems: [],
+  meta: null,
+};
+
+const FAMILY_NAME = {
+  C: "案例习题集",
+  Z: "知识习题册",
+  A: "案例真题",
+  K: "知识真题",
+  M: "案例模拟",
+};
+
+// Mirrors app/store.TAGS; /api/books returns the same map when reachable.
+const TAG_LABELS = {
+  concept: "不会",
+  calc: "算错",
+  standard: "规范错",
+  misread: "审题错",
+};
+
+function tagLabel(key) {
+  return (state.meta && state.meta.tags && state.meta.tags[key]) || TAG_LABELS[key] || key;
+}
+
+async function loadMeta() {
+  if (state.meta) return state.meta;
+  try {
+    const res = await fetch("/api/books");
+    if (res.ok) state.meta = await res.json();
+  } catch (err) { /* offline: the built-in labels and no chapter list */ }
+  return state.meta;
+}
+
+function toast(msg) {
+  const el = $("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove("show"), 2200);
+}
+
+function setFamily(f) {
+  state.family = f;
+  localStorage.setItem("family", f);
+  $("family").value = f;
+  $("familyName").textContent = FAMILY_NAME[f] || f;
+}
+
+const SCREENS = ["home", "pick", "viewer", "book", "detail", "import"];
+const LOOK_SCREENS = ["home", "pick", "viewer"];
+
+function show(section) {
+  for (const id of SCREENS) {
+    $(id).classList.toggle("hidden", id !== section);
+  }
+  const look = LOOK_SCREENS.includes(section);
+  if (look) state.look = section;
+  $("navLook").classList.toggle("on", look);
+  $("navBook").classList.toggle("on", !look);
+  // The family picker belongs to the lookup flow only; the book has its own.
+  $("family").classList.toggle("hidden", !look);
+  window.scrollTo(0, 0);
+}
+
+$("navLook").addEventListener("click", () => show(state.look || "home"));
+$("navBook").addEventListener("click", openBook);
+
+$("family").addEventListener("change", (e) => {
+  setFamily(e.target.value);
+  closeViewer();
+});
+
+$("camera").addEventListener("change", async (e) => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  e.target.value = "";
+  await recognizeFile(file);
+});
+
+$("retry").addEventListener("click", () => {
+  closeViewer();
+  show("home");
+});
+
+// Back to the ticks, not all the way home: adjusting a mis-ticked question
+// must not cost another photo.
+$("back").addEventListener("click", () => {
+  closeViewer();
+  show(state.cands.length ? "pick" : "home");
+});
+
+$("again").addEventListener("click", () => {
+  closeViewer();
+  show("home");
+});
+
+for (const [btn, input] of [["go", "manual"], ["go2", "manual2"]]) {
+  $(btn).addEventListener("click", () => openManual($(input).value));
+  $(input).addEventListener("keydown", (e) => {
+    if (e.key === "Enter") openManual($(input).value);
+  });
+}
+
+async function recognizeFile(file) {
+  show("pick");
+  $("pickBody").classList.add("hidden");
+  $("busy").classList.remove("hidden");
+  $("busyText").textContent = "识别中…";
+  state.picked = false;
+  state.touched = false;   // a new photo starts from the seeded ticks
+  state.sel = new Set();
+  state.off = new Set();
+  state.cands = [];
+  state.file = file;   // offered as the attachment when marking a wrong answer
+  // Candidate ids are bare ("3-11"); remember the book they were read under
+  // so a later family switch cannot silently re-prefix them.
+  state.recogFamily = state.family;
+  if ($("preview")._url) URL.revokeObjectURL($("preview")._url);
+  $("preview")._url = URL.createObjectURL(file);
+  $("preview").src = $("preview")._url;
+
+  const started = Date.now();
+  state.timer = setInterval(() => {
+    $("busyText").textContent = "识别中… " + ((Date.now() - started) / 1000).toFixed(0) + "s";
+  }, 500);
+
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("family", state.family);
+
+  try {
+    const res = await fetch("/api/recognize", { method: "POST", body: fd });
+    if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
+    // The server streams one JSON object per stage: "head" arrives long
+    // before "full", so candidates can show up while the scan continues.
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffered = "";
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffered += decoder.decode(value, { stream: true });
+      let cut;
+      while ((cut = buffered.indexOf("\n")) >= 0) {
+        const line = buffered.slice(0, cut).trim();
+        buffered = buffered.slice(cut + 1);
+        if (line) handleStage(JSON.parse(line));
+      }
+    }
+    clearInterval(state.timer);
+  } catch (err) {
+    clearInterval(state.timer);
+    $("busy").classList.add("hidden");
+    $("pickBody").classList.remove("hidden");
+    $("pickMeta").textContent = "识别失败：" + err.message;
+    toast("识别失败，直接手输吧");
+  }
+}
+
+function handleStage(data) {
+  if (data.stage === "error") throw new Error(data.detail || "识别失败");
+  renderCandidates(data, data.stage === "full");
+}
+
+function renderCandidates(data, final) {
+  $("busy").classList.toggle("hidden", final);
+  $("pickBody").classList.remove("hidden");
+  state.cands = data.candidates || [];
+  const cands = state.cands;
+  $("busyText").textContent = "先给你 " + cands.length + " 个题号，继续找…";
+  $("pickMeta").textContent = final
+    ? cands.length
+      ? "识别完成 " + data.seconds + "s · 点题号可勾选/取消"
+      : "没认出题号，手输一下吧"
+    : "先按已认出的勾，剩下的马上补";
+
+  // A whole page is normally checked as a set, so every anchored read (a real
+  // question label, not a loose guess) starts ticked.  This re-runs on every
+  // stage: the head channel often misses a question the full scan finds, and
+  // that one must still arrive ticked.  A question the user unticked stays
+  // unticked -- `off` outranks the seed.
+  for (const c of cands) {
+    if (c.start && !state.off.has(c.qid)) state.sel.add(c.qid);
+  }
+
+  const box = $("candidates");
+  box.innerHTML = "";
+  // Candidates arrive in page order; with a single question the best-scoring
+  // chip still gets a hint outline.
+  const highlight = cands.reduce((a, c) => (!a || c.score > a.score ? c : a), null);
+  const starts = cands.filter((c) => c.start);
+  cands.forEach((c) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.dataset.qid = c.qid;
+    b.className = "cand"
+      + (state.sel.has(c.qid) ? " on" : "")
+      + (c === highlight && starts.length <= 1 ? " top" : "");
+    b.setAttribute("aria-pressed", state.sel.has(c.qid) ? "true" : "false");
+    const ord = c.start ? "第" + (starts.indexOf(c) + 1) + "题 · " : "";
+    b.innerHTML = '<span class="tick" aria-hidden="true">✓</span>'
+      + "<b>" + escapeHtml(c.qid) + "</b><span>"
+      + ord + Math.round(c.score * 100) + "%"
+      + (c.start ? "" : ' · <em class="tag">待确认</em>')
+      + "</span>";
+    b.addEventListener("click", () => togglePick(c.qid));
+    box.appendChild(b);
+  });
+  updateSelBar();
+
+  // Warm the crop cache for the likeliest taps so opening one is instant.
+  [...cands]
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 2)
+    .forEach((c) => prefetchCrop(c.qid));
+
+  // The back end applies the one auto-open rule; the page never re-derives it.
+  // Once the photo has been ticked or opened by hand, the final stage must not
+  // yank the viewer somewhere else.
+  if (final && data.auto && !state.picked && !state.touched) openViewer(data.auto, true);
+}
+
+function togglePick(qid) {
+  state.touched = true;
+  if (state.sel.has(qid)) {
+    state.sel.delete(qid);
+    state.off.add(qid);
+  } else {
+    state.sel.add(qid);
+    state.off.delete(qid);
+  }
+  updateSelBar();
+}
+
+function updateSelBar() {
+  const n = state.sel.size;
+  $("openSel").textContent = n ? "查看所选 (" + n + ")" : "查看所选";
+  $("openSel").disabled = !n;
+  $("markSel").textContent = n ? "记错 (" + n + ")" : "记错";
+  $("markSel").disabled = !n;
+  for (const chip of $("candidates").querySelectorAll(".cand")) {
+    const on = state.sel.has(chip.dataset.qid);
+    chip.classList.toggle("on", on);
+    chip.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+}
+
+$("selectAll").addEventListener("click", () => {
+  state.touched = true;
+  state.off.clear();
+  state.sel = new Set(state.cands.filter((c) => c.start).map((c) => c.qid));
+  updateSelBar();
+});
+
+$("clearSel").addEventListener("click", () => {
+  state.touched = true;
+  // Remember every untick, or the next stage would re-seed them.
+  for (const qid of state.sel) state.off.add(qid);
+  state.sel.clear();
+  updateSelBar();
+});
+
+$("openSel").addEventListener("click", () => {
+  // Page order first; anything ticked that the last stage dropped keeps its
+  // tick and goes last rather than silently vanishing.
+  const order = state.cands.filter((c) => state.sel.has(c.qid)).map((c) => c.qid);
+  for (const qid of state.sel) {
+    if (!order.includes(qid)) order.push(qid);
+  }
+  if (!order.length) {
+    toast("先勾一题");
+    return;
+  }
+  openSelection(order);
+});
+
+function prefetchCrop(qid) {
+  if (!qid) return;
+  const img = new Image();
+  img.src = "/api/crop?qid=" + encodeURIComponent(qid)
+    + "&family=" + state.family + "&answer=0";
+}
+
+async function openManual(value) {
+  const qid = (value || "").trim();
+  if (!qid) {
+    toast("先写个题号");
+    return;
+  }
+  await openViewer(qid);
+}
+
+async function openViewer(qid, auto) {
+  if (!auto) state.picked = true; // a hand-picked qid outranks the auto rule
+  state.order = [qid];
+  state.at = 0;
+  await showViewerAt(0, auto ? "已自动识别 " + qid + " · 不对就手输" : null);
+}
+
+async function openSelection(order) {
+  state.picked = true;
+  state.order = order;
+  state.at = 0;
+  await showViewerAt(0);
+}
+
+async function showViewerAt(index, note) {
+  const qid = state.order[index];
+  if (!qid) return;
+  try {
+    const res = await fetch(
+      "/api/resolve?qid=" + encodeURIComponent(qid) + "&family=" + state.family
+    );
+    if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
+    const info = await res.json();
+    state.at = index;
+    state.qid = info.qid;
+    state.answer = 0;
+    const batch = state.order.length > 1;
+    $("qidTitle").textContent = info.qid;
+    $("pos").textContent = batch ? (index + 1) + " / " + state.order.length : "";
+    $("prev").classList.toggle("hidden", !batch);
+    $("next").classList.toggle("hidden", !batch);
+    $("again").classList.toggle("hidden", batch);
+    $("prev").disabled = index <= 0;
+    $("next").disabled = index >= state.order.length - 1;
+    $("tabQ").classList.add("on");
+    $("tabA").classList.remove("on");
+    state.source = info.book
+      ? info.book + (state.family === "Z" ? " · 知识册题目与答案同页" : "")
+      : "";
+    renderWrongBadge(info.attempt);
+    show("viewer");
+    await loadCrop();
+    prefetchAround();
+    if (note) toast(note);
+  } catch (err) {
+    toast(err.message);
+  }
+}
+
+function prefetchAround() {
+  for (const i of [state.at - 1, state.at + 1]) {
+    if (state.order[i]) prefetchCrop(state.order[i]);
+  }
+}
+
+function step(d) {
+  const i = state.at + d;
+  if (i >= 0 && i < state.order.length) showViewerAt(i);
+}
+
+$("prev").addEventListener("click", () => step(-1));
+$("next").addEventListener("click", () => step(1));
+
+document.addEventListener("keydown", (e) => {
+  if ($("viewer").classList.contains("hidden") || state.order.length < 2) return;
+  if (e.key === "ArrowLeft") step(-1);
+  if (e.key === "ArrowRight") step(1);
+});
+
+async function loadCrop() {
+  if (!state.qid) return;
+  $("viewerHint").textContent = (state.answer ? "解析裁图" : "题干裁图")
+    + (state.source ? " · 来源：" + state.source : "");
+  $("paper").src = "/api/crop?qid=" + encodeURIComponent(state.qid)
+    + "&family=" + state.family + "&answer=" + state.answer;
+}
+
+$("tabQ").addEventListener("click", () => {
+  state.answer = 0;
+  $("tabQ").classList.add("on");
+  $("tabA").classList.remove("on");
+  loadCrop();
+});
+$("tabA").addEventListener("click", () => {
+  state.answer = 1;
+  $("tabA").classList.add("on");
+  $("tabQ").classList.remove("on");
+  loadCrop();
+});
+$("zoom").addEventListener("click", () => {
+  const w = $("paperWrap");
+  w.classList.toggle("zoom");
+  $("zoom").textContent = w.classList.contains("zoom") ? "适应" : "放大";
+  if (!w.classList.contains("zoom")) w.scrollLeft = 0;
+});
+
+function closeViewer() {
+  state.qid = null;
+  $("paper").removeAttribute("src");
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
+}
+
+// ---------------------------------------------------------------- wrong book
+
+function renderWrongBadge(attempt) {
+  const el = $("wrongBadge");
+  if (!attempt) {
+    el.classList.add("hidden");
+    el.textContent = "";
+    return;
+  }
+  el.textContent = "错 " + attempt.times + " 次"
+    + (attempt.status === "mastered" ? " · 已掌握" : "");
+  el.classList.remove("hidden");
+}
+
+async function refreshBadge(qid) {
+  try {
+    const res = await fetch(
+      "/api/resolve?qid=" + encodeURIComponent(qid) + "&family=" + state.family
+    );
+    if (res.ok) renderWrongBadge((await res.json()).attempt);
+  } catch (err) { /* the badge is a nicety; never block on it */ }
+}
+
+async function refreshNavCount() {
+  try {
+    const res = await fetch("/api/attempts?limit=1");
+    if (!res.ok) return;
+    const data = await res.json();
+    const n = data.stats.total;
+    $("navBook").textContent = n ? "错题本 " + n : "错题本";
+  } catch (err) { /* offline is fine */ }
+}
+
+// --- mark sheet -----------------------------------------------------------
+
+function openSheet(qids, from) {
+  if (!qids.length) {
+    toast("先勾题");
+    return;
+  }
+  state.sheet = {
+    qids,
+    from,
+    tags: new Set(),
+    family: state.recogFamily || state.family,
+  };
+  $("sheetCount").textContent = qids.length + " 题";
+  const box = $("sheetTags");
+  box.innerHTML = "";
+  for (const key of Object.keys(TAG_LABELS)) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip";
+    b.dataset.tag = key;
+    b.textContent = tagLabel(key);
+    b.addEventListener("click", () => {
+      if (state.sheet.tags.has(key)) state.sheet.tags.delete(key);
+      else state.sheet.tags.add(key);
+      b.classList.toggle("on", state.sheet.tags.has(key));
+    });
+    box.appendChild(b);
+  }
+  $("sheetNote").value = "";
+  const canPhoto = !!state.file;
+  $("sheetPhotoRow").classList.toggle("hidden", !canPhoto);
+  $("sheetPhoto").checked = canPhoto;
+  $("sheet").classList.remove("hidden");
+}
+
+function closeSheet() {
+  $("sheet").classList.add("hidden");
+  state.sheet = null;
+}
+
+async function uploadPhoto(file) {
+  const fd = new FormData();
+  fd.append("file", file);
+  const res = await fetch("/api/photos", { method: "POST", body: fd });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || res.statusText);
+  return data.sha256;
+}
+
+async function saveSheet() {
+  const sheet = state.sheet;
+  if (!sheet) return;
+  $("sheetSave").disabled = true;
+  $("sheetSave").textContent = "保存中…";
+  try {
+    let photoSha = null;
+    if (!$("sheetPhotoRow").classList.contains("hidden")
+        && $("sheetPhoto").checked && state.file) {
+      photoSha = await uploadPhoto(state.file);
+    }
+    const body = {
+      qids: sheet.qids,
+      family: sheet.family || state.family,
+      tags: [...sheet.tags],
+      source: sheet.from === "viewer" ? "single" : "batch",
+    };
+    const note = $("sheetNote").value.trim();
+    if (note) body.note = note;
+    if (photoSha) body.photo_sha = photoSha;
+    const res = await fetch("/api/attempts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    const n = data.created.length + data.updated.length;
+    toast(n ? "已记 " + n + " 题" : "没有记入新题");
+    if (data.errors.length) {
+      toast("有 " + data.errors.length + " 题没记上：" + data.errors[0].detail);
+    }
+    closeSheet();
+    if (state.qid) refreshBadge(state.qid);
+    refreshNavCount();
+  } catch (err) {
+    toast("保存失败：" + err.message);
+  } finally {
+    $("sheetSave").disabled = false;
+    $("sheetSave").textContent = "保存";
+  }
+}
+
+$("markSel").addEventListener("click", () => {
+  const order = state.cands.filter((c) => state.sel.has(c.qid)).map((c) => c.qid);
+  for (const qid of state.sel) if (!order.includes(qid)) order.push(qid);
+  openSheet(order, "batch");
+});
+
+$("markOne").addEventListener("click", () => {
+  if (state.qid) openSheet([state.qid], "viewer");
+});
+
+$("sheetCancel").addEventListener("click", closeSheet);
+$("sheetSave").addEventListener("click", saveSheet);
+$("sheet").addEventListener("click", (e) => {
+  if (e.target === $("sheet")) closeSheet();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !$("sheet").classList.contains("hidden")) closeSheet();
+});
+
+// --- book list ------------------------------------------------------------
+
+function bookQuery(offset) {
+  const f = state.book.filters;
+  const p = new URLSearchParams();
+  if (f.family) p.set("family", f.family);
+  if (f.tag) p.set("tag", f.tag);
+  if (f.chapter) p.set("chapter", f.chapter);
+  if (f.status) p.set("status", f.status);
+  if (f.days) p.set("days", String(f.days));
+  p.set("limit", "50");
+  p.set("offset", String(offset));
+  return p;
+}
+
+async function openBook() {
+  show("book");
+  await loadMeta();
+  renderChapterFilter();
+  await loadBook(true);
+}
+
+async function loadBook(reset) {
+  // Taps can outrun the network; queue one follow-up instead of dropping it.
+  if (state.book.loading) {
+    state.book.pending = true;
+    state.book.pendingReset = state.book.pendingReset || reset;
+    return;
+  }
+  state.book.loading = true;
+  const offset = reset ? 0 : state.book.items.length;
+  try {
+    const res = await fetch("/api/attempts?" + bookQuery(offset).toString());
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    state.book.items = reset ? data.items : state.book.items.concat(data.items);
+    state.book.total = data.total;
+    state.book.stats = data.stats;
+    renderBook();
+  } catch (err) {
+    toast("加载错题本失败：" + err.message);
+  } finally {
+    state.book.loading = false;
+    if (state.book.pending) {
+      const againReset = state.book.pendingReset;
+      state.book.pending = false;
+      state.book.pendingReset = false;
+      loadBook(againReset);
+    }
+  }
+}
+
+function renderTagFilters() {
+  const box = $("fTags");
+  const stats = state.book.stats;
+  box.innerHTML = "";
+  for (const key of Object.keys(TAG_LABELS)) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip" + (state.book.filters.tag === key ? " on" : "");
+    const count = stats ? (stats.by_tag[key] || 0) : "";
+    b.innerHTML = escapeHtml(tagLabel(key))
+      + (count === "" ? "" : ' <span class="n">' + count + "</span>");
+    b.addEventListener("click", () => {
+      state.book.filters.tag = state.book.filters.tag === key ? "" : key;
+      loadBook(true);
+    });
+    box.appendChild(b);
+  }
+}
+
+function renderChapterFilter() {
+  const sel = $("fChapter");
+  const f = state.book.filters;
+  const showChapter = !f.family || f.family === "C";
+  sel.classList.toggle("hidden", !showChapter);
+  if (!showChapter) {
+    f.chapter = "";
+    return;
+  }
+  if (!sel.dataset.ready) {
+    sel.innerHTML = '<option value="">全部篇</option>';
+    for (const row of (state.meta && state.meta.chapters) || []) {
+      const opt = document.createElement("option");
+      opt.value = row.key;
+      opt.textContent = row.title;
+      sel.appendChild(opt);
+    }
+    sel.dataset.ready = "1";
+  }
+  sel.value = f.chapter;
+}
+
+function shortDate(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return String(iso).slice(0, 10);
+  const pad = (n) => String(n).padStart(2, "0");
+  const md = pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear() ? md : d.getFullYear() + "-" + md;
+}
+
+function renderBook() {
+  renderTagFilters();
+  const stats = state.book.stats;
+  $("bookMeta").textContent = "本次 " + state.book.total + " 题 · 全部 "
+    + (stats ? stats.total : "—") + " 题 · 未掌握 "
+    + (stats ? stats.active : "—") + " · 已掌握 "
+    + (stats ? stats.mastered : "—");
+  const list = $("bookList");
+  list.innerHTML = "";
+  if (!state.book.items.length) {
+    list.innerHTML = '<div class="empty">'
+      + (stats && stats.total
+        ? "没有符合筛选条件的错题"
+        : "错题本还是空的：拍照识别后点「记错」，或先导入旧照片")
+      + "</div>";
+  }
+  for (const item of state.book.items) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "item" + (item.status === "mastered" ? " mastered" : "");
+    const where = [item.chapter, item.section].filter(Boolean).join(" · ");
+    const tags = item.tags
+      .map((t) => '<span class="tagmini">' + escapeHtml(tagLabel(t)) + "</span>")
+      .join("");
+    btn.innerHTML =
+      '<span class="main"><span class="qid">' + escapeHtml(item.qid) + "</span>"
+      + tags
+      + '<div class="meta">' + escapeHtml(where || item.family_name || "")
+      + " · 错 " + item.times + " 次 · " + shortDate(item.last_at) + "</div></span>"
+      + (item.photo
+        ? '<img class="mini" src="' + escapeHtml(item.photo.thumb) + '" alt="">'
+        : "");
+    btn.addEventListener("click", () => openDetail(item.id));
+    list.appendChild(btn);
+  }
+  $("bookMore").classList.toggle(
+    "hidden", state.book.items.length >= state.book.total
+  );
+}
+
+$("fFamily").addEventListener("change", (e) => {
+  state.book.filters.family = e.target.value;
+  state.book.filters.chapter = "";
+  renderChapterFilter();
+  loadBook(true);
+});
+$("fChapter").addEventListener("change", (e) => {
+  state.book.filters.chapter = e.target.value;
+  loadBook(true);
+});
+$("fTime").addEventListener("change", (e) => {
+  state.book.filters.days = Number(e.target.value) || 0;
+  loadBook(true);
+});
+$("fStatus").addEventListener("change", (e) => {
+  state.book.filters.status = e.target.value;
+  loadBook(true);
+});
+$("bookMore").addEventListener("click", () => loadBook(false));
+
+// --- detail ---------------------------------------------------------------
+
+async function openDetail(id) {
+  try {
+    const res = await fetch("/api/attempts/" + id);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    state.detail = data;
+    state.detailAnswer = 0;
+    renderDetail();
+    show("detail");
+  } catch (err) {
+    toast("打开失败：" + err.message);
+  }
+}
+
+function renderDetail() {
+  const d = state.detail;
+  if (!d) return;
+  $("dQid").textContent = d.qid;
+  $("dTimes").textContent = "错 " + d.times + " 次";
+  $("dWhere").textContent = [d.chapter, d.section, d.book]
+    .filter(Boolean).join(" · ");
+  $("dTabQ").classList.toggle("on", state.detailAnswer === 0);
+  $("dTabA").classList.toggle("on", state.detailAnswer === 1);
+  $("dPaper").src = "/api/crop?qid=" + encodeURIComponent(d.qid)
+    + "&family=" + d.family + "&answer=" + state.detailAnswer;
+  if (d.photo) {
+    $("dPhotoWrap").classList.remove("hidden");
+    $("dPhoto").src = d.photo.orig;
+  } else {
+    $("dPhotoWrap").classList.add("hidden");
+    $("dPhoto").removeAttribute("src");
+  }
+  const box = $("dTags");
+  box.innerHTML = "";
+  for (const key of Object.keys(TAG_LABELS)) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip" + (d.tags.includes(key) ? " on" : "");
+    b.dataset.tag = key;
+    b.textContent = tagLabel(key);
+    b.addEventListener("click", () => b.classList.toggle("on"));
+    box.appendChild(b);
+  }
+  $("dNote").value = d.note || "";
+  $("dMaster").textContent = d.status === "mastered" ? "恢复未掌握" : "标记已掌握";
+  $("dMaster").dataset.next = d.status === "mastered" ? "active" : "mastered";
+}
+
+$("dTabQ").addEventListener("click", () => {
+  state.detailAnswer = 0;
+  if (state.detail) renderDetail();
+});
+$("dTabA").addEventListener("click", () => {
+  state.detailAnswer = 1;
+  if (state.detail) renderDetail();
+});
+
+$("detailBack").addEventListener("click", () => {
+  show("book");
+  loadBook(true);
+});
+
+$("dSave").addEventListener("click", async () => {
+  const d = state.detail;
+  if (!d) return;
+  const tags = [...$("dTags").querySelectorAll(".chip.on")].map((c) => c.dataset.tag);
+  $("dSave").disabled = true;
+  try {
+    const res = await fetch("/api/attempts/" + d.id, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tags, note: $("dNote").value }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    state.detail = data;
+    renderDetail();
+    toast("已保存");
+    refreshNavCount();
+  } catch (err) {
+    toast("保存失败：" + err.message);
+  } finally {
+    $("dSave").disabled = false;
+  }
+});
+
+$("dMaster").addEventListener("click", async () => {
+  const d = state.detail;
+  if (!d) return;
+  const next = $("dMaster").dataset.next === "mastered" ? "mastered" : "active";
+  try {
+    const res = await fetch("/api/attempts/" + d.id, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: next }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    state.detail = data;
+    renderDetail();
+    toast(next === "mastered" ? "已标记掌握" : "已放回未掌握");
+    refreshNavCount();
+  } catch (err) {
+    toast("操作失败：" + err.message);
+  }
+});
+
+$("dDelete").addEventListener("click", async () => {
+  const d = state.detail;
+  if (!d) return;
+  if (!confirm("删除 " + d.qid + " 这条错题记录？")) return;
+  try {
+    const res = await fetch("/api/attempts/" + d.id, { method: "DELETE" });
+    if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
+    toast("已删除");
+    state.detail = null;
+    show("book");
+    loadBook(true);
+    refreshNavCount();
+  } catch (err) {
+    toast("删除失败：" + err.message);
+  }
+});
+
+// --- legacy photo import --------------------------------------------------
+
+$("openImport").addEventListener("click", openImport);
+$("importBack").addEventListener("click", () => {
+  show("book");
+  loadBook(true);
+});
+
+async function openImport() {
+  show("import");
+  $("importHint").textContent = "扫描 拍照错题/ …";
+  $("importList").innerHTML =
+    '<div class="status"><span class="spinner"></span>处理照片中，第一次会慢一些…</div>';
+  try {
+    const res = await fetch("/api/import/preview?family=C");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    state.importItems = data.items;
+    $("importHint").textContent = "共 " + data.items.length
+      + " 张照片，可新增 " + data.new + " 题；已在错题本的题会自动跳过。";
+    renderImport();
+  } catch (err) {
+    $("importHint").textContent = "扫描失败：" + err.message;
+    $("importList").innerHTML = "";
+  }
+}
+
+function renderImport() {
+  const box = $("importList");
+  box.innerHTML = "";
+  for (const item of state.importItems) {
+    const row = document.createElement("label");
+    row.className = "import-row";
+    const qids = item.qids.map((q) => {
+      const text = q.status === "new" ? "新" : q.status === "dup" ? "已在库" : "题库无此号";
+      const cls = q.status === "new" ? "ok" : "warn";
+      return escapeHtml(q.qid) + '( <span class="' + cls + '">' + text + "</span> )";
+    }).join("　");
+    row.innerHTML =
+      '<input type="checkbox" ' + (item.new_count > 0 ? "checked" : "")
+      + ' data-sha="' + escapeHtml(item.sha256 || "") + '">'
+      + (item.thumb
+        ? '<img class="mini" src="' + escapeHtml(item.thumb) + '" alt="">'
+        : "")
+      + '<span class="main"><div>'
+      + (qids || escapeHtml(item.error || "文件里没有题号"))
+      + '</div><div class="name">' + escapeHtml(item.file) + "</div></span>";
+    box.appendChild(row);
+  }
+}
+
+$("importAll").addEventListener("click", () => {
+  const boxes = [...$("importList").querySelectorAll("input[type=checkbox]")];
+  const allOn = boxes.length && boxes.every((b) => b.checked);
+  for (const b of boxes) b.checked = !allOn;
+});
+
+$("importGo").addEventListener("click", async () => {
+  const shas = [...$("importList").querySelectorAll("input[type=checkbox]:checked")]
+    .map((c) => c.dataset.sha)
+    .filter(Boolean);
+  if (!shas.length) {
+    toast("先勾选要导入的照片");
+    return;
+  }
+  $("importGo").disabled = true;
+  try {
+    const res = await fetch("/api/import", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ shas, family: "C" }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    toast(data.created.length
+      ? "导入完成：新增 " + data.created.length + " 题"
+      : "没有新题可导入");
+    refreshNavCount();
+    show("book");
+    loadBook(true);
+  } catch (err) {
+    toast("导入失败：" + err.message);
+  } finally {
+    $("importGo").disabled = false;
+  }
+});
+
+setFamily(state.family);
+show("home");
+loadMeta();
+refreshNavCount();
+
+// Deep link: /?qid=3-11 opens the viewer directly.
+const deep = new URLSearchParams(location.search).get("qid");
+if (deep) openViewer(deep);
+</script>
+</body>
+</html>
