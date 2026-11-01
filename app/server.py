@@ -3,8 +3,9 @@
 M1 proved the lookup loop.  M2 adds the study data: marked questions, four
 error tags, notes, photo attachments, filters and a one-zip backup.  M3 adds
 the zero-decision review queue (sessions, grading, undo), the Z-family answer
-mask, and one-click A4 question/answer sheets.  The catalog stays read-only;
-only `data/` is user data (decision D5).
+mask, and one-click A4 question/answer sheets.  M4 reads a solution crop on
+demand and proposes error tags with the sentence that triggered them.  The
+catalog stays read-only; only `data/` is user data (decision D5).
 
 Run:
     py -3 app/server.py
@@ -34,6 +35,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 import crop_question as CQ  # noqa: E402
 import recognize_qid as RQ  # noqa: E402
+from app.answer_ocr import analyze_crop  # noqa: E402
 from app.catalog import Catalog  # noqa: E402
 from app.photo_import import import_photos, scan_photos  # noqa: E402
 from app.print_export import MAX_QUESTIONS, export_pdf  # noqa: E402
@@ -41,6 +43,7 @@ from app.store import Store, TAGS  # noqa: E402
 
 INDEX = ROOT / "index"
 CACHE = ROOT / ".cache" / "crops"
+ANSWER_OCR = ROOT / ".cache" / "answer_ocr"
 STATIC = Path(__file__).resolve().parent / "static"
 # YANTU_DATA lets tests point at a scratch database; production uses data/.
 DATA = Path(os.environ.get("YANTU_DATA", str(ROOT / "data")))
@@ -54,7 +57,7 @@ CHAPTER_RE = re.compile(r"^([CZ])(\d{1,2})-(\d{1,3})$")
 EXAM_RE = re.compile(r"^[AK]\d{4}-[A-Z]-\d{1,3}$")
 MOCK_RE = re.compile(r"^M\d{1,2}-\d{1,3}$")
 
-app = FastAPI(title="岩土错题本 M1")
+app = FastAPI(title="岩土错题本 M4")
 
 
 def _warm_ocr():
@@ -214,6 +217,16 @@ def build_z_mask(qid, answer):
                     pass
             raise HTTPException(409, "题 %s 没找到【答案】行，无法遮罩" % qid)
     return apath if answer else qpath
+
+
+def answer_image(qid):
+    """The crop M4 reads: the answer half for Z, the solution crop otherwise."""
+    if qid.startswith("Z"):
+        try:
+            return build_z_mask(qid, True)
+        except HTTPException:
+            pass  # fall back to the whole crop; suggestions may be noisier
+    return build_crop(qid, True)
 
 
 @app.get("/")
@@ -457,6 +470,45 @@ def get_attempt(attempt_id: int):
         raise HTTPException(404, "错题记录不存在")
     item.update(_describe(item))
     return item
+
+
+@app.get("/api/attempts/{attempt_id}/suggest")
+def suggest_attempt(attempt_id: int):
+    """M4: read this question's solution and propose error-cause tags.
+
+    Non-blocking by contract: the page shows the panel while this runs, and a
+    failed OCR returns an `error` string instead of breaking the detail view.
+    """
+    item = store.get_attempt(attempt_id)
+    if not item:
+        raise HTTPException(404, "错题记录不存在")
+    qid = item["qid"]
+    started = time.time()
+    try:
+        path = answer_image(qid)
+        with _ocr_lock:
+            result = analyze_crop(qid, str(path), ANSWER_OCR, engine=RQ.engine())
+    except HTTPException as exc:
+        return {
+            "qid": qid,
+            "error": str(exc.detail),
+            "citations": [],
+            "candidates": [],
+            "elapsed_ms": int((time.time() - started) * 1000),
+        }
+    except Exception as exc:  # noqa: BLE001 - a suggestion must never 500
+        return {
+            "qid": qid,
+            "error": "解析读取失败：%s" % exc,
+            "citations": [],
+            "candidates": [],
+            "elapsed_ms": int((time.time() - started) * 1000),
+        }
+    result.update({
+        "qid": qid,
+        "elapsed_ms": int((time.time() - started) * 1000),
+    })
+    return result
 
 
 @app.patch("/api/attempts/{attempt_id}")
@@ -733,5 +785,5 @@ if __name__ == "__main__":
     import uvicorn
 
     port = int(os.environ.get("PORT", "8000"))
-    print("岩土错题本 M3  ->  http://%s:%d" % (lan_ip(), port), flush=True)
+    print("岩土错题本 M4  ->  http://%s:%d" % (lan_ip(), port), flush=True)
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="warning")

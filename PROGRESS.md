@@ -36,7 +36,14 @@
     混合族按每题手写区排版；单次上限 30 题
   - 验证：单测 64 条全绿；浏览器端到端 6 题混合一轮全 PASS（遮罩、续做、撤销、总结、打印）
   - **三族打印样张已实打通过（2026-11-02，_ming）**：题面/答案分页、Z 遮罩、手写区均可用
-- **下一步**：M3 已完整验收；进 M4（答案页按需 OCR → 错因候选），或先按备考节奏用起来
+- **M4 答案页按需 OCR（11-02）**：错题详情页「错因建议」——只读已入本题目，
+  抽《规范》+ 条文号与点评易错句 → 候选错因，人工点选后保存
+  - 纯正则 + 本地 OCR；结果缓存 `.cache/answer_ocr/`，不写 `data/`，失败不阻塞详情页
+  - 29 题基准：有依据 24/29、有候选 24/29；首次 OCR 平均 3.52 s（最慢 5.42 s），缓存 ~11 ms
+  - 覆盖跨行标题、括号标准号、条文范围 `14.2.2~14.2.4`、附录、`p81页第14.7.4.5条`
+  - 单测 **73 条全绿**（新增 9 条）；接口实测 C3-12 首读 3.3 s / 二读 11 ms
+- **下一步**：M3/M4 已验收；按备考节奏用起来（**11-04 前后交基线**），
+  或做 M4 二轮（复习「没做对」标签面板接候选、规范候选降噪）
 - 备考策略见 `docs/study-plan.md`，陪练规则见 `docs/coach/playbook.md`，
   做题顺序见 `docs/coach/practice-order.md`，原型全图见 `docs/coach/prototypes.md`
 
@@ -227,6 +234,7 @@
   （11-01 完成，19 题入本；备份/恢复、过滤、详情见 `docs/journal/2026-11-01-m2-wrongbook.md`）
 - [x] M3 复习与打印卷导出（11-02：今日复习、答案遮罩、会话续做/撤销、A4 卷；64 条测试全绿）
 - [x] M3 收尾：实打 `print_samples/m3_{C,Z,M}.pdf` 三族样张通过（2026-11-02，_ming）
+- [x] M4 答案页按需 OCR → 错因候选（11-02；详情页「错因建议」，29 题基准，见 journal）
 - [ ] 14 个单册标签人工看原页核对（优先级低）
 - [ ] 《工程地质手册》登记进规范登记表（唯一带文字层的一本，走全文检索而非 OCR）
 - [ ] 教材章节页码表：OCR 李广信第 3 版前置目录，建 9 章 → 页码映射（v1.5 才用，不急）
@@ -279,6 +287,7 @@ PYTHONIOENCODING=utf-8 py -3 tools/extract_mock.py
 cd "D:/my-project/岩土"
 PYTHONIOENCODING=utf-8 py -3 app/server.py     # 启动后打印 http://<PC-IP>:8000
 PYTHONIOENCODING=utf-8 py -3 tools/eval_photo_qids.py   # 18 张真图基准
+PYTHONIOENCODING=utf-8 py -3 tools/eval_answer_ocr.py   # M4：29 题条文/候选基准
 ```
 
 - 手机与本机同一 Wi-Fi，浏览器打开打印出的地址；Windows 防火墙首次弹窗要允许**专用网络**
@@ -323,14 +332,17 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `app/server.py` | **网页后端**（FastAPI：流式识别 / 题号校验 / 裁图缓存 / 错题本 / 复习 / 打印 / 备份） |
 | `app/static/index.html` | 前端：查题 + 错题本 + 今日复习（两按钮/遮罩/总结）+ 打印卷 |
 | `app/store.py` | **错题库**：SQLite（attempts/tags/photos/review_sessions/review_log）、排期、过滤、备份/恢复 |
+| `app/answer_ocr.py` | **M4 解析 OCR**：规范条文抽取 + 点评易错句 → 错因候选（纯规则）、磁盘缓存 |
+| `tools/eval_answer_ocr.py` | **M4 基准**：29 题抽条文/候选 + 计时（`--qids` 可指定） |
 | `app/print_export.py` | **A4 打印卷**：题面/答案分页、混合族手写区、Z 族拆分 |
 | `app/catalog.py` | 题号 → 族/篇/节/书名（只从只读索引派生，不写用户库） |
 | `app/photo_import.py` | 旧照片解析与幂等导入（`4-12 4-13错.jpg` 两题） |
 | `tools/import_old_photos.py` | 旧照片导入 CLI（预览 / `--apply`） |
 | `tools/backup_wrongbook.py` | 备份 / 恢复 CLI（恢复需 `--yes`） |
 | `data/` | **用户数据唯一位置**：`wrongbook.db` + `attachments/` + `backups/` |
-| `tests/` | 单元测试 64 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
+| `tests/` | 单元测试 73 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
 | `.cache/crops/` | 裁图缓存（可随时删，自动重建） |
+| `.cache/answer_ocr/` | 解析 OCR + 候选缓存（可随时删，自动重建） |
 | `tools/build_lookup.py` | 合并成 `index/lookup.json`（v1 的唯一数据入口） |
 | `index/lookup.json` | **查询表：8,826 个题目 → 页码/答案页** |
 | `index/books.json` | 书目登记表：13 本 → 族/角色/所辖篇/页数/有无文字层 |

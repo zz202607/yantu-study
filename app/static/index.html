@@ -220,6 +220,16 @@
   .check { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--muted); margin-top: 10px; }
   .detail-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
   .detail-head h2 { font-size: 18px; margin: 0; }
+  .suggest {
+    margin: 10px 0 4px; border: 1px dashed var(--line); border-radius: 12px;
+    padding: 10px 12px; background: var(--paper);
+  }
+  .suggest-head { display: flex; align-items: baseline; gap: 8px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+  .suggest-head .hint { font-weight: 400; font-size: 11.5px; }
+  .suggest-cite { font-size: 12.5px; line-height: 1.55; margin-top: 5px; }
+  .suggest .chip { background: #fff; font-size: 12.5px; padding: 5px 10px; }
+  .suggest-evidence { font-size: 12px; color: var(--muted); line-height: 1.45; margin-top: 3px; }
+  .suggest-note { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
   .import-row { display: flex; gap: 10px; align-items: flex-start; padding: 10px 2px; border-bottom: 1px solid var(--line); }
   .import-row input { margin-top: 5px; width: 18px; height: 18px; flex: 0 0 auto; }
   .import-row .main { flex: 1; min-width: 0; font-size: 13.5px; }
@@ -475,6 +485,13 @@
     <div class="paper-wrap"><img id="dPaper" alt="题目"></div>
     <div class="photo hidden" id="dPhotoWrap"><img id="dPhoto" alt="手写过程照片"></div>
     <div class="chips" id="dTags"></div>
+    <div class="suggest" id="dSuggest">
+      <div class="suggest-head">
+        <span>错因建议</span>
+        <span class="hint" id="dSuggestState">读取解析中…</span>
+      </div>
+      <div id="dSuggestBody"></div>
+    </div>
     <textarea id="dNote" rows="2" placeholder="一句话备注（可不填）"></textarea>
     <div class="toolbar">
       <button id="dMaster" class="ghost small">标记已掌握</button>
@@ -1304,6 +1321,104 @@ $("bookMore").addEventListener("click", () => loadBook(false));
 
 // --- detail ---------------------------------------------------------------
 
+let suggestToken = 0;
+
+function citationText(c) {
+  let text = "《" + c.title + "》";
+  if (c.code) text += " " + c.code;
+  const nums = (c.clauses || []).filter((x) => !x.startsWith("附录"));
+  const apps = (c.clauses || []).filter((x) => x.startsWith("附录"));
+  if (nums.length) text += " 第" + nums.join("、") + "条";
+  if (apps.length) text += " " + apps.join(" ");
+  return text;
+}
+
+function syncSuggestChips() {
+  for (const b of $("dSuggestBody").querySelectorAll("[data-suggest-tag]")) {
+    const chip = $("dTags").querySelector('.chip[data-tag="' + b.dataset.suggestTag + '"]');
+    b.classList.toggle("on", !!(chip && chip.classList.contains("on")));
+  }
+}
+
+function renderSuggest(data) {
+  const body = $("dSuggestBody");
+  body.innerHTML = "";
+  if (data.error) {
+    $("dSuggestState").textContent = "没读出来";
+    body.innerHTML = '<p class="suggest-note">' + escapeHtml(data.error) + "</p>";
+    return;
+  }
+  $("dSuggestState").textContent = data.cached
+    ? "来自缓存 · " + data.elapsed_ms + " ms"
+    : "首次读取 " + (data.elapsed_ms / 1000).toFixed(1) + " s";
+  if (data.citations.length) {
+    const cites = document.createElement("div");
+    cites.className = "suggest-cite";
+    cites.innerHTML = "<b>依据</b><br>" + data.citations.slice(0, 4)
+      .map((c) => escapeHtml(citationText(c))).join("<br>");
+    body.appendChild(cites);
+  }
+  if (!data.candidates.length) {
+    const note = document.createElement("p");
+    note.className = "suggest-note";
+    note.textContent = data.citations.length
+      ? "解析里没找到明确的易错提示，按自己判断标注。"
+      : "解析里没读到规范条文或易错提示。";
+    body.appendChild(note);
+    return;
+  }
+  const chips = document.createElement("div");
+  chips.className = "chips";
+  for (const cand of data.candidates) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip";
+    b.dataset.suggestTag = cand.tag;
+    b.textContent = cand.label;
+    b.title = cand.reason;
+    b.addEventListener("click", () => {
+      const chip = $("dTags").querySelector('.chip[data-tag="' + cand.tag + '"]');
+      if (!chip) return;
+      chip.classList.toggle("on");
+      syncSuggestChips();
+    });
+    chips.appendChild(b);
+  }
+  body.appendChild(chips);
+  const why = document.createElement("div");
+  why.className = "suggest-evidence";
+  for (const cand of data.candidates) {
+    const line = document.createElement("div");
+    line.innerHTML = "<b>" + escapeHtml(cand.label) + "</b> " + escapeHtml(cand.reason);
+    why.appendChild(line);
+  }
+  body.appendChild(why);
+  const tip = document.createElement("p");
+  tip.className = "suggest-note";
+  tip.textContent = "点候选 = 勾选对应错因，保存后生效。";
+  body.appendChild(tip);
+  syncSuggestChips();
+}
+
+async function loadSuggest(attemptId) {
+  const token = ++suggestToken;
+  $("dSuggestBody").innerHTML = "";
+  $("dSuggestState").textContent = "读取解析中…（首次 3–6 秒）";
+  try {
+    const res = await fetch("/api/attempts/" + attemptId + "/suggest");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    if (token !== suggestToken) return;
+    if (!state.detail || state.detail.id !== attemptId) return;
+    renderSuggest(data);
+  } catch (err) {
+    if (token !== suggestToken) return;
+    $("dSuggestState").textContent = "没读出来";
+    $("dSuggestBody").innerHTML =
+      '<p class="suggest-note">' + escapeHtml(err.message) + "</p>";
+  }
+}
+
 async function openDetail(id) {
   try {
     const res = await fetch("/api/attempts/" + id);
@@ -1313,6 +1428,7 @@ async function openDetail(id) {
     state.detailAnswer = 0;
     renderDetail();
     show("detail");
+    loadSuggest(data.id);
   } catch (err) {
     toast("打开失败：" + err.message);
   }
@@ -1349,12 +1465,16 @@ function renderDetail() {
     b.className = "chip" + (d.tags.includes(key) ? " on" : "");
     b.dataset.tag = key;
     b.textContent = tagLabel(key);
-    b.addEventListener("click", () => b.classList.toggle("on"));
+    b.addEventListener("click", () => {
+      b.classList.toggle("on");
+      syncSuggestChips();
+    });
     box.appendChild(b);
   }
   $("dNote").value = d.note || "";
   $("dMaster").textContent = d.status === "mastered" ? "恢复未掌握" : "标记已掌握";
   $("dMaster").dataset.next = d.status === "mastered" ? "active" : "mastered";
+  syncSuggestChips();
 }
 
 $("dTabQ").addEventListener("click", () => {
