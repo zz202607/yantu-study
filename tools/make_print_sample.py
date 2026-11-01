@@ -123,6 +123,9 @@ class Sheet:
         self.min_write = min_write
         self.items = []
         self.pages = []
+        # Optional (dpi, jpeg_quality): embed images as JPEG at a lower
+        # resolution.  None keeps the original lossless PNG bytes.
+        self.jpeg = None
 
     def add(self, label, source, image_path, min_write=None):
         w, h = image_size(image_path)
@@ -170,9 +173,32 @@ class Sheet:
                 caption = label + ("  ·  " + source if source else "")
                 text_line(page, caption, y + 10, 8, color=(0.35, 0.35, 0.35))
                 y += LABEL_H
-                page.insert_image(pymupdf.Rect(MARGIN, y, MARGIN + w, y + h), filename=path)
+                rect = pymupdf.Rect(MARGIN, y, MARGIN + w, y + h)
+                stream = self._jpeg_stream(path) if self.jpeg else None
+                if stream is not None:
+                    page.insert_image(rect, stream=stream)
+                else:
+                    page.insert_image(rect, filename=path)
                 y += h + write + GAP
         return self.pages
+
+    def _jpeg_stream(self, path):
+        """Read a crop, scale it to the target dpi, return JPEG bytes."""
+        import io
+
+        from PIL import Image
+
+        dpi, quality = self.jpeg
+        image = Image.open(path).convert("RGB")
+        if dpi < CROP_DPI:
+            ratio = dpi / float(CROP_DPI)
+            image = image.resize(
+                (max(1, round(image.width * ratio)), max(1, round(image.height * ratio))),
+                Image.LANCZOS,
+            )
+        buf = io.BytesIO()
+        image.save(buf, format="JPEG", quality=quality, optimize=True)
+        return buf.getvalue()
 
 
 def stamp(doc, title):

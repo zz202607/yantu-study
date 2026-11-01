@@ -10,6 +10,7 @@ is split at 【答案】 and the two halves go to opposite sheets.
 """
 
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -29,8 +30,11 @@ KNOW_WRITE = MPS.WRITE["question_know"]
 
 
 def _short(book):
-    name = Path(book).stem
-    return name.replace("_扫描版", "").replace("高清版", "")
+    """A readable book name: drop 【…】 tags, a leading year and scan suffixes."""
+    name = re.sub(r"【[^】]*】", "", Path(book).stem)
+    name = name.replace("_扫描版", "").replace("高清版", "")
+    name = re.sub(r"^\d{4}", "", name)
+    return name.strip()
 
 
 def _render(qid, prefer, tmp_dir, suffix):
@@ -82,8 +86,13 @@ def _stamp(doc, title, answer_from):
         )
 
 
-def export_pdf(qids, out_path, title, tmp_dir, engine=None, ocr_lock=None):
-    """Write one PDF; returns page counts and per-question problems."""
+def export_pdf(qids, out_path, title, tmp_dir, engine=None, ocr_lock=None,
+               jpeg=None):
+    """Write one PDF; returns page counts and per-question problems.
+
+    `jpeg=(dpi, quality)` embeds page images as compressed JPEG.  Default is
+    the lossless PNG path used by the print samples.
+    """
     qids = [str(qid).strip().upper() for qid in qids if str(qid).strip()]
     qids = list(dict.fromkeys(qids))[:MAX_QUESTIONS]
     if not qids:
@@ -92,6 +101,8 @@ def export_pdf(qids, out_path, title, tmp_dir, engine=None, ocr_lock=None):
     doc = pymupdf.open()
     questions = MPS.Sheet(doc, "question_case", CASE_WRITE)
     answers = MPS.Sheet(doc, "answer", MPS.WRITE["answer"])
+    questions.jpeg = jpeg
+    answers.jpeg = jpeg
     errors = []
     answered = 0
 
@@ -99,11 +110,11 @@ def export_pdf(qids, out_path, title, tmp_dir, engine=None, ocr_lock=None):
         family = qid[0]
         try:
             prefer = "blank" if family == "C" else "solutions"
-            full, source, short = _render(qid, prefer, tmp_dir, "q")
+            full, source, _ = _render(qid, prefer, tmp_dir, "q")
         except (Exception, SystemExit) as exc:  # noqa: BLE001 - one bad qid only
             errors.append({"qid": qid, "detail": "题面失败：%s" % exc})
             continue
-        label = "%s · %s" % (qid, short)
+        label = qid  # the source line already names the book and page
         write = CASE_WRITE if family in CASE_FAMILIES else KNOW_WRITE
 
         answer_path = None
