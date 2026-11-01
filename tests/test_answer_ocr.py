@@ -78,8 +78,29 @@ def test_caution_beats_a_lone_citation_and_caps_at_three():
     }]
     candidates = suggest_tags(text, citations)
     assert len(candidates) == 3
-    assert candidates[-1]["tag"] != "standard"  # the lone citation is cut
-    assert candidates[0]["tag"] in ("misread", "calc", "concept")
+    assert all(c["tag"] in ("misread", "calc", "concept") for c in candidates)
+
+
+def test_lone_citation_yields_no_standard_when_a_caution_exists():
+    text = join_lines(["【点评】注意题目问的是夹层土。"])
+    citations = extract_citations(join_lines([
+        "【解析】根据《水运工程岩土勘察规范》第4.2.7条计算。",
+        "【点评】注意题目问的是夹层土。",
+    ]))
+    tags = [c["tag"] for c in suggest_tags(text, citations)]
+    assert tags == ["misread"]
+
+
+def test_two_standards_keep_the_standard_candidate():
+    text = join_lines([
+        "【解析】根据《建筑地基基础设计规范》第5.2.4条及"
+        "《建筑桩基技术规范》第5.3.2条计算。",
+        "【点评】注意取小值。",
+    ])
+    candidates = suggest_tags(text, extract_citations(text))
+    tags = [c["tag"] for c in candidates]
+    assert "standard" in tags
+    assert tags.count("misread") == 1
 
 
 def test_one_citation_still_suggests_standard():

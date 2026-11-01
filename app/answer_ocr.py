@@ -20,7 +20,7 @@ import time
 
 from app.store import TAGS
 
-CACHE_VERSION = 2
+CACHE_VERSION = 3
 
 # A standard title never spans more than a handful of OCR rows; joining all
 # rows into one string is what makes wrapped titles (`《建筑地基基` + `础设计
@@ -198,22 +198,6 @@ def suggest_tags(text, citations):
     explicit caution sentence, so silence means "no suggestion", never a guess.
     """
     candidates = []
-    # A bare《标准名》mention ("未指定《土工试验方法标准》时…") is a remark,
-    # not a basis; only citations that carry a code or a clause count here.
-    strong = [c for c in citations if c["code"] or c["clauses"]]
-    if strong:
-        evidence = [citation_label(c) for c in strong[:MAX_EVIDENCE]]
-        count = len(strong)
-        reason = "解析引用了 %d 部规范/标准" % count if count > 1 \
-            else "解析依据 %s" % evidence[0]
-        candidates.append({
-            "tag": "standard",
-            "label": TAGS["standard"],
-            "reason": reason,
-            "evidence": evidence,
-            "score": min(3, count),
-        })
-
     notes = commentary(text)
     for tag, words in CAUTION_RULES:
         snippets = _snippets(notes, words)
@@ -231,6 +215,26 @@ def suggest_tags(text, citations):
             "evidence": snippets,
             # A caution sentence is stronger evidence than one more citation.
             "score": 2 + len(snippets),
+        })
+
+    # Nearly every solution cites one standard, so a lone citation says little
+    # about *why* this question was missed.  Offer `standard` when two or more
+    # standards are cited (cross-standard questions are a real trap), or when
+    # the citation is the only evidence at all.
+    # A bare《标准名》mention ("未指定《土工试验方法标准》时…") is a remark,
+    # not a basis; only citations that carry a code or a clause count here.
+    strong = [c for c in citations if c["code"] or c["clauses"]]
+    if strong and (len(strong) >= 2 or not candidates):
+        evidence = [citation_label(c) for c in strong[:MAX_EVIDENCE]]
+        count = len(strong)
+        reason = "解析引用了 %d 部规范/标准" % count if count > 1 \
+            else "解析依据 %s" % evidence[0]
+        candidates.append({
+            "tag": "standard",
+            "label": TAGS["standard"],
+            "reason": reason,
+            "evidence": evidence,
+            "score": min(3, count),
         })
 
     candidates.sort(key=lambda c: (-c["score"], PRIORITY[c["tag"]]))

@@ -41,9 +41,11 @@
   - 纯正则 + 本地 OCR；结果缓存 `.cache/answer_ocr/`，不写 `data/`，失败不阻塞详情页
   - 29 题基准：有依据 24/29、有候选 24/29；首次 OCR 平均 3.52 s（最慢 5.42 s），缓存 ~11 ms
   - 覆盖跨行标题、括号标准号、条文范围 `14.2.2~14.2.4`、附录、`p81页第14.7.4.5条`
-  - 单测 **73 条全绿**（新增 9 条）；接口实测 C3-12 首读 3.3 s / 二读 11 ms
+  - **M4 二轮（11-02）**：复习「没做对」面板接同一套候选（点候选 = 勾选错因，随评分入库）；
+    规范候选降噪为「≥2 部规范，或无其它候选」——`standard` 23 → 18/29，有候选仍 24/29
+  - 单测 **75 条全绿**；headless Chrome 实测复习/详情两处面板（缓存 0–2 ms、点选同步、标签入库）
 - **下一步**：M3/M4 已验收；按备考节奏用起来（**11-04 前后交基线**），
-  或做 M4 二轮（复习「没做对」标签面板接候选、规范候选降噪）
+  基线到手后按分项正确率调复习节奏与题量
 - 备考策略见 `docs/study-plan.md`，陪练规则见 `docs/coach/playbook.md`，
   做题顺序见 `docs/coach/practice-order.md`，原型全图见 `docs/coach/prototypes.md`
 
@@ -235,6 +237,7 @@
 - [x] M3 复习与打印卷导出（11-02：今日复习、答案遮罩、会话续做/撤销、A4 卷；64 条测试全绿）
 - [x] M3 收尾：实打 `print_samples/m3_{C,Z,M}.pdf` 三族样张通过（2026-11-02，_ming）
 - [x] M4 答案页按需 OCR → 错因候选（11-02；详情页「错因建议」，29 题基准，见 journal）
+- [x] M4 二轮：复习「没做对」面板接候选 + 规范候选降噪（11-02，同日，见 journal）
 - [ ] 14 个单册标签人工看原页核对（优先级低）
 - [ ] 《工程地质手册》登记进规范登记表（唯一带文字层的一本，走全文检索而非 OCR）
 - [ ] 教材章节页码表：OCR 李广信第 3 版前置目录，建 9 章 → 页码映射（v1.5 才用，不急）
@@ -330,7 +333,7 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `tools/recognize_qid.py` | **照片 → 题号候选**（方向/去红/行头 + 左边界滑窗/索引校验/`auto_qid`） |
 | `tools/eval_photo_qids.py` | 18 张真图基准：候选召回 + 自动入库准确率 + 耗时 |
 | `app/server.py` | **网页后端**（FastAPI：流式识别 / 题号校验 / 裁图缓存 / 错题本 / 复习 / 打印 / 备份） |
-| `app/static/index.html` | 前端：查题 + 错题本 + 今日复习（两按钮/遮罩/总结）+ 打印卷 |
+| `app/static/index.html` | 前端：查题 + 错题本 + 今日复习（两按钮/遮罩/总结）+ 打印卷 + 错因建议 |
 | `app/store.py` | **错题库**：SQLite（attempts/tags/photos/review_sessions/review_log）、排期、过滤、备份/恢复 |
 | `app/answer_ocr.py` | **M4 解析 OCR**：规范条文抽取 + 点评易错句 → 错因候选（纯规则）、磁盘缓存 |
 | `tools/eval_answer_ocr.py` | **M4 基准**：29 题抽条文/候选 + 计时（`--qids` 可指定） |
@@ -340,7 +343,7 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `tools/import_old_photos.py` | 旧照片导入 CLI（预览 / `--apply`） |
 | `tools/backup_wrongbook.py` | 备份 / 恢复 CLI（恢复需 `--yes`） |
 | `data/` | **用户数据唯一位置**：`wrongbook.db` + `attachments/` + `backups/` |
-| `tests/` | 单元测试 73 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
+| `tests/` | 单元测试 75 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
 | `.cache/crops/` | 裁图缓存（可随时删，自动重建） |
 | `.cache/answer_ocr/` | 解析 OCR + 候选缓存（可随时删，自动重建） |
 | `tools/build_lookup.py` | 合并成 `index/lookup.json`（v1 的唯一数据入口） |

@@ -297,7 +297,7 @@
 </head>
 <body>
 <header>
-  <h1>岩土错题本 <span class="badge">M3</span></h1>
+  <h1>岩土错题本 <span class="badge">M4</span></h1>
   <nav class="nav">
     <button id="navLook" class="on" type="button">查题</button>
     <button id="navBook" type="button">错题本</button>
@@ -389,6 +389,13 @@
     </div>
     <div id="rTagBox" class="chips hidden">
       <span class="hint" style="align-self:center">错因（选「没做对」时记录，可不选）</span>
+    </div>
+    <div class="suggest hidden" id="rSuggest">
+      <div class="suggest-head">
+        <span>错因建议</span>
+        <span class="hint" id="rSuggestState"></span>
+      </div>
+      <div id="rSuggestBody"></div>
     </div>
     <div class="review-bar">
       <button id="rShowAnswer" class="primary big">看答案</button>
@@ -1321,8 +1328,6 @@ $("bookMore").addEventListener("click", () => loadBook(false));
 
 // --- detail ---------------------------------------------------------------
 
-let suggestToken = 0;
-
 function citationText(c) {
   let text = "《" + c.title + "》";
   if (c.code) text += " " + c.code;
@@ -1333,22 +1338,37 @@ function citationText(c) {
   return text;
 }
 
-function syncSuggestChips() {
-  for (const b of $("dSuggestBody").querySelectorAll("[data-suggest-tag]")) {
-    const chip = $("dTags").querySelector('.chip[data-tag="' + b.dataset.suggestTag + '"]');
-    b.classList.toggle("on", !!(chip && chip.classList.contains("on")));
-  }
+// Shared by the detail page and the review flow: each host supplies where to
+// render and how to read/toggle its own tag selection.
+function suggestionUI(body, stateEl, tagOn, toggleTag) {
+  return {
+    body,
+    stateEl,
+    tagOn,
+    toggleTag,
+    token: 0,
+    refresh() {
+      for (const b of body.querySelectorAll("[data-suggest-tag]")) {
+        b.classList.toggle("on", tagOn(b.dataset.suggestTag));
+      }
+    },
+    reset(text) {
+      this.token += 1;
+      body.innerHTML = "";
+      stateEl.textContent = text || "";
+    },
+  };
 }
 
-function renderSuggest(data) {
-  const body = $("dSuggestBody");
+function renderSuggest(ui, data) {
+  const body = ui.body;
   body.innerHTML = "";
   if (data.error) {
-    $("dSuggestState").textContent = "没读出来";
+    ui.stateEl.textContent = "没读出来";
     body.innerHTML = '<p class="suggest-note">' + escapeHtml(data.error) + "</p>";
     return;
   }
-  $("dSuggestState").textContent = data.cached
+  ui.stateEl.textContent = data.cached
     ? "来自缓存 · " + data.elapsed_ms + " ms"
     : "首次读取 " + (data.elapsed_ms / 1000).toFixed(1) + " s";
   if (data.citations.length) {
@@ -1377,10 +1397,8 @@ function renderSuggest(data) {
     b.textContent = cand.label;
     b.title = cand.reason;
     b.addEventListener("click", () => {
-      const chip = $("dTags").querySelector('.chip[data-tag="' + cand.tag + '"]');
-      if (!chip) return;
-      chip.classList.toggle("on");
-      syncSuggestChips();
+      ui.toggleTag(cand.tag);
+      ui.refresh();
     });
     chips.appendChild(b);
   }
@@ -1397,27 +1415,39 @@ function renderSuggest(data) {
   tip.className = "suggest-note";
   tip.textContent = "点候选 = 勾选对应错因，保存后生效。";
   body.appendChild(tip);
-  syncSuggestChips();
+  ui.refresh();
 }
 
-async function loadSuggest(attemptId) {
-  const token = ++suggestToken;
-  $("dSuggestBody").innerHTML = "";
-  $("dSuggestState").textContent = "读取解析中…（首次 3–6 秒）";
+async function loadSuggest(ui, attemptId, stillCurrent) {
+  const token = ++ui.token;
+  ui.body.innerHTML = "";
+  ui.stateEl.textContent = "读取解析中…（首次 3–6 秒）";
   try {
     const res = await fetch("/api/attempts/" + attemptId + "/suggest");
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || res.statusText);
-    if (token !== suggestToken) return;
-    if (!state.detail || state.detail.id !== attemptId) return;
-    renderSuggest(data);
+    if (token !== ui.token) return;
+    if (stillCurrent && !stillCurrent()) return;
+    renderSuggest(ui, data);
   } catch (err) {
-    if (token !== suggestToken) return;
-    $("dSuggestState").textContent = "没读出来";
-    $("dSuggestBody").innerHTML =
-      '<p class="suggest-note">' + escapeHtml(err.message) + "</p>";
+    if (token !== ui.token) return;
+    ui.stateEl.textContent = "没读出来";
+    ui.body.innerHTML = '<p class="suggest-note">' + escapeHtml(err.message) + "</p>";
   }
 }
+
+const detailSuggest = suggestionUI(
+  $("dSuggestBody"),
+  $("dSuggestState"),
+  (tag) => {
+    const chip = $("dTags").querySelector('.chip[data-tag="' + tag + '"]');
+    return !!(chip && chip.classList.contains("on"));
+  },
+  (tag) => {
+    const chip = $("dTags").querySelector('.chip[data-tag="' + tag + '"]');
+    if (chip) chip.classList.toggle("on");
+  }
+);
 
 async function openDetail(id) {
   try {
@@ -1428,7 +1458,7 @@ async function openDetail(id) {
     state.detailAnswer = 0;
     renderDetail();
     show("detail");
-    loadSuggest(data.id);
+    loadSuggest(detailSuggest, data.id, () => state.detail && state.detail.id === data.id);
   } catch (err) {
     toast("打开失败：" + err.message);
   }
@@ -1467,14 +1497,14 @@ function renderDetail() {
     b.textContent = tagLabel(key);
     b.addEventListener("click", () => {
       b.classList.toggle("on");
-      syncSuggestChips();
+      detailSuggest.refresh();
     });
     box.appendChild(b);
   }
   $("dNote").value = d.note || "";
   $("dMaster").textContent = d.status === "mastered" ? "恢复未掌握" : "标记已掌握";
   $("dMaster").dataset.next = d.status === "mastered" ? "active" : "mastered";
-  syncSuggestChips();
+  detailSuggest.refresh();
 }
 
 $("dTabQ").addEventListener("click", () => {
@@ -1654,10 +1684,23 @@ function renderReviewTags() {
       if (state.review.tags.has(key)) state.review.tags.delete(key);
       else state.review.tags.add(key);
       b.classList.toggle("on", state.review.tags.has(key));
+      reviewSuggest.refresh();
     });
     box.appendChild(b);
   }
 }
+
+const reviewSuggest = suggestionUI(
+  $("rSuggestBody"),
+  $("rSuggestState"),
+  (tag) => state.review.tags.has(tag),
+  (tag) => {
+    if (state.review.tags.has(tag)) state.review.tags.delete(tag);
+    else state.review.tags.add(tag);
+    const chip = $("rTagBox").querySelector('.chip[data-tag="' + tag + '"]');
+    if (chip) chip.classList.toggle("on", state.review.tags.has(tag));
+  }
+);
 
 function renderReview() {
   const s = state.review.session;
@@ -1699,6 +1742,8 @@ function renderReview() {
   answer.removeAttribute("src");
   $("rAnswerWrap").classList.add("hidden");
   $("rTagBox").classList.add("hidden");
+  $("rSuggest").classList.add("hidden");
+  reviewSuggest.reset("");
   $("rShowAnswer").classList.remove("hidden");
   $("rShowAnswer").disabled = false;
   $("rWrong").classList.add("hidden");
@@ -1732,6 +1777,11 @@ function showReviewAnswer() {
   $("rHint").textContent = "看完答案选一个评分，自动进入下一题。标签可不选。";
   state.review.shown = true;
   answer.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  $("rSuggest").classList.remove("hidden");
+  loadSuggest(reviewSuggest, item.id, () => {
+    const current = currentReviewItem();
+    return !!(current && current.qid === item.qid && state.review.shown);
+  });
 }
 
 function nextReviewStep(session, fallbackId) {
