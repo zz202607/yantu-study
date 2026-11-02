@@ -15,8 +15,8 @@
   → 工具一律用 `tools/bookpath.py` 找 PDF，不要再拼 `ROOT/<书名>.pdf`
 - **待你做的一件事**：
   - **11-04 前后交基线**：打印 `print_samples/baseline_2025_{A,P}.pdf` 的**题面页**
-    （上午 1–17、下午 1–16），各限时 3 小时；做完按过程自评四个数，
-    用 `tools/score_baseline.py` 记录（案例不按选项判分）
+    （上午 1–17、下午 1–16），各限时 3 小时；做完在 App「计划 → 2025 案例基线」录入
+    （逐题点状态或只记四个数；案例不按选项判分）
 - **M1 网页手机实机验证通过**（2026-11-01，_ming）：拍照 → 候选 → 题干/解析，同一 Wi-Fi 可用
 - **M1 收尾完成（11-01 深夜）**：**拍整页多题勾选** + 批量查看器（题面/解析、上一题/下一题、进度 n/N）
   - 默认勾选本页全部 `start`，`待确认` 候选不预勾；head/full 两阶段之间勾选不丢、新 start 自动补勾
@@ -59,8 +59,8 @@
   - 设置存 `data/settings.json`（备份/恢复一并带走）；深链 `?tab=data&view=handbook&q=液化`
   - **单测 120 条全绿**；无头 Chrome 逐屏验收 14 张；复习闭环在临时库跑通
 - **基线套件就绪（11-02）**：`print_samples/baseline_2025_{A,P}.pdf` 两本 A4 卷
-  （题面在前、答案在后，220 dpi JPEG 各 ~24.5 MB）+ `tools/score_baseline.py`
-  （按过程自评四个数：作答/做对/放弃/超时；**不按选项字母判案例**）
+  （题面在前、答案在后，220 dpi JPEG 各 ~24.5 MB）；记分先走 App（M7），
+  `tools/score_baseline.py` 只作电脑端回填（四个数，**不按选项字母判案例**）
   - 上午只打 1–17 页、下午只打 1–16 页；答案页封存到两半都做完
 - **M5.1 案例/客观题边界修正（11-02）**：华S 案例资料把部分题排成选项练习，
   旧基线脚本误把 A/B/C/D 当判分依据；案例是主观题，只有答案无过程按 0 分。已修：
@@ -84,10 +84,18 @@
   - **CI 门禁**：GitHub Actions（PR / push main）安装最小依赖 → compileall → pytest
   - 新模块：`app/plan.py`、`tools/build_standards_index.py`、`index/standards_index.json`
   - **158 条测试全绿**；计划/规范/打印逐屏验收
+- **M7 应用内基线记分完成（11-02）**：计划页直接记 2025 两半，不再依赖电脑 CLI
+  - `baseline_runs` + `baseline_items`（schema 5）；数据库优先，旧 markdown 仅兜底
+  - 四个数 + 可选逐题「对/错/弃 + 超时」；25 题录满自动算四个数并锁定；
+    部分逐题只补分项，服务端拒绝与四个数冲突的记录
+  - 每半 50 分、两半合计 100 / 通过线 60；分项按九大类，错题一键入本（幂等）
+  - 保存同时 upsert 一条练习台账（`baseline_half` 唯一索引），周计划不重复计数；
+    基线记录不能在「最近练习」里删，必须回基线页
+  - 答案纸照片（半卷级）、错题过程状态（可选）、深链 `?tab=data&view=plan&baseline=A`
+  - **177 条测试全绿**；CDP 无头 Chrome 端到端 17 项 PASS（两半录入→刷新恢复→入错题本→删除回滚）
 - **下一步**：**11-04 前后交基线**（各限时 3 小时，考场规则）；
-  按过程自评四个数，`score_baseline.py --half A --answered ... --correct ... --write`，
-  两半齐后调复习节奏与题量。
-  之后：应用内基线记分（四个数 + 过程状态/照片）→ 周报 → 题目到条文级推荐
+  在「计划 → 2025 案例基线」逐题或只记四个数，两半齐后调复习节奏与题量。
+  之后：周报/月报 → 题目到条文级推荐
 - 备考策略见 `docs/study-plan.md`，陪练规则见 `docs/coach/playbook.md`，
   做题顺序见 `docs/coach/practice-order.md`，原型全图见 `docs/coach/prototypes.md`
 
@@ -282,7 +290,7 @@
 - [x] M4 二轮：复习「没做对」面板接候选 + 规范候选降噪（11-02，同日，见 journal）
 - [x] M5 学习驾驶舱：倒计时/统计/规范/手册/鼓励/PWA（11-02，见 journal）
 - [x] M5.1 案例/客观题边界修正：过程状态 + 过程照片，知识题独立客观判分（11-02，134 条测试）
-- [ ] 应用内 2025 基线记分（四个数 + 过程状态/照片 → 总分/正确率，替代 CLI）
+- [x] 应用内 2025 基线记分（四个数 + 逐题状态/答案纸照片 → 总分/正确率，替代 CLI）
 - [ ] 周报/月报：把统计与下一步动作保存成一页
 - [ ] 题目 → 条文级推荐（现在只到大类；M4 已抽引用，可做按题推荐）
 - [ ] 官方考试日期公布后改设置默认值（当前 2027-11-01 为估算）
@@ -340,6 +348,8 @@ PYTHONIOENCODING=utf-8 py -3 app/server.py     # 启动后打印 http://<PC-IP>:
 PYTHONIOENCODING=utf-8 py -3 tools/eval_photo_qids.py   # 18 张真图基准
 PYTHONIOENCODING=utf-8 py -3 tools/eval_answer_ocr.py   # M4：29 题条文/候选基准
 PYTHONIOENCODING=utf-8 py -3 tools/print_baseline.py    # 2025 基线卷（两半）
+# 基线记分：网页「计划 → 2025 案例基线」为主；
+# 下面是没带手机时的 CLI 回填（数据库为空时首页才读它写的 markdown）
 PYTHONIOENCODING=utf-8 py -3 tools/score_baseline.py --half A --answered 25 --correct 15 --overtime 2 --write
 PYTHONIOENCODING=utf-8 py -3 tools/score_objective.py --key key.json --answers answers.json
 ```
@@ -347,7 +357,10 @@ PYTHONIOENCODING=utf-8 py -3 tools/score_objective.py --key key.json --answers a
 - 首页 = 学习驾驶舱：倒计时、今日复习、连续天数、九大类分布、证据型鼓励、下一步；
   底部 5 栏 = 首页 / 拍题 / 错题 / 复习 / 数据
 - 「数据」页：统计（7/30/90 天、九大类 + 70 节、错因、活动、基线）、
-  **计划**（阶段/周题量/练习记录/纠偏）、**规范**（章节索引/条文定位/页图/50 本 PDF）、手册检索
+  **计划**（阶段/周题量/练习记录/纠偏/2025 基线记分）、
+  **规范**（章节索引/条文定位/页图/50 本 PDF）、手册检索
+- 基线：计划页两半卡 → 记分抽屉；可逐题「对/错/弃 + 超时」或只填四个数；
+  录满 25 题自动算；保存后错题可一键入本；每半 50 分、合计 100 / 通过线 60
 - 计划：练习后记四个数；每周看计划 vs 实际；按未完成原型打印本周任务卷
 - 打印：本周任务卷/错题卷/筛选卷/复习卷；封面任务单 + 每题回填格 + 手写区缩放
 - 手机「添加到主屏幕」可当 App 打开；局域网 HTTP 不触发自动安装（PWA manifest 已就绪）
@@ -396,7 +409,7 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `tools/recognize_qid.py` | **照片 → 题号候选**（方向/去红/行头 + 左边界滑窗/索引校验/`auto_qid`） |
 | `tools/eval_photo_qids.py` | 18 张真图基准：候选召回 + 自动入库准确率 + 耗时 |
 | `app/server.py` | **网页后端**（FastAPI：流式识别 / 题号校验 / 裁图缓存 / 错题本 / 复习 / 打印 / 备份） |
-| `app/static/index.html` | 前端：查题 + 错题本 + 今日复习（两按钮/遮罩/总结）+ 打印卷 + 错因建议 |
+| `app/static/index.html` | 前端：查题 + 错题本 + 今日复习 + 打印卷 + 计划/基线记分（两半卡/逐题/照片） |
 | `app/store.py` | **错题库**：SQLite（attempts/tags/photos/review_sessions/review_log）、排期、过滤、备份/恢复 |
 | `app/answer_ocr.py` | **M4 解析 OCR**：规范条文抽取 + 点评易错句 → 错因候选（纯规则）、磁盘缓存 |
 | `app/curriculum.py` | **M5 课程表**：十篇/九大类、考试权重、核心/配套规范、手册范围、A2025 映射 |
@@ -404,6 +417,7 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `app/analytics.py` | **M5 统计**：倒计时、连续天数、九大类/70 节、错因、活动、里程碑、证据型鼓励、基线解析 |
 | `app/standards.py` | **M5 规范/手册**：规范库扫描与编号匹配、安全取文件、手册全文索引/搜索/页图；**M6 章节索引/条文定位/规范页图** |
 | `app/plan.py` | **M6 计划**：阶段/周题量、练习记录统计、阶段目标、纠偏规则、任务生成、打印选题 |
+| `app/baseline.py` | **M7 基线**：2025 两半 25 题清单、四个数校验、逐题状态、分项/合计、错题清单 |
 | `tools/build_standards_index.py` | **M6 规范索引构建**：文字/OCR 目录、双分辨率合并、页码偏移、正文缓存 |
 | `index/standards_index.json` | 50 本标准 → 章节/印刷页/PDF 页（不含正文） |
 | `app/static/manifest.webmanifest` | PWA 清单（名称/图标/快捷方式） |
@@ -413,7 +427,7 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `..\LESSONS.md` | **跨项目经验库**（根目录，新项目启动先读） |
 | `tools/eval_answer_ocr.py` | **M4 基准**：29 题抽条文/候选 + 计时（`--qids` 可指定） |
 | `tools/print_baseline.py` | **2025 基线卷**：上午/下午 → A4 题面 + 答案（220 dpi JPEG） |
-| `tools/score_baseline.py` | **案例基线**：人工按过程自评四个数；不按选项字母判分 |
+| `tools/score_baseline.py` | **案例基线 CLI 回填**：四个数；主入口是 `app/baseline.py` + 计划页 |
 | `app/objective.py` | **知识题客观判分**：单选/多选精确集合匹配；不用于案例 |
 | `tools/score_objective.py` | 知识题答案键 + 作答 JSON → 得分/错题；格式见 `docs/objective-scoring.md` |
 | `app/print_export.py` | **A4 打印卷**：题面/答案分页、混合族手写区、Z 族拆分；M6 封面/回填格/手写区缩放/JPEG |
@@ -422,7 +436,7 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `tools/import_old_photos.py` | 旧照片导入 CLI（预览 / `--apply`） |
 | `tools/backup_wrongbook.py` | 备份 / 恢复 CLI（恢复需 `--yes`） |
 | `data/` | **用户数据唯一位置**：`wrongbook.db` + `attachments/` + `backups/` |
-| `tests/` | 单元测试 158 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
+| `tests/` | 单元测试 177 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
 | `.github/workflows/ci.yml` | GitHub Actions：最小依赖 → compileall → pytest（PR / push main） |
 | `requirements-ci.txt` | CI 最小依赖（不含 OCR/ONNX/FastAPI） |
 | `.cache/crops/` | 裁图缓存（可随时删，自动重建） |

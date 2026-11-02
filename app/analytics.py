@@ -587,7 +587,7 @@ def _actions(summary, baseline, settings, now):
     today = _as_datetime(now).date() if now else datetime.now().date()
     totals = summary["totals"]
     actions = []
-    if not baseline.get("available"):
+    if not baseline.get("complete", False):
         try:
             due_day = date.fromisoformat(settings["baseline_due"])
             gap = (due_day - today).days
@@ -595,9 +595,16 @@ def _actions(summary, baseline, settings, now):
                     + (" · 还剩 %d 天" % gap if gap >= 0 else " · 已过 %d 天" % -gap))
         except ValueError:
             when = "计划日期未设定"
+        detail = baseline.get("half_detail") or {}
+        done = [half for half in ("A", "P")
+                if (detail.get(half) or {}).get("recorded")]
+        if len(done) == 1:
+            title = "交 2025 基线%s" % ("下午卷" if done[0] == "A" else "上午卷")
+        else:
+            title = "交 2025 基线卷"
         actions.append({
             "kind": "baseline",
-            "title": "交 2025 基线卷",
+            "title": title,
             "detail": when + "；两半各限时 3 小时，按过程自评四个数（不按选项判案例）。",
             "route": "baseline",
         })
@@ -684,9 +691,13 @@ def build_home(snapshot, *, settings, lookup=None, exam_tags=None, baseline=None
         "milestone": _milestone(summary, len(snapshot.get("logs", []))),
         "baseline": {
             "available": baseline.get("available", False),
+            "complete": baseline.get("complete", False),
             "score": baseline.get("score"),
             "max_score": baseline.get("max_score"),
             "accuracy": baseline.get("accuracy"),
+            "passed": baseline.get("passed"),
+            "pass_line": baseline.get("pass_line", 60),
+            "halves": baseline.get("halves") or [],
             "due": settings.get("baseline_due"),
         },
         "settings": {

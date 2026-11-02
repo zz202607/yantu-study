@@ -237,7 +237,6 @@
   .suggest-cite a { color: var(--accent); text-decoration: none; border-bottom: 1px dotted rgba(22,103,217,.45); }
   .suggest-cite a::after { content: " ↗"; font-size: 10px; }
   code { background: var(--paper); border: 1px solid var(--line); border-radius: 4px; padding: 0 3px; font-size: 12px; }
-  .baseline-status { margin: 10px 0 0; font-size: 12.5px; color: var(--muted); }
   .storage-box { border: 1px dashed var(--line); border-radius: 11px; padding: 10px 12px; margin: 10px 0; background: var(--paper); }
   .storage-line { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 12.5px; }
   .storage-line span { color: var(--muted); font-size: 11.5px; text-align: right; }
@@ -491,6 +490,7 @@
     border: 1px solid var(--line); border-radius: 9px; font-family: inherit;
     font-size: 14px; color: var(--ink); background: #fff;
   }
+  .session-grid input[readonly] { background: var(--paper); color: var(--muted); }
   .panel-title { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: .04em; margin: 18px 0 7px; }
   .cat-table { border: 1px solid var(--line); border-radius: 12px; padding: 0 12px; background: #fff; }
   .cat-table .row {
@@ -521,6 +521,38 @@
   .baseline-card { border: 1px dashed var(--line); border-radius: 12px; padding: 12px; background: var(--paper); }
   .baseline-card b { font-size: 13px; }
   .baseline-card p { margin: 5px 0 8px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .baseline-panel { display: flex; flex-direction: column; gap: 8px; }
+  .b-half { border: 1px solid var(--line); border-radius: 12px; padding: 11px 12px; background: #fff; }
+  .b-half.done { border-color: rgba(22,103,217,.38); box-shadow: inset 3px 0 0 var(--accent); }
+  .b-half .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .b-half .top b { font-size: 13px; }
+  .b-half .score { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .b-half .meta { font-size: 11.5px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+  .b-half .cats { font-size: 10.5px; color: var(--muted); margin-top: 4px; line-height: 1.55; }
+  .b-half .acts { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
+  .b-combined { font-size: 12px; color: var(--muted); padding: 1px 2px 0; line-height: 1.5; }
+  .bq-counts { display: flex; gap: 10px; flex-wrap: wrap; font-size: 11.5px; color: var(--muted); margin: 8px 0; }
+  .bq-list { border: 1px solid var(--line); border-radius: 12px; background: #fff; max-height: 42vh; overflow: auto; }
+  .bq-row { display: grid; grid-template-columns: 26px 46px 1fr 50px; gap: 6px; align-items: center; padding: 5px 8px; border-bottom: 1px solid var(--line); }
+  .bq-row:last-child { border-bottom: 0; }
+  .bq-row .n { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 11px; text-align: right; }
+  .bq-row .cat { font-size: 10.5px; color: var(--muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .bq-seg { display: flex; gap: 2px; }
+  .bq-seg button { border: 1px solid var(--line); background: var(--paper); color: var(--muted); font-family: inherit; font-size: 11px; padding: 4px 0; flex: 1; border-radius: 6px; }
+  .bq-seg button.on[data-result=correct] { background: rgba(29,122,79,.12); border-color: var(--good); color: var(--good); font-weight: 700; }
+  .bq-seg button.on[data-result=wrong] { background: rgba(163,90,0,.12); border-color: var(--warn); color: var(--warn); font-weight: 700; }
+  .bq-seg button.on[data-result=skipped] { background: rgba(90,90,90,.12); border-color: var(--muted); color: var(--ink); font-weight: 700; }
+  .bq-ot { border: 1px solid var(--line); background: #fff; color: var(--muted); font-family: inherit; font-size: 10px; padding: 4px 2px; border-radius: 6px; }
+  .bq-ot.on { background: #fff3e0; border-color: var(--warn); color: var(--warn); font-weight: 700; }
+  .bq-ot:disabled { opacity: .35; }
+  .bq-proc { display: flex; gap: 4px; flex-wrap: wrap; padding: 0 8px 6px 80px; }
+  .bq-proc button { border: 1px dashed var(--line); background: #fff; color: var(--muted); font-family: inherit; font-size: 10px; padding: 3px 7px; border-radius: 999px; }
+  .bq-proc button.on { border-style: solid; border-color: var(--warn); color: var(--warn); background: #fff8ef; }
+  .bq-photo { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+  .bq-photo img { width: 46px; height: 46px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+  .bq-hint { font-size: 11px; color: var(--muted); margin: 6px 0; line-height: 1.5; }
+  .sheet-panel.baseline-sheet { max-height: 92vh; overflow: auto; }
+  .plan-task.done .dot { background: var(--good); border-color: var(--good); color: #fff; display: grid; place-items: center; font-size: 10px; }
   .standard-card { border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px; margin-bottom: 9px; background: #fff; }
   .standard-card.flash { animation: flash 1.4s ease; }
   @keyframes flash { 0% { box-shadow: 0 0 0 3px rgba(22,103,217,.3); } 100% { box-shadow: none; } }
@@ -1064,32 +1096,44 @@
 </div>
 
 <div id="baselineSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="baselineTitle">
-  <div class="sheet-panel">
+  <div class="sheet-panel baseline-sheet">
     <div class="sheet-head">
-      <h3 id="baselineTitle">2025 案例基线</h3>
-      <span class="hint">各限时 3 小时</span>
+      <h3 id="baselineTitle">2025 案例基线 · 上午卷</h3>
+      <span class="hint">限时 3 小时</span>
     </div>
-    <p class="hint" style="line-height:1.6">
-      先打印题面页，按考场规则写完过程；两半都做完再对答案。
+    <p class="hint" id="baselineHalfHint" style="line-height:1.6">
+      按考场规则写完过程；两半都做完再对答案。
       <b>案例是主观题：做对 = 过程与结果均正确，只有答案无过程按 0 分。</b>
       系统不按 A/B/C/D 选项判案例。
     </p>
-    <p class="hint" style="line-height:1.6">
-      做完按过程自评四个数，在电脑上运行：
-      <code>score_baseline.py --half A --answered 25 --correct 15 --overtime 2 --write</code>。
-      首页会自动读到总分与正确率。
-    </p>
-    <div class="print-options">
-      <a class="print-opt" href="/api/baseline/file/A" target="_blank" rel="noopener">
-        <b>上午卷 · 题面</b><span>PDF</span>
-      </a>
-      <a class="print-opt" href="/api/baseline/file/P" target="_blank" rel="noopener">
-        <b>下午卷 · 题面</b><span>PDF</span>
-      </a>
+    <a id="bqPdf" class="print-opt" href="/api/baseline/file/A" target="_blank" rel="noopener" style="margin-top:6px">
+      <b>打开基线卷 PDF</b><span>题面</span>
+    </a>
+    <div class="session-grid">
+      <label>日期<input type="date" id="bqDay"></label>
+      <label>用时（分钟）<input type="number" id="bqMinutes" min="0" max="600" inputmode="numeric"></label>
+      <label>作答<input type="number" id="bqAnswered" min="0" max="25" inputmode="numeric"></label>
+      <label>做对<input type="number" id="bqCorrect" min="0" max="25" inputmode="numeric"></label>
+      <label>放弃<input type="number" id="bqSkipped" readonly></label>
+      <label>超时<input type="number" id="bqOvertime" min="0" max="25" inputmode="numeric"></label>
     </div>
-    <p class="baseline-status" id="baselineStatus"></p>
+    <p class="bq-hint" id="bqAutoHint">逐题可不录；只填四个数也能保存。逐题录满 25 题时，四个数自动计算。</p>
+    <div class="bq-photo">
+      <button type="button" id="bqPhotoPick" class="ghost small">拍答案纸照片</button>
+      <img id="bqPhotoThumb" class="hidden" alt="答案纸照片">
+      <button type="button" id="bqPhotoClear" class="ghost small hidden">移除照片</button>
+      <input id="bqPhotoFile" type="file" accept="image/*" capture="environment" class="hidden">
+      <span class="hint" id="bqPhotoState"></span>
+    </div>
+    <div class="bq-counts" id="bqCounts"></div>
+    <div class="bq-list" id="bqList"></div>
+    <label class="settings-field" style="display:block;margin-top:10px">备注
+      <input type="text" id="bqNote" maxlength="2000" placeholder="可选：哪几题卡住、考场状态">
+    </label>
     <div class="sheet-actions">
-      <button id="baselineClose" class="ghost">关闭</button>
+      <button id="bqDelete" class="ghost danger" type="button">删除本半</button>
+      <button id="bqClose" class="ghost" type="button">关闭</button>
+      <button id="bqSave" class="primary" type="button">保存记分</button>
     </div>
   </div>
 </div>
@@ -1252,6 +1296,14 @@ const state = {
     handbookQuery: "",
     handbookResults: null,
     loaded: { standards: false, handbook: false },
+  },
+  baseline: {
+    data: null,      // /api/baseline payload
+    half: null,      // "A" or "P" while the score sheet is open
+    draft: {},       // qid -> { result, overtime, process_status }
+    photoSha: null,
+    photoUrl: null,
+    busy: false,
   },
   review: {
     session: null,
@@ -2672,13 +2724,15 @@ function renderStats(d) {
   if (base.available) {
     html.push('<div class="baseline-card"><b>得分 ' + (base.score ?? "—")
       + " / " + (base.max_score ?? "—") + " · 正确率 " + pct(base.accuracy)
-      + "</b><p>按分项正确率对照上面的九大类；基线只用于定节奏，不是最终水平。</p></div>");
+      + (base.complete ? "" : " · 还差一半")
+      + "</b><p>按分项正确率对照上面的九大类；基线只用于定节奏，不是最终水平。</p>"
+      + '<button type="button" class="ghost small" data-baseline="1">去基线页</button></div>');
   } else {
     html.push('<div class="baseline-card"><b>还没交基线</b>'
       + "<p>计划 " + escapeHtml(base.due || "—") + "；两半各限时 3 小时。"
-      + "案例按过程自评四个数，做完在电脑上运行 score_baseline.py，"
-      + "回来这里看总分与正确率。</p>"
-      + '<button type="button" class="ghost small" data-baseline="1">打开基线说明</button></div>');
+      + "案例按过程自评四个数，直接在「计划 → 2025 案例基线」里录入，"
+      + "这里会自动出现总分与正确率。</p>"
+      + '<button type="button" class="ghost small" data-baseline="1">去录入基线</button></div>');
   }
   const unmapped = d.unmapped || {};
   html.push('<p class="hint" style="margin-top:10px">正确率只统计已复习记录；'
@@ -2717,10 +2771,14 @@ async function loadPlan() {
   $("dataPlan").innerHTML =
     '<div class="status"><span class="spinner"></span>读取计划…</div>';
   try {
-    const res = await fetch("/api/plan");
+    const [res, baseRes] = await Promise.all([
+      fetch("/api/plan"),
+      fetch("/api/baseline"),
+    ]);
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || res.statusText);
     state.data.plan = data;
+    state.baseline.data = baseRes.ok ? await baseRes.json() : null;
     renderPlan(data);
   } catch (err) {
     $("dataPlan").innerHTML =
@@ -2763,6 +2821,8 @@ function renderPlan(d) {
     html.push('<div class="plan-advice">' + d.advice.map(escapeHtml).join("<br>")
       + "</div>");
   }
+  html.push('<div class="panel-title">2025 案例基线</div>'
+    + '<div id="planBaseline" class="baseline-panel"></div>');
   html.push('<div class="panel-title">阶段目标</div><div class="cat-table">');
   for (const row of (d.targets || [])) {
     html.push('<div class="plan-target"><span>' + escapeHtml(row.label) + "</span>"
@@ -2772,7 +2832,8 @@ function renderPlan(d) {
   html.push("</div>");
   html.push('<div class="panel-title">本周任务</div><div class="plan-check" style="border:0;padding:0">');
   for (const task of (d.tasks || [])) {
-    html.push('<div class="plan-task"><span class="dot"></span><span>'
+    html.push('<div class="plan-task' + (task.done ? " done" : "") + '">'
+      + '<span class="dot">' + (task.done ? "✓" : "") + "</span><span>"
       + "<b>" + escapeHtml(task.label) + "</b><span>"
       + escapeHtml(task.detail || "") + "</span></span></div>");
   }
@@ -2806,13 +2867,17 @@ function renderPlan(d) {
   html.push("</div>");
   html.push('<div class="panel-title">最近练习</div><div class="cat-table">');
   for (const row of (d.recent_sessions || [])) {
+    const isBaseline = !!row.baseline_half;
     html.push('<div class="session-row"><span class="main"><b>'
       + escapeHtml(row.day) + " · " + escapeHtml(row.source_label)
-      + " · " + escapeHtml(row.category) + "</b><span> 作 " + row.attempted
+      + " · " + (isBaseline ? "基线" : escapeHtml(row.category))
+      + "</b><span> 作 " + row.attempted
       + " · 对 " + row.correct + " · " + row.minutes + " 分钟"
       + (row.note ? " · " + escapeHtml(row.note) : "") + "</span></span>"
-      + '<button type="button" class="del" data-session-delete="' + row.id
-      + '" aria-label="删除">×</button></div>');
+      + (isBaseline ? ""
+        : '<button type="button" class="del" data-session-delete="' + row.id
+          + '" aria-label="删除">×</button>')
+      + "</div>");
   }
   if (!(d.recent_sessions || []).length) {
     html.push('<div class="empty">还没有练习记录。</div>');
@@ -2820,6 +2885,7 @@ function renderPlan(d) {
   html.push("</div>");
   const box = $("dataPlan");
   box.innerHTML = html.join("");
+  renderBaselinePanel();
   $("planSession").addEventListener("click", openSessionSheet);
   $("planPrint").addEventListener("click", openPrintSheet);
   $("planSettings").addEventListener("click", openPlanSettings);
@@ -3587,16 +3653,494 @@ $("settingsSheet").addEventListener("click", (event) => {
   if (event.target === $("settingsSheet")) $("settingsSheet").classList.add("hidden");
 });
 
+const BASELINE_HALVES = { A: "上午卷", P: "下午卷" };
+const BASELINE_PROCESS = [
+  ["process_right_result_wrong", "过程对·结果错"],
+  ["process_wrong", "过程错"],
+  ["no_idea", "没思路"],
+];
+
+function baselineToday() {
+  const day = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return day.getFullYear() + "-" + pad(day.getMonth() + 1) + "-" + pad(day.getDate());
+}
+
+function baselineHalves() {
+  const data = state.baseline.data || {};
+  const out = { A: null, P: null };
+  const detail = data.half_detail || {};
+  for (const half of ["A", "P"]) {
+    if (detail[half]) out[half] = detail[half];
+  }
+  for (const row of (data.halves || [])) {
+    const label = String(row.half || row.label || "");
+    const half = row.half === "A" || row.half === "P"
+      ? row.half
+      : label.includes("下午") ? "P" : label.includes("上午") ? "A" : null;
+    if (half && !out[half] && row.recorded !== false) {
+      out[half] = Object.assign({}, row, {
+        half: half,
+        recorded: true,
+        questions: (data.questions || {})[half] || [],
+        items: [],
+      });
+    }
+  }
+  return out;
+}
+
+function baselineWrongCount(detail) {
+  return (detail.items || []).filter((row) => row.result === "wrong").length;
+}
+
+function renderBaselinePanel() {
+  const box = $("planBaseline");
+  if (!box) return;
+  const halves = baselineHalves();
+  const data = state.baseline.data || {};
+  const html = [];
+  let recorded = 0;
+  let score = 0;
+  let maxScore = 0;
+  for (const half of ["A", "P"]) {
+    const d = halves[half] || { half: half, recorded: false };
+    const done = !!d.recorded;
+    if (done) {
+      recorded += 1;
+      score += d.score || 0;
+      maxScore += d.max_score || 50;
+    }
+    html.push('<div class="b-half ' + (done ? "done" : "") + '">'
+      + '<div class="top"><b>' + BASELINE_HALVES[half] + " · " + half + "</b>"
+      + (done
+        ? '<span class="score">' + (d.score ?? "—") + " / " + (d.max_score ?? 50) + "</span>"
+        : '<span class="hint">未录入</span>')
+      + "</div>");
+    if (done) {
+      const rate = d.accuracy != null ? d.accuracy
+        : (d.answered ? d.correct / d.answered : null);
+      html.push('<div class="meta">'
+        + escapeHtml(d.day || "—") + " · 作 " + d.answered + " · 对 " + d.correct
+        + " · 弃 " + d.skipped + " · 超时 " + d.overtime
+        + " · 正确率 " + pct(rate)
+        + " · 逐题 " + (d.items_done ?? 0) + "/25</div>");
+      const cats = (d.by_category || []).filter((row) => row.answered > 0)
+        .map((row) => row.category + " " + row.correct + "/" + row.answered);
+      html.push('<div class="cats">'
+        + (cats.length ? cats.join(" · ") : "未逐题录入，只有四个数；分类统计为空")
+        + "</div>");
+    } else {
+      html.push('<div class="meta">两半各 25 题 × 2 分；做完再对答案，按过程自评四个数。</div>');
+    }
+    html.push('<div class="acts">'
+      + '<button type="button" class="' + (done ? "ghost" : "primary")
+      + ' small" data-baseline-open="' + half + '">'
+      + (done ? "修改记分" : "录入记分") + "</button>"
+      + '<a class="ghost small" href="/api/baseline/file/' + half
+      + '" target="_blank" rel="noopener">题面 PDF</a>');
+    const wrongs = baselineWrongCount(d);
+    if (wrongs) {
+      html.push('<button type="button" class="ghost small" data-baseline-wrongs="'
+        + half + '" data-wrongs="' + wrongs + '">错题入本 (' + wrongs + ")</button>");
+    }
+    html.push("</div></div>");
+  }
+  if (!recorded) {
+    html.push('<div class="b-combined">合计 100 分 · 通过线 60；两半都做完再对答案。</div>');
+  } else if (recorded === 1) {
+    html.push('<div class="b-combined">已记 ' + score + " / " + maxScore
+      + "；还差一半，两半齐后才看合计与通过线。</div>");
+  } else {
+    html.push('<div class="b-combined">合计 <b>' + score + " / " + maxScore
+      + "</b> · 通过线 " + (data.pass_line || 60)
+      + " · 正确率 " + pct(data.accuracy)
+      + (data.passed ? ' · <span class="ok">已过线</span>'
+        : ' · <span class="warn">未过线</span>')
+      + "</div>");
+  }
+  box.innerHTML = html.join("");
+  for (const button of box.querySelectorAll("[data-baseline-open]")) {
+    button.addEventListener("click", () => openBaselineSheet(button.dataset.baselineOpen));
+  }
+  for (const button of box.querySelectorAll("[data-baseline-wrongs]")) {
+    button.addEventListener("click", () => importBaselineWrongs(
+      button.dataset.baselineWrongs, Number(button.dataset.wrongs)));
+  }
+}
+
+async function loadBaselineData() {
+  const res = await fetch("/api/baseline");
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.detail || res.statusText);
+  state.baseline.data = data;
+  return data;
+}
+
 function openBaseline() {
-  const baseline = (state.home && state.home.baseline) || {};
-  $("baselineStatus").textContent = baseline.available
-    ? "已交 · 得分 " + (baseline.score ?? "—") + " / " + (baseline.max_score ?? "—")
-      + " · 正确率 " + pct(baseline.accuracy)
-    : "计划 " + (baseline.due || "—") + " 前交 · 目前还没有记录";
+  openData("plan");
+  let tries = 0;
+  const timer = setInterval(() => {
+    const box = $("planBaseline");
+    if (box && box.children.length) {
+      clearInterval(timer);
+      box.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (++tries > 24) {
+      clearInterval(timer);
+    }
+  }, 150);
+}
+
+function baselineQuestions() {
+  const half = state.baseline.half;
+  const data = state.baseline.data || {};
+  const detail = (data.half_detail || {})[half] || {};
+  return (data.questions || {})[half] || detail.questions || [];
+}
+
+function baselineDraftCounts() {
+  const counts = { done: 0, correct: 0, wrong: 0, skipped: 0, overtime: 0 };
+  for (const item of Object.values(state.baseline.draft)) {
+    if (!item.result) continue;
+    counts.done += 1;
+    counts[item.result] += 1;
+    if (item.overtime) counts.overtime += 1;
+  }
+  return counts;
+}
+
+function renderBaselinePhoto() {
+  const has = !!state.baseline.photoSha;
+  $("bqPhotoThumb").classList.toggle("hidden", !has);
+  $("bqPhotoClear").classList.toggle("hidden", !has);
+  if (has) $("bqPhotoThumb").src = state.baseline.photoUrl
+    || "/api/photos/" + state.baseline.photoSha + "?size=thumb";
+  $("bqPhotoState").textContent = has ? "已附答案纸照片" : "";
+}
+
+function updateBaselineSummary() {
+  const counts = baselineDraftCounts();
+  $("bqCounts").textContent = "逐题 " + counts.done + "/25 · 对 " + counts.correct
+    + " · 错 " + counts.wrong + " · 弃 " + counts.skipped
+    + " · 超时 " + counts.overtime;
+  const locked = counts.done === 25;
+  for (const id of ["bqAnswered", "bqCorrect", "bqOvertime"]) {
+    $(id).readOnly = locked;
+  }
+  if (locked) {
+    $("bqAnswered").value = counts.correct + counts.wrong;
+    $("bqCorrect").value = counts.correct;
+    $("bqSkipped").value = counts.skipped;
+    $("bqOvertime").value = counts.overtime;
+    $("bqAutoHint").textContent =
+      "25 题已录满：四个数由逐题状态自动计算；四个数不可手改。";
+  } else if (counts.done) {
+    $("bqAutoHint").textContent = "逐题只录了 " + counts.done
+      + "/25；四个数以手填为准，分类统计只含已录题，且不能与四个数冲突。";
+  } else {
+    $("bqAutoHint").textContent =
+      "逐题可不录；只填四个数也能保存。逐题录满 25 题时，四个数自动计算。";
+  }
+}
+
+function bqListHtml() {
+  const questions = baselineQuestions();
+  if (!questions.length) {
+    return '<div class="empty">题目标签没读到：检查 index/tags/A2025.json。</div>';
+  }
+  const html = [];
+  for (const question of questions) {
+    const item = state.baseline.draft[question.qid] || {};
+    const result = item.result || "";
+    const overtime = !!item.overtime;
+    html.push('<div class="bq-row" data-qid="' + escapeHtml(question.qid) + '">'
+      + '<span class="n">' + question.seq + "</span>"
+      + '<span class="cat">' + escapeHtml(question.category || "") + "</span>"
+      + '<span class="bq-seg">');
+    for (const [value, label] of [["correct", "对"], ["wrong", "错"], ["skipped", "弃"]]) {
+      html.push('<button type="button" data-result="' + value + '"'
+        + (result === value ? ' class="on"' : "") + ">" + label + "</button>");
+    }
+    html.push('</span><button type="button" class="bq-ot'
+      + (overtime ? " on" : "") + '" data-ot="1"'
+      + (result && result !== "skipped" ? "" : " disabled") + ">超时</button></div>");
+    if (result === "wrong") {
+      html.push('<div class="bq-proc" data-proc-qid="'
+        + escapeHtml(question.qid) + '">');
+      for (const [value, label] of BASELINE_PROCESS) {
+        html.push('<button type="button" data-process="' + value + '"'
+          + (item.process_status === value ? ' class="on"' : "") + ">"
+          + label + "</button>");
+      }
+      html.push("</div>");
+    }
+  }
+  return html.join("");
+}
+
+function renderBqList() {
+  const box = $("bqList");
+  if (!box) return;
+  box.innerHTML = bqListHtml();
+}
+
+function rerenderBqList() {
+  const box = $("bqList");
+  const top = box ? box.scrollTop : 0;
+  renderBqList();
+  if (box) box.scrollTop = top;
+}
+
+function handleBqListClick(event) {
+  const button = event.target.closest("button");
+  if (!button) return;
+  const proc = event.target.closest("[data-proc-qid]");
+  if (proc) {
+    const qid = proc.dataset.procQid;
+    const item = state.baseline.draft[qid] || {};
+    const value = button.dataset.process;
+    item.process_status = item.process_status === value ? null : value;
+    state.baseline.draft[qid] = item;
+    rerenderBqList();
+    return;
+  }
+  const row = event.target.closest(".bq-row");
+  if (!row) return;
+  const qid = row.dataset.qid;
+  const item = state.baseline.draft[qid]
+    || { result: null, overtime: 0, process_status: null };
+  if (button.dataset.ot) {
+    if (!item.result || item.result === "skipped") return;
+    item.overtime = item.overtime ? 0 : 1;
+  } else {
+    const value = button.dataset.result;
+    if (!value) return;
+    if (item.result === value) {
+      item.result = null;
+      item.overtime = 0;
+      item.process_status = null;
+    } else {
+      item.result = value;
+      if (value === "skipped") {
+        item.overtime = 0;
+        item.process_status = null;
+      } else if (value === "correct") {
+        item.process_status = "process_right_result_right";
+      } else if (item.process_status === "process_right_result_right") {
+        item.process_status = null;
+      }
+    }
+  }
+  state.baseline.draft[qid] = item;
+  rerenderBqList();
+  updateBaselineSummary();
+}
+
+async function openBaselineSheet(half) {
+  if (!["A", "P"].includes(half)) return;
+  try {
+    if (!state.baseline.data) await loadBaselineData();
+  } catch (err) {
+    toast("读取基线失败：" + err.message);
+    return;
+  }
+  const data = state.baseline.data || {};
+  const detail = (data.half_detail || {})[half] || {};
+  state.baseline.half = half;
+  state.baseline.draft = {};
+  for (const row of (detail.items || [])) {
+    state.baseline.draft[row.qid] = {
+      result: row.result,
+      overtime: !!row.overtime,
+      process_status: row.process_status || null,
+    };
+  }
+  state.baseline.photoSha = detail.photo ? detail.photo.sha : null;
+  state.baseline.photoUrl = detail.photo ? detail.photo.thumb : null;
+  $("baselineTitle").textContent = "2025 案例基线 · " + BASELINE_HALVES[half];
+  $("bqPdf").href = "/api/baseline/file/" + half;
+  $("bqPdf").querySelector("b").textContent =
+    "打开" + BASELINE_HALVES[half] + "基线卷 PDF";
+  $("bqDay").value = detail.day || baselineToday();
+  $("bqMinutes").value = detail.minutes || 180;
+  const recorded = !!detail.recorded;
+  $("bqAnswered").value = recorded ? detail.answered : 25;
+  $("bqCorrect").value = recorded ? detail.correct : 0;
+  $("bqSkipped").value = recorded ? detail.skipped : 0;
+  $("bqOvertime").value = recorded ? detail.overtime : 0;
+  $("bqNote").value = detail.note || "";
+  $("bqDelete").classList.toggle("hidden", !recorded);
+  renderBaselinePhoto();
+  renderBqList();
+  updateBaselineSummary();
   $("baselineSheet").classList.remove("hidden");
 }
 
-$("baselineClose").addEventListener("click", () => $("baselineSheet").classList.add("hidden"));
+function markBaselineDirty() {
+  const answered = Number($("bqAnswered").value);
+  if (Number.isFinite(answered)) {
+    $("bqSkipped").value = Math.max(0, 25 - Math.min(25, answered));
+  }
+}
+
+async function saveBaseline() {
+  const half = state.baseline.half;
+  if (!half || state.baseline.busy) return;
+  const counts = baselineDraftCounts();
+  const body = {
+    day: $("bqDay").value,
+    minutes: Number($("bqMinutes").value) || 0,
+    answered: Number($("bqAnswered").value),
+    correct: Number($("bqCorrect").value),
+    skipped: Number($("bqSkipped").value),
+    overtime: Number($("bqOvertime").value) || 0,
+    note: $("bqNote").value.trim(),
+    photo_sha: state.baseline.photoSha || null,
+    items: Object.entries(state.baseline.draft)
+      .filter(([, item]) => item.result)
+      .map(([qid, item]) => ({
+        qid: qid,
+        result: item.result,
+        overtime: item.overtime ? 1 : 0,
+        process_status: item.process_status || null,
+      })),
+  };
+  if (counts.done === 25) {
+    body.answered = counts.correct + counts.wrong;
+    body.correct = counts.correct;
+    body.skipped = counts.skipped;
+    body.overtime = counts.overtime;
+  }
+  try {
+    if (!body.day) throw new Error("先填日期");
+    if (!Number.isInteger(body.answered) || !Number.isInteger(body.correct)) {
+      throw new Error("作答题数和做对数必须是整数");
+    }
+    if (body.answered < 0 || body.answered > 25 || body.correct < 0) {
+      throw new Error("题数应在 0–25 之间");
+    }
+    if (body.correct > body.answered) throw new Error("做对数不能超过作答题数");
+    if (body.answered + body.skipped !== 25) {
+      throw new Error("作答 " + body.answered + " + 放弃 " + body.skipped
+        + " 应等于 25");
+    }
+    if (body.overtime > body.answered) throw new Error("超时题数不能超过作答题数");
+    if (counts.done < 25) {
+      if (counts.correct > body.correct) {
+        throw new Error("逐题「对」超过四个数的做对数");
+      }
+      if (counts.wrong > body.answered - body.correct) {
+        throw new Error("逐题「错」超过四个数的错题数");
+      }
+      if (counts.skipped > body.skipped) {
+        throw new Error("逐题「弃」超过四个数的放弃数");
+      }
+      if (counts.overtime > body.overtime) {
+        throw new Error("逐题「超时」超过四个数的超时数");
+      }
+    }
+  } catch (err) {
+    toast(err.message);
+    return;
+  }
+  state.baseline.busy = true;
+  $("bqSave").disabled = true;
+  $("bqSave").textContent = "保存中…";
+  try {
+    const res = await fetch("/api/baseline/" + half, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    state.baseline.data = data.baseline;
+    state.data.plan = data.plan;
+    $("baselineSheet").classList.add("hidden");
+    const result = (data.baseline.half_detail || {})[half] || {};
+    toast("已保存" + BASELINE_HALVES[half] + " · " + (result.score ?? "—") + "/50");
+    renderPlan(data.plan);
+    loadHome();
+    if (state.data.view === "stats") loadStats();
+  } catch (err) {
+    toast("保存失败：" + err.message);
+  } finally {
+    state.baseline.busy = false;
+    $("bqSave").disabled = false;
+    $("bqSave").textContent = "保存记分";
+  }
+}
+
+async function deleteBaseline() {
+  const half = state.baseline.half;
+  if (!half) return;
+  if (!confirm("删除" + BASELINE_HALVES[half]
+    + "的基线记录？对应的练习记录也会一起删除。")) return;
+  try {
+    const res = await fetch("/api/baseline/" + half, { method: "DELETE" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    state.baseline.data = data.baseline;
+    state.data.plan = data.plan;
+    $("baselineSheet").classList.add("hidden");
+    toast("已删除" + BASELINE_HALVES[half] + "基线");
+    renderPlan(data.plan);
+    loadHome();
+    if (state.data.view === "stats") loadStats();
+  } catch (err) {
+    toast("删除失败：" + err.message);
+  }
+}
+
+async function importBaselineWrongs(half, count) {
+  if (!confirm("把" + BASELINE_HALVES[half] + "做错的 " + count
+    + " 题加入错题本？已在本里的题会跳过，不重复计。")) return;
+  try {
+    const res = await fetch("/api/baseline/" + half + "/wrongs", { method: "POST" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    const added = data.added || 0;
+    const skipped = data.skipped || 0;
+    toast(added
+      ? "已加入 " + added + " 题" + (skipped ? " · 跳过 " + skipped + " 道已在库" : "")
+      : (skipped ? "这 " + skipped + " 题都已在错题本" : "没有可加入的错题"));
+    refreshNavCount();
+    loadHome();
+  } catch (err) {
+    toast("加入失败：" + err.message);
+  }
+}
+
+async function pickBaselinePhoto(file) {
+  if (!file) return;
+  $("bqPhotoState").textContent = "上传中…";
+  try {
+    const sha = await uploadPhoto(file);
+    state.baseline.photoSha = sha;
+    state.baseline.photoUrl = "/api/photos/" + sha + "?size=thumb";
+    renderBaselinePhoto();
+    toast("答案纸照片已附上，保存记分后关联");
+  } catch (err) {
+    $("bqPhotoState").textContent = "";
+    toast("照片上传失败：" + err.message);
+  }
+}
+
+$("bqSave").addEventListener("click", saveBaseline);
+$("bqClose").addEventListener("click", () => $("baselineSheet").classList.add("hidden"));
+$("bqDelete").addEventListener("click", deleteBaseline);
+$("bqAnswered").addEventListener("input", markBaselineDirty);
+$("bqList").addEventListener("click", handleBqListClick);
+$("bqPhotoPick").addEventListener("click", () => $("bqPhotoFile").click());
+$("bqPhotoFile").addEventListener("change", () => {
+  pickBaselinePhoto($("bqPhotoFile").files[0]);
+  $("bqPhotoFile").value = "";
+});
+$("bqPhotoClear").addEventListener("click", () => {
+  state.baseline.photoSha = null;
+  state.baseline.photoUrl = null;
+  renderBaselinePhoto();
+});
 $("baselineSheet").addEventListener("click", (event) => {
   if (event.target === $("baselineSheet")) $("baselineSheet").classList.add("hidden");
 });
@@ -4301,6 +4845,8 @@ if (deep) {
   openData(params.get("view") || "stats", params.get("cat"));
   const query = params.get("q");
   if (query) searchHandbook(query);
+  const half = (params.get("baseline") || "").toUpperCase();
+  if (half === "A" || half === "P") openBaselineSheet(half);
 }
 </script>
 </body>
