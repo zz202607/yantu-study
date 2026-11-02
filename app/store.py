@@ -184,6 +184,17 @@ CREATE TABLE IF NOT EXISTS baseline_items (
     process_status TEXT,
     PRIMARY KEY (run_id, qid)
 );
+-- Why a baseline question was left blank: "no_time" (knew it, ran out of
+-- clock) or "no_idea" (did not know it).  Kept separate from baseline_items
+-- so re-saving a half never wipes the triage.
+CREATE TABLE IF NOT EXISTS baseline_triage (
+    year INTEGER NOT NULL,
+    half TEXT NOT NULL,
+    qid TEXT NOT NULL,
+    triage TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY (year, half, qid)
+);
 CREATE TABLE IF NOT EXISTS review_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     session_id INTEGER NOT NULL REFERENCES review_sessions(id) ON DELETE CASCADE,
@@ -381,7 +392,7 @@ class Store:
             " WHERE baseline_half IS NOT NULL"
         )
         conn.execute(
-            "UPDATE meta SET value = '5' WHERE key = 'schema_version'"
+            "UPDATE meta SET value = '6' WHERE key = 'schema_version'"
         )
 
     # -- photos -----------------------------------------------------------
@@ -1888,6 +1899,50 @@ class Store:
                     (run_id,),
                 )
             ]
+        finally:
+            conn.close()
+
+    def baseline_triage(self, year):
+        """`{"A": {qid: triage}, "P": {...}}` for one baseline year."""
+        conn = self._connect()
+        try:
+            out = {"A": {}, "P": {}}
+            for row in conn.execute(
+                "SELECT half, qid, triage FROM baseline_triage WHERE year = ?",
+                (int(year),),
+            ):
+                out.setdefault(row["half"], {})[row["qid"]] = row["triage"]
+            return out
+        finally:
+            conn.close()
+
+    def set_baseline_triage(self, year, half, qid, triage):
+        """Store or clear the reason a baseline question was skipped."""
+        half = str(half or "").upper()
+        if half not in ("A", "P"):
+            raise ValueError("基线只有上午卷 A 或下午卷 P")
+        qid = str(qid or "").strip().upper()
+        if not qid:
+            raise ValueError("空题号")
+        conn = self._connect()
+        try:
+            with conn:
+                if triage in (None, ""):
+                    conn.execute(
+                        "DELETE FROM baseline_triage"
+                        " WHERE year = ? AND half = ? AND qid = ?",
+                        (int(year), half, qid),
+                    )
+                else:
+                    conn.execute(
+                        "INSERT INTO baseline_triage"
+                        " (year, half, qid, triage, updated_at)"
+                        " VALUES (?, ?, ?, ?, ?)"
+                        " ON CONFLICT(year, half, qid) DO UPDATE SET"
+                        " triage = excluded.triage,"
+                        " updated_at = excluded.updated_at",
+                        (int(year), half, qid, str(triage), now_iso()),
+                    )
         finally:
             conn.close()
 

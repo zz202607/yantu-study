@@ -425,22 +425,34 @@ def delete_baseline(half: str):
     }
 
 
-@app.post("/api/baseline/{half}/wrongs")
-def import_baseline_wrongs(half: str):
-    """Put the half's wrong questions into the review queue, idempotently."""
+BASELINE_IMPORT_KINDS = {
+    "wrong": "2025 基线·错题",
+    "skipped": "2025 基线·放弃",
+    "overtime": "2025 基线·超时做对",
+}
+
+
+def _import_baseline(half, kind, triage=None):
+    """Put one baseline list into the review queue, idempotently."""
     key = (half or "").strip().upper()
     if key not in ("A", "P"):
         raise HTTPException(404, "基线只有上午卷 A 或下午卷 P")
-    qids = baseline_app.wrong_qids(store, key)
+    kind = (kind or "wrong").strip().lower()
+    if kind not in BASELINE_IMPORT_KINDS:
+        raise HTTPException(400, "导入类型只能是 wrong / skipped / overtime")
+    try:
+        qids = baseline_app.qids_for_import(store, key, kind, triage)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
     if not qids:
         return {"added": 0, "updated": 0, "skipped": 0, "errors": [],
-                "qids": []}
+                "qids": [], "kind": kind}
     rows = [
         {
             "qid": qid,
             "family": qid[0],
             "tags": None,
-            "note": "2025 基线",
+            "note": BASELINE_IMPORT_KINDS[kind],
             "source": "batch",
         }
         for qid in qids
@@ -454,7 +466,34 @@ def import_baseline_wrongs(half: str):
         "skipped": len(result["skipped"]),
         "errors": result["errors"],
         "qids": qids,
+        "kind": kind,
     }
+
+
+@app.post("/api/baseline/{half}/wrongs")
+def import_baseline_wrongs(half: str):
+    """Backwards-compatible shortcut for the wrong-question import."""
+    return _import_baseline(half, "wrong")
+
+
+@app.post("/api/baseline/{half}/import")
+def import_baseline_list(half: str, payload: dict = Body(default=None)):
+    payload = payload or {}
+    return _import_baseline(
+        half, payload.get("kind") or "wrong", payload.get("triage")
+    )
+
+
+@app.post("/api/baseline/{half}/triage")
+def triage_baseline_question(half: str, payload: dict = Body(...)):
+    """Label an abandoned question: no_time (clock) or no_idea (knowledge)."""
+    try:
+        row = baseline_app.set_triage(
+            store, half, payload.get("qid"), payload.get("triage")
+        )
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    return {"triage": row, "baseline": baseline_payload()}
 
 
 @app.get("/api/plan/sessions")

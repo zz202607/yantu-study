@@ -268,6 +268,156 @@ class BaselineAppTest(unittest.TestCase):
         )
         self.assertEqual(baseline.wrong_qids(self.store, "P"), [])
 
+    # -- four quadrants + triage -----------------------------------------
+
+    def test_quadrants_split_correct_answers_by_overtime(self):
+        results = ["skipped"] * 25
+        results[0] = "correct"
+        results[1] = "correct"
+        results[2] = "wrong"
+        rows = items("A", results)
+        rows[1]["overtime"] = 1
+        summary = self.save("A", items=rows)
+        quadrants = summary["quadrants"]
+        self.assertTrue(quadrants["available"])
+        self.assertEqual(quadrants["counts"],
+                         {"fast": 1, "slow": 1, "wrong": 1, "skipped": 22})
+        self.assertEqual(quadrants["coverage"], {"done": 25, "total": 25})
+        by_qid = {row["qid"]: row for row in quadrants["items"]}
+        self.assertEqual(by_qid["A2025-A-1"]["quadrant"], "fast")
+        self.assertEqual(by_qid["A2025-A-2"]["quadrant"], "slow")
+        self.assertEqual(by_qid["A2025-A-3"]["quadrant"], "wrong")
+        self.assertEqual(by_qid["A2025-A-4"]["quadrant"], "skipped")
+
+    def test_skipped_triage_is_saved_and_survives_a_resave(self):
+        results = ["skipped"] * 25
+        self.save("A", items=items("A", results))
+        row = baseline.set_triage(
+            self.store, "A", "A2025-A-3", "no_idea"
+        )
+        self.assertEqual(row["triage"], "no_idea")
+        summary = baseline.summary(self.store, self.tags)
+        skipped = [
+            item for item in summary["quadrants"]["items"]
+            if item["qid"] == "A2025-A-3"
+        ][0]
+        self.assertEqual(skipped["triage"], "no_idea")
+        # Re-saving the half must not wipe the triage table.
+        summary = self.save("A", items=items("A", results))
+        skipped = [
+            item for item in summary["quadrants"]["items"]
+            if item["qid"] == "A2025-A-3"
+        ][0]
+        self.assertEqual(skipped["triage"], "no_idea")
+        # Clearing works too.
+        baseline.set_triage(self.store, "A", "A2025-A-3", "")
+        summary = baseline.summary(self.store, self.tags)
+        skipped = [
+            item for item in summary["quadrants"]["items"]
+            if item["qid"] == "A2025-A-3"
+        ][0]
+        self.assertIsNone(skipped["triage"])
+
+    def test_triage_only_accepts_skipped_questions(self):
+        results = ["correct"] + ["skipped"] * 24
+        self.save("A", answered=24, correct=1, skipped=1,
+                  items=items("A", results)[:2])
+        with self.assertRaisesRegex(ValueError, "只有放弃题"):
+            baseline.set_triage(self.store, "A", "A2025-A-1", "no_time")
+        with self.assertRaisesRegex(ValueError, "分流只能是"):
+            baseline.set_triage(self.store, "A", "A2025-A-2", "maybe")
+        with self.assertRaisesRegex(ValueError, "还没有逐题录入"):
+            baseline.set_triage(self.store, "A", "A2025-A-25", "no_idea")
+
+    def test_import_lists_split_wrong_skipped_and_overtime(self):
+        results = ["skipped"] * 25
+        results[0] = "correct"   # fast
+        results[1] = "correct"   # overtime
+        results[2] = "wrong"
+        results[3] = "skipped"   # no_idea
+        results[4] = "skipped"   # no_time
+        rows = items("A", results)
+        rows[1]["overtime"] = 1
+        self.save("A", items=rows)
+        baseline.set_triage(self.store, "A", "A2025-A-4", "no_idea")
+        baseline.set_triage(self.store, "A", "A2025-A-5", "no_time")
+        self.assertEqual(
+            baseline.qids_for_import(self.store, "A", "wrong"),
+            ["A2025-A-3"],
+        )
+        self.assertEqual(
+            baseline.qids_for_import(self.store, "A", "overtime"),
+            ["A2025-A-2"],
+        )
+        self.assertEqual(
+            baseline.qids_for_import(self.store, "A", "skipped",
+                                     triage="no_idea"),
+            ["A2025-A-4"],
+        )
+        self.assertEqual(
+            baseline.qids_for_import(self.store, "A", "skipped",
+                                     triage="no_time"),
+            ["A2025-A-5"],
+        )
+        self.assertEqual(
+            baseline.qids_for_import(self.store, "A", "skipped"),
+            ["A2025-A-%d" % number for number in range(4, 26)],
+        )
+        with self.assertRaisesRegex(ValueError, "导入类型"):
+            baseline.qids_for_import(self.store, "A", "everything")
+
+    # -- must-have categories + exam simulation --------------------------
+
+    def test_must_have_accuracy_uses_paper_category_keys(self):
+        rows = items("A", ["correct"] * 25)
+        must_numbers = [2, 4, 5, 8, 11, 13, 14, 17, 20, 22, 23]
+        for number in must_numbers:
+            rows[number - 1]["result"] = "wrong"
+        self.save("A", items=rows)
+        must = baseline.summary(self.store, self.tags)["must"]
+        self.assertTrue(must["available"])
+        self.assertEqual(must["attempted"], 11)
+        self.assertEqual(must["correct"], 0)
+        self.assertEqual(must["accuracy"], 0.0)
+        self.assertEqual(
+            [row["key"] for row in must["rows"]],
+            ["C3", "C5", "C8", "C9"],
+        )
+        self.assertEqual(
+            {row["key"]: row["n"] for row in must["rows"]},
+            {"C3": 3, "C5": 3, "C8": 3, "C9": 2},
+        )
+
+    def test_simulation_turns_pace_into_exam_day_gaps(self):
+        self.save("A", answered=17, correct=10, skipped=8, overtime=0)
+        summary = self.save("P", answered=17, correct=9, skipped=8,
+                            overtime=0)
+        sim = summary["simulation"]
+        self.assertTrue(sim["available"])
+        self.assertEqual(sim["minutes"], 360)
+        self.assertEqual(sim["per_question_minutes"], 10.59)
+        self.assertEqual(sim["capacity_per_half"], 17)
+        self.assertEqual(sim["target_per_half"], 20)
+        self.assertEqual(sim["target_minutes_per_question"], 9)
+        self.assertEqual(sim["gaps"]["questions_per_half"], 3)
+        self.assertEqual(sim["gaps"]["minutes_per_question"], 1.59)
+        self.assertEqual(sim["gaps"]["correct"], 11)
+        self.assertEqual(sim["gaps"]["score"], 22)
+
+    def test_plan_advice_reads_baseline_must_accuracy(self):
+        from app import plan
+        rows = items("A", ["wrong"] * 25)
+        self.save("A", items=rows)
+        rows = items("P", ["wrong"] * 25)
+        self.save("P", items=rows)
+        summary = baseline.summary(self.store, self.tags)
+        data = plan.overview(
+            self.store, self.tmp, {"exam_date": "2027-11-01"},
+            now="2026-11-10", baseline=summary,
+        )
+        self.assertEqual(data["baseline_must_accuracy"], 0.0)
+        self.assertTrue(any("基线必拿四类" in line for line in data["advice"]))
+
     def test_plan_counts_the_baseline_as_real_exam_work(self):
         from app import plan
         self.save("A", answered=25, correct=18, skipped=0, overtime=2)

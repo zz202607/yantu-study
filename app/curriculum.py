@@ -221,6 +221,12 @@ CASE_CATEGORIES = [
 ]
 
 CASE_BY_KEY = {row["key"]: row for row in CASE_CATEGORIES}
+
+# Questions in these categories carry the most marks per hour of study for
+# most candidates.  The 2025 baseline showed the opposite for this user, so
+# the list is a starting weight, not a personal priority (see the baseline
+# postmortem); the app keeps it in one place so plan and baseline agree.
+MUST_HAVE_KEYS = ("C3", "C5", "C8", "C9")
 CASE_BY_EXAM_NAME = {
     row["exam_category"]: row["key"]
     for row in CASE_CATEGORIES

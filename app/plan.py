@@ -14,6 +14,7 @@ import math
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
+from app.curriculum import MUST_HAVE_KEYS
 from app.store import PRACTICE_SOURCES
 
 DEFAULT_WEEKLY_HOURS = 11
@@ -94,7 +95,7 @@ CORE_STANDARDS = [
     ("C9", "GB 50011-2010", "建筑抗震设计规范"),
 ]
 
-MUST_HAVE_CATEGORIES = {"C3", "C5", "C8", "C9"}
+MUST_HAVE_CATEGORIES = set(MUST_HAVE_KEYS)
 TARGET_QUESTIONS = 1200
 TARGET_REAL_EXAM = 751
 
@@ -345,13 +346,33 @@ def _task_list(phase, week_target, week_actual, prototypes, chapters, standards,
     return tasks[:5]
 
 
+def _baseline_must_line(baseline):
+    """One advice line from the baseline's must-have categories, or None."""
+    must = (baseline or {}).get("must") or {}
+    accuracy = must.get("accuracy")
+    if accuracy is None or must.get("attempted", 0) < 10 or accuracy >= 0.85:
+        return None
+    weak = [
+        row for row in must.get("rows") or []
+        if row.get("accuracy") is not None
+    ]
+    weak.sort(key=lambda row: (row["accuracy"], row["key"]))
+    names = "、".join(row["category"] for row in weak[:2]) or "必拿四类"
+    return ("基线必拿四类正确率 %d%%，低于 85%%；先修%s，不铺新题。"
+            % (round(accuracy * 100), names))
+
+
 def _advice(week, phase, must_accuracy, review_due, phase_summary, baseline=None):
     if phase["key"] == "baseline":
         recorded = _recorded_halves(baseline)
         if len(recorded) == 2:
             score = baseline.get("score") or 0
-            return ["两半基线都已记录（合计 %d/100）；按分项正确率定基础期的优先级。"
-                    % score]
+            advice = ["两半基线都已记录（合计 %d/100）；按分项正确率定基础期的优先级。"
+                      % score]
+            line = _baseline_must_line(baseline)
+            if line:
+                advice.append(line)
+            return advice
         if recorded:
             missing = "下午卷" if "A" in recorded else "上午卷"
             return ["已完成%s；还差%s，3 小时做完后在同一页记四个数。"
@@ -373,6 +394,10 @@ def _advice(week, phase, must_accuracy, review_due, phase_summary, baseline=None
     if must_accuracy is not None and week["attempted"] >= 10 and must_accuracy < 0.85:
         advice.append("必拿类正确率 %d%%，低于 85%%；停新题，回原型卡和规范。"
                       % round(must_accuracy * 100))
+    else:
+        line = _baseline_must_line(baseline)
+        if line:
+            advice.append(line)
     if review_due >= 15:
         advice.append("今日复习到期 %d 题（上限 20）；先清复习，再开新题。" % review_due)
     if phase["weeks"] >= 3 and phase_summary["expected"]:
@@ -504,6 +529,9 @@ def overview(store, data_dir, settings=None, now=None, baseline=None):
         "week": week,
         "phase_summary": phase_sum,
         "must_accuracy": must_accuracy,
+        "baseline_must_accuracy": (
+            ((baseline or {}).get("must") or {}).get("accuracy")
+        ),
         "review_due": review_due,
         "targets": targets,
         "prototypes": prototypes,

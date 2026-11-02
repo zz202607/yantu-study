@@ -27,7 +27,7 @@ import re
 from collections import Counter
 from datetime import date
 
-from app.curriculum import CASE_CATEGORIES, category_key
+from app.curriculum import CASE_BY_KEY, CASE_CATEGORIES, MUST_HAVE_KEYS, category_key
 from app.store import PROCESS_LABELS
 
 YEAR = 2025
@@ -37,6 +37,30 @@ PASS_SCORE = 60
 HALF_NAMES = {"A": "上午卷", "P": "下午卷"}
 RESULT_LABELS = {"correct": "对", "wrong": "错", "skipped": "弃"}
 RESULTS = tuple(RESULT_LABELS)
+
+# Baseline triage: a blank question is either "knew it, ran out of time" or
+# "did not know it".  The first needs a clock, the second needs a prototype.
+TRIAGE_LABELS = {"no_time": "没时间", "no_idea": "不会"}
+TRIAGE_KEYS = tuple(TRIAGE_LABELS)
+
+# The 2025 baseline showed the real bottleneck: correct answers were slow.
+# The six-week target is 20 answered questions per half at 9 minutes each
+# (exactly 180 minutes) and 75% accuracy (15 correct = 30 points per half).
+QUADRANT_LABELS = {
+    "fast": "会且快",
+    "slow": "会但慢",
+    "wrong": "做错",
+    "skipped": "放弃",
+}
+QUADRANT_ACTIONS = {
+    "fast": "维持：不用重做",
+    "slow": "限时：8 分钟重做",
+    "wrong": "补原型：入错题本",
+    "skipped": "分流：没时间 / 不会",
+}
+TARGET_PER_HALF = 20
+TARGET_MINUTES_PER_QUESTION = 9
+TARGET_ACCURACY = 0.75
 
 # Exam tags use the `exam_category` name (勘察), not the curriculum display
 # name (岩土工程勘察), so order by the former and fall back for unknowns.
@@ -179,6 +203,171 @@ def _process_tally(items):
     ))
 
 
+def quadrant_of(result, overtime):
+    if result == "skipped":
+        return "skipped"
+    if result == "wrong":
+        return "wrong"
+    return "slow" if overtime else "fast"
+
+
+def _quadrant_rows(items, questions, triage, half):
+    """Per-question rows with the quadrant and the skip triage attached."""
+    by_qid = {question["qid"]: question for question in questions}
+    rows = []
+    for item in items:
+        question = by_qid.get(item["qid"])
+        if not question:
+            continue
+        quadrant = quadrant_of(item["result"], item["overtime"])
+        rows.append({
+            "qid": item["qid"],
+            "half": half,
+            "seq": item["seq"],
+            "category": item["category"],
+            "category_key": question["category_key"],
+            "result": item["result"],
+            "overtime": bool(item["overtime"]),
+            "quadrant": quadrant,
+            "triage": (triage or {}).get(item["qid"]) if quadrant == "skipped" else None,
+        })
+    return rows
+
+
+def _quadrant_counts(rows):
+    counts = {key: 0 for key in QUADRANT_LABELS}
+    for row in rows:
+        counts[row["quadrant"]] += 1
+    return counts
+
+
+def _must_have(items, questions):
+    """Accuracy inside the four must-have categories for one half."""
+    rows = {}
+    for question in questions:
+        key = question["category_key"]
+        if key not in MUST_HAVE_KEYS:
+            continue
+        bucket = rows.setdefault(key, {
+            "key": key,
+            "category": CASE_BY_KEY[key]["name"],
+            "n": 0, "answered": 0, "correct": 0, "recorded": 0,
+        })
+        bucket["n"] += 1
+    by_qid = {question["qid"]: question for question in questions}
+    for item in items:
+        question = by_qid.get(item["qid"])
+        key = question["category_key"] if question else None
+        if key not in rows:
+            continue
+        bucket = rows[key]
+        bucket["recorded"] += 1
+        if item["result"] != "skipped":
+            bucket["answered"] += 1
+            if item["result"] == "correct":
+                bucket["correct"] += 1
+    return [rows[key] for key in MUST_HAVE_KEYS if key in rows]
+
+
+def _merge_must(merged, rows):
+    for row in rows:
+        bucket = merged.setdefault(row["key"], {
+            "key": row["key"],
+            "category": row["category"],
+            "n": 0, "answered": 0, "correct": 0, "recorded": 0,
+        })
+        for field in ("n", "answered", "correct", "recorded"):
+            bucket[field] += row[field]
+
+
+def _finish_must(merged):
+    rows = []
+    for key in MUST_HAVE_KEYS:
+        bucket = merged.get(key)
+        if not bucket:
+            continue
+        bucket["accuracy"] = (
+            round(bucket["correct"] / bucket["answered"], 4)
+            if bucket["answered"] else None
+        )
+        bucket["pending"] = bucket["n"] - bucket["recorded"]
+        rows.append(bucket)
+    attempted = sum(row["answered"] for row in rows)
+    correct = sum(row["correct"] for row in rows)
+    return {
+        "available": any(row["recorded"] for row in rows),
+        "attempted": attempted,
+        "correct": correct,
+        "accuracy": round(correct / attempted, 4) if attempted else None,
+        "recorded": sum(row["recorded"] for row in rows),
+        "pending": sum(row["pending"] for row in rows),
+        "rows": rows,
+    }
+
+
+def simulation(recorded_halves, minutes, answered, correct):
+    """Turn the baseline into a plain exam-day estimate.
+
+    The estimate is deliberately arithmetic, not motivational: with the
+    observed pace, how many questions fit in 180 minutes, and what has to
+    change to reach 20 questions x 9 minutes x 75%.
+    """
+    if not recorded_halves or not answered:
+        return {
+            "available": False,
+            "target_per_half": TARGET_PER_HALF,
+            "target_minutes_per_question": TARGET_MINUTES_PER_QUESTION,
+            "target_accuracy": TARGET_ACCURACY,
+        }
+    minutes = int(minutes or 0)
+    raw_per_question = minutes / answered if minutes else None
+    per_question = round(raw_per_question, 2) if raw_per_question else None
+    per_half_minutes = round(minutes / recorded_halves, 1) if minutes else 0
+    capacity = (
+        int(per_half_minutes // raw_per_question) if raw_per_question else 0
+    )
+    target_correct = round(TARGET_ACCURACY * TARGET_PER_HALF)  # 15
+    target_correct_total = target_correct * recorded_halves
+    target_score = target_correct * PER_QUESTION * recorded_halves
+    score = correct * PER_QUESTION
+    if per_question is None:
+        headline = "基线缺用时，无法推演速度；先补上每半用时。"
+    else:
+        headline = (
+            "按 %.1f 分钟/题，每半 3 小时只能做 %d 题；目标 %d 题 × %d 分钟"
+            "刚好用满 180 分钟。"
+            % (per_question, capacity, TARGET_PER_HALF,
+               TARGET_MINUTES_PER_QUESTION)
+        )
+    return {
+        "available": True,
+        "recorded_halves": recorded_halves,
+        "minutes": minutes,
+        "answered": answered,
+        "correct": correct,
+        "score": score,
+        "per_question_minutes": per_question,
+        "per_half_minutes": per_half_minutes,
+        "capacity_per_half": capacity,
+        "target_per_half": TARGET_PER_HALF,
+        "target_minutes_per_question": TARGET_MINUTES_PER_QUESTION,
+        "target_accuracy": TARGET_ACCURACY,
+        "target_correct_per_half": target_correct,
+        "target_correct_total": target_correct_total,
+        "target_score": target_score,
+        "gaps": {
+            "questions_per_half": TARGET_PER_HALF - capacity,
+            "minutes_per_question": (
+                round(per_question - TARGET_MINUTES_PER_QUESTION, 2)
+                if per_question is not None else None
+            ),
+            "correct": max(0, target_correct_total - correct),
+            "score": max(0, target_score - score),
+        },
+        "headline": headline,
+    }
+
+
 def summary(store, tags, year=YEAR):
     """Assemble the baseline view from the database.
 
@@ -188,9 +377,13 @@ def summary(store, tags, year=YEAR):
     """
     paper = paper_questions(tags, year)
     runs = {row["half"]: row for row in store.baseline_runs(year)}
+    triage_map = store.baseline_triage(year)
     halves = []
     detail = {}
     merged_categories = {}
+    merged_must = {}
+    quadrant_rows = []
+    total_minutes = 0
     process = Counter()
     for half in ("A", "P"):
         run = runs.get(half)
@@ -217,14 +410,21 @@ def summary(store, tags, year=YEAR):
                 "photo": None,
                 "by_category": [],
                 "process": {},
+                "quadrants": _quadrant_counts([]),
             })
             detail[half] = {**halves[-1], "items": [], "questions": questions}
             continue
         items = store.baseline_items(run["id"])
         rows = _by_category(items, questions)
         _merge_category(merged_categories, rows)
+        half_quadrant_rows = _quadrant_rows(
+            items, questions, triage_map.get(half, {}), half
+        )
+        quadrant_rows.extend(half_quadrant_rows)
+        _merge_must(merged_must, _must_have(items, questions))
         tally = _process_tally(items)
         process.update(tally)
+        total_minutes += int(run["minutes"] or 0)
         accuracy = (
             round(run["correct"] / run["answered"], 4)
             if run["answered"] else None
@@ -246,6 +446,7 @@ def summary(store, tags, year=YEAR):
             "updated_at": run["updated_at"],
             "by_category": rows,
             "process": tally,
+            "quadrants": _quadrant_counts(half_quadrant_rows),
             "items": items,
             "questions": questions,
         }
@@ -255,7 +456,7 @@ def summary(store, tags, year=YEAR):
                 "half", "label", "day", "total_questions", "max_score",
                 "recorded", "answered", "correct", "skipped", "overtime",
                 "score", "accuracy", "items_done", "note", "photo",
-                "by_category", "process",
+                "by_category", "process", "quadrants",
             )
         })
         detail[half] = entry
@@ -263,6 +464,17 @@ def summary(store, tags, year=YEAR):
     recorded = [row for row in halves if row["recorded"]]
     answered = sum(row["answered"] for row in recorded)
     correct = sum(row["correct"] for row in recorded)
+    quadrants = {
+        "available": bool(quadrant_rows),
+        "labels": QUADRANT_LABELS,
+        "actions": QUADRANT_ACTIONS,
+        "counts": _quadrant_counts(quadrant_rows),
+        "coverage": {
+            "done": len(quadrant_rows),
+            "total": TOTAL_QUESTIONS * len(recorded),
+        },
+        "items": quadrant_rows,
+    }
     return {
         "available": bool(recorded),
         "source": "app",
@@ -286,6 +498,9 @@ def summary(store, tags, year=YEAR):
         "score_rule": "每题 %d 分；做对 = 过程与结果均正确" % PER_QUESTION,
         "halves": halves,
         "half_detail": detail,
+        "quadrants": quadrants,
+        "must": _finish_must(merged_must),
+        "simulation": simulation(len(recorded), total_minutes, answered, correct),
     }
 
 
@@ -412,15 +627,68 @@ def save(store, half, payload, tags, year=YEAR):
     return summary(store, tags, year)
 
 
-def wrong_qids(store, half, year=YEAR):
-    """Questions marked wrong in one recorded half, in paper order."""
+def set_triage(store, half, qid, triage, year=YEAR):
+    """Label one abandoned baseline question as no-time or no-idea."""
     half = str(half or "").strip().upper()
+    if half not in HALF_NAMES:
+        raise ValueError("基线只有上午卷 A 或下午卷 P")
+    qid = str(qid or "").strip().upper()
+    runs = {row["half"]: row for row in store.baseline_runs(year)}
+    run = runs.get(half)
+    if not run:
+        raise ValueError("这一半还没有基线记录")
+    item = next(
+        (row for row in store.baseline_items(run["id"]) if row["qid"] == qid),
+        None,
+    )
+    if not item:
+        raise ValueError("这题还没有逐题录入：%s" % (qid or "空题号"))
+    if item["result"] != "skipped":
+        raise ValueError("只有放弃题需要分流")
+    value = str(triage or "").strip().lower()
+    if value and value not in TRIAGE_KEYS:
+        raise ValueError("分流只能是「没时间」或「不会」")
+    store.set_baseline_triage(year, half, qid, value or None)
+    return {"half": half, "qid": qid, "triage": value or None}
+
+
+def qids_for_import(store, half, kind="wrong", triage=None, year=YEAR):
+    """Question ids ready to re-enter a list, in paper order.
+
+    `kind` is one of:
+      wrong     - answered and scored wrong
+      overtime  - answered correctly but over the ten-minute mark
+      skipped   - left blank; `triage` can narrow to no_time or no_idea
+    """
+    half = str(half or "").strip().upper()
+    if half not in HALF_NAMES:
+        raise ValueError("基线只有上午卷 A 或下午卷 P")
+    kind = str(kind or "wrong").strip().lower()
+    if kind not in ("wrong", "overtime", "skipped"):
+        raise ValueError("导入类型只能是 wrong / overtime / skipped")
+    triage = str(triage or "").strip().lower() or None
+    if triage and triage not in TRIAGE_KEYS:
+        raise ValueError("分流只能是「没时间」或「不会」")
     runs = {row["half"]: row for row in store.baseline_runs(year)}
     run = runs.get(half)
     if not run:
         return []
-    return [
-        row["qid"]
-        for row in store.baseline_items(run["id"])
-        if row["result"] == "wrong"
-    ]
+    triage_map = store.baseline_triage(year).get(half, {})
+    qids = []
+    for item in store.baseline_items(run["id"]):
+        if kind == "wrong":
+            keep = item["result"] == "wrong"
+        elif kind == "overtime":
+            keep = item["result"] == "correct" and bool(item["overtime"])
+        else:
+            keep = item["result"] == "skipped"
+            if keep and triage:
+                keep = triage_map.get(item["qid"]) == triage
+        if keep:
+            qids.append(item["qid"])
+    return qids
+
+
+def wrong_qids(store, half, year=YEAR):
+    """Questions marked wrong in one recorded half, in paper order."""
+    return qids_for_import(store, half, "wrong", year=year)
