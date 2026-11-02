@@ -454,6 +454,26 @@
   .plan-head .track { height: 7px; background: rgba(255,255,255,.18); border-radius: 999px; overflow: hidden; margin: 9px 0 7px; }
   .plan-head .track span { display: block; height: 100%; width: 0; background: linear-gradient(90deg,#f0c987,#e8b15c); border-radius: 999px; }
   .plan-head .meta { font-size: 11px; opacity: .8; }
+  .report-cats .row { grid-template-columns: minmax(0,1fr) 52px 52px 40px; }
+  .report-cats .num b { font-size: 12px; color: var(--ink); }
+  .saved-row {
+    display: flex; align-items: center; gap: 8px; padding: 8px 0;
+    border-bottom: 1px solid var(--line); font-size: 12px;
+  }
+  .saved-row:last-child { border-bottom: 0; }
+  .saved-row .main { flex: 1; min-width: 0; }
+  .saved-row b { display: block; font-size: 12.5px; font-weight: 600; }
+  .saved-row span { color: var(--muted); font-size: 10.5px; line-height: 1.4; }
+  .saved-row .del {
+    border: 0; background: transparent; color: var(--muted);
+    font-size: 16px; padding: 2px 4px; font-family: inherit;
+  }
+  .report-md {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px; margin: 10px 0 0; white-space: pre-wrap; overflow: auto;
+    max-height: 62vh; font-family: ui-monospace, Consolas, "Courier New", monospace;
+    font-size: 11.5px; line-height: 1.6; color: var(--ink);
+  }
   .plan-advice {
     border: 1px solid rgba(163,90,0,.22); background: rgba(163,90,0,.06);
     border-radius: 12px; padding: 10px 12px; font-size: 12px; line-height: 1.55;
@@ -903,11 +923,13 @@
     <div class="data-tabs" id="dataTabs">
       <button type="button" data-view="stats" class="on">统计</button>
       <button type="button" data-view="plan">计划</button>
+      <button type="button" data-view="report">周报</button>
       <button type="button" data-view="standards">规范</button>
       <button type="button" data-view="handbook">手册</button>
     </div>
     <div id="dataStats"></div>
     <div id="dataPlan" class="hidden"></div>
+    <div id="dataReport" class="hidden"></div>
     <div id="dataStandards" class="hidden"></div>
     <div id="dataHandbook" class="hidden"></div>
   </section>
@@ -1291,6 +1313,7 @@ const state = {
     standardsFilter: "",
     focus: null,
     plan: null,
+    report: { data: null, saved: [], period: "week", anchor: "" },
     handbookMeta: null,
     handbookToc: null,
     handbookQuery: "",
@@ -2545,6 +2568,7 @@ function runAction(action) {
   if (action.route === "review") return startReview();
   if (action.route === "baseline") return openBaseline();
   if (action.route === "book") return openBook();
+  if (action.route === "plan") return openData("plan");
   if (action.route === "standards") {
     return openData("standards", action.category || null);
   }
@@ -2582,17 +2606,19 @@ function openData(view, category) {
 }
 
 function setDataView(view) {
-  if (!["stats", "plan", "standards", "handbook"].includes(view)) view = "stats";
+  if (!["stats", "plan", "report", "standards", "handbook"].includes(view)) view = "stats";
   state.data.view = view;
   for (const button of $("dataTabs").querySelectorAll("button")) {
     button.classList.toggle("on", button.dataset.view === view);
   }
   $("dataStats").classList.toggle("hidden", view !== "stats");
   $("dataPlan").classList.toggle("hidden", view !== "plan");
+  $("dataReport").classList.toggle("hidden", view !== "report");
   $("dataStandards").classList.toggle("hidden", view !== "standards");
   $("dataHandbook").classList.toggle("hidden", view !== "handbook");
   if (view === "stats") loadStats();
   else if (view === "plan") loadPlan();
+  else if (view === "report") loadReport();
   else if (view === "standards") loadStandards();
   else loadHandbook();
 }
@@ -3045,6 +3071,355 @@ $("planSettingsSave").addEventListener("click", savePlanSettings);
 $("planSettingsSheet").addEventListener("click", (event) => {
   if (event.target === $("planSettingsSheet")) $("planSettingsSheet").classList.add("hidden");
 });
+
+// --- weekly / monthly report ---------------------------------------------
+
+function reportStatusLabel(status) {
+  return { ahead: "超额", on_track: "按计划", behind: "落后", baseline: "基线周",
+           upcoming: "未开始" }[status] || "按计划";
+}
+
+function reportSigned(value, unit) {
+  const n = Number(value) || 0;
+  const text = Number.isInteger(n) ? String(n) : n.toFixed(1);
+  return (n > 0 ? "+" : "") + text + unit;
+}
+
+function shortStamp(value) {
+  if (!value) return "—";
+  return String(value).replace("T", " ").slice(0, 16);
+}
+
+async function loadReport(period, anchor) {
+  const p = period || state.data.report.period || "week";
+  const a = anchor === undefined ? (state.data.report.anchor || "") : anchor;
+  state.data.report.period = p;
+  state.data.report.anchor = a;
+  $("dataReport").innerHTML =
+    '<div class="status"><span class="spinner"></span>生成报告…</div>';
+  try {
+    const [res, savedRes] = await Promise.all([
+      fetch("/api/report?period=" + encodeURIComponent(p)
+        + (a ? "&anchor=" + encodeURIComponent(a) : "")),
+      fetch("/api/reports"),
+    ]);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    const saved = savedRes.ok ? ((await savedRes.json()).reports || []) : [];
+    state.data.report.data = data;
+    state.data.report.saved = saved;
+    renderReport(data, saved);
+  } catch (err) {
+    $("dataReport").innerHTML =
+      '<div class="empty">报告生成失败：' + escapeHtml(err.message) + "</div>";
+  }
+}
+
+function renderReport(d, saved) {
+  const p = d.practice || {};
+  const r = d.review || {};
+  const book = d.book || {};
+  const base = d.baseline || {};
+  const prev = d.previous || {};
+  const delta = prev.delta || {};
+  const info = d.range || {};
+  const phase = d.phase || {};
+  const enc = d.encouragement || {};
+  const baselinePhase = phase.key === "baseline";
+  const target = p.target || 0;
+  const percent = target
+    ? Math.min(100, Math.round((p.attempted || 0) / target * 100)) : 0;
+  const halvesDone = (base.halves || []).filter((row) => row.recorded).length;
+  const big = baselinePhase ? halvesDone : (p.attempted || 0);
+  const bigSuffix = baselinePhase
+    ? "/ 2 半 · 基线周"
+    : "/ " + target + " 题 · " + reportStatusLabel(p.status);
+  const trackPercent = baselinePhase
+    ? Math.round(halvesDone / 2 * 100) : percent;
+  let planValue;
+  if (baselinePhase) {
+    planValue = halvesDone + "/2";
+  } else if (!info.started || !target) {
+    planValue = "—";
+  } else if (p.behind_basis === "to_date") {
+    planValue = p.target_to_date
+      ? Math.min(100, Math.round((p.attempted || 0) / p.target_to_date * 100)) + "%"
+      : (p.attempted ? "领先" : "—");
+  } else {
+    planValue = percent + "%";
+  }
+  const html = [];
+
+  html.push('<div class="section-head" style="margin-top:0"><h2>周报 / 月报</h2>'
+    + '<span class="chips" style="margin:0">'
+    + ["week", "month"].map((key) => '<button type="button" class="chip'
+      + (d.period === key ? " on" : "") + '" data-report-period="' + key + '">'
+      + (key === "week" ? "周报" : "月报") + "</button>").join("")
+    + "</span></div>");
+
+  html.push('<div class="plan-head"><div class="top"><span>'
+    + escapeHtml(d.title || "") + "</span><span>"
+    + escapeHtml(info.label || "") + "</span></div>"
+    + '<div class="phase">' + escapeHtml(phase.name || "")
+    + (d.period === "week" && phase.week
+      ? " · 第 " + phase.week + "/" + phase.weeks + " 周" : "")
+    + "</div>"
+    + '<div class="focus">' + escapeHtml(phase.focus || "") + "</div>"
+    + '<div class="weekline"><b>' + big + "</b><span>" + escapeHtml(bigSuffix)
+    + "</span></div>"
+    + '<div class="track"><span style="width:' + trackPercent + '%"></span></div>'
+    + '<div class="meta">'
+    + (d.countdown && d.countdown.days_left >= 0
+      ? "距 " + escapeHtml(d.countdown.exam_date || "考试") + " "
+        + d.countdown.days_left + " 天"
+      : "已过考试日期")
+    + " · 复习 " + (r.reviews || 0) + " 次 · 新增错题 "
+    + (book.new_errors || 0) + " 道</div></div>");
+
+  html.push('<div class="toolbar wrap" style="margin:0 0 10px">'
+    + '<button type="button" class="ghost small" data-report-nav="prev">‹ 上一'
+    + escapeHtml(info.unit || "") + "</button>"
+    + (info.current ? ""
+      : '<button type="button" class="ghost small" data-report-nav="today">本期</button>')
+    + '<button type="button" class="ghost small" data-report-nav="next">下一'
+    + escapeHtml(info.unit || "") + " ›</button>"
+    + '<span class="grow"></span>'
+    + '<button type="button" id="reportSave" class="primary">保存本页</button>'
+    + "</div>");
+
+  html.push('<div class="summary-block encourage"><h3>这一期的一句话</h3>'
+    + "<p>" + escapeHtml(enc.text || "") + "</p>"
+    + '<p class="hint" style="margin-top:4px">'
+    + escapeHtml(enc.evidence || "") + "</p></div>");
+
+  html.push('<div class="panel-title">关键数字</div><div class="stat-grid">'
+    + statCell(p.attempted ?? 0, "练习题数")
+    + statCell(pct(p.accuracy), "练习正确率")
+    + statCell(r.reviews ?? 0, "复习次数")
+    + statCell(pct(r.accuracy), "复习正确率")
+    + statCell(book.new_errors ?? 0, "新增错题")
+    + statCell(r.mastered ?? 0, "新掌握")
+    + statCell(((p.minutes || 0) / 60).toFixed(1), "学习小时")
+    + statCell(planValue, "计划达成")
+    + "</div>");
+  const bits = [];
+  if ((prev.compare || {}).comparable !== false) {
+    if (delta.attempted != null) bits.push("练习 " + reportSigned(delta.attempted, " 题"));
+    if (delta.reviews != null) bits.push("复习 " + reportSigned(delta.reviews, " 次"));
+    if (delta.accuracy != null) bits.push("正确率 " + reportSigned(delta.accuracy, " 个百分点"));
+    if (bits.length) {
+      html.push('<p class="hint">对比'
+        + escapeHtml((prev.compare || {}).label || "上期") + "："
+        + escapeHtml(bits.join(" · ")) + "</p>");
+    }
+  }
+
+  html.push('<div class="panel-title">计划进度</div><div class="cat-table">'
+    + (baselinePhase
+      ? '<div class="plan-target"><span>基线</span><span class="track">'
+        + '<span class="fill" style="width:' + trackPercent + '%"></span></span>'
+        + '<span class="num">' + halvesDone + "/2 半</span></div>"
+      : '<div class="plan-target"><span>练习</span><span class="track">'
+        + '<span class="fill" style="width:' + percent + '%"></span></span>'
+        + '<span class="num">' + (p.attempted || 0) + "/" + target + "</span></div>")
+    + "</div>"
+    + '<p class="hint">' + escapeHtml(p.target_basis || "")
+    + (p.avg_minutes == null ? "" : " · 平均 " + p.avg_minutes + " 分钟/题")
+    + (p.behind_basis === "to_date"
+      ? " · 截至今日目标 " + p.target_to_date + " 题" : "")
+    + (p.behind_basis === "none" ? "" :
+      p.behind < 0 ? " · 还差 " + (-p.behind) + " 题"
+        : p.behind > 0 ? " · 超额 " + p.behind + " 题" : " · 正好")
+    + "</p>");
+
+  const cats = (d.categories || []).filter((row) => row.attempted
+    || row.reviews || row.new_errors || row.baseline_accuracy != null);
+  html.push('<div class="panel-title">分项 · 练习（正确率）/ 复习（正确率）/ 新增</div>');
+  if (!cats.length) {
+    html.push('<div class="empty">本期没有分类活动。</div>');
+  } else {
+    html.push('<div class="cat-table report-cats">');
+    for (const row of cats) {
+      const baseText = row.baseline_accuracy == null
+        ? "" : "基线 " + pct(row.baseline_accuracy);
+      html.push('<div class="row"><span class="name">'
+        + escapeHtml(row.short)
+        + (baseText ? "<small>" + escapeHtml(baseText) + "</small>" : "")
+        + '</span><span class="num"><b>' + row.attempted + "</b> 题<br>"
+        + pct(row.accuracy) + '</span><span class="num"><b>' + row.reviews
+        + "</b> 次<br>" + pct(row.review_accuracy) + '</span><span class="num">'
+        + (row.new_errors ? "+" + row.new_errors : "—") + "</span></div>");
+    }
+    html.push("</div>");
+  }
+
+  const activity = d.activity || [];
+  if (activity.length) {
+    const maxBar = Math.max(1, ...activity.map((row) =>
+      Math.max(row.reviews, row.wrong)));
+    html.push('<div class="panel-title">节奏（蓝 = 复习，橙 = 做错）</div>'
+      + '<div class="activity"><div class="cols">');
+    for (const row of activity) {
+      html.push('<div class="col" title="' + escapeHtml(row.date + " · 复习 "
+        + row.reviews + " · 做错 " + row.wrong + " · 新错 " + row.new_errors) + '">'
+        + '<span class="bar" style="height:'
+        + Math.max(2, Math.round(row.reviews / maxBar * 100)) + '%"></span>'
+        + '<span class="bar wrong" style="height:'
+        + Math.max(2, Math.round(row.wrong / maxBar * 100)) + '%"></span></div>');
+    }
+    html.push('</div><div class="labels">');
+    activity.forEach((row, index) => {
+      const show = activity.length <= 7 || index % 7 === 0;
+      const label = activity.length <= 7 ? row.label : row.label.slice(3);
+      html.push("<span>" + (show ? escapeHtml(label) : "") + "</span>");
+    });
+    html.push("</div></div>");
+  }
+
+  html.push('<div class="panel-title">2025 案例基线</div>');
+  if (base.available) {
+    const rows = (base.halves || []).map((half) => (half.recorded
+      ? half.label + " " + (half.day || "") + " · " + half.answered + " 题 · "
+        + half.correct + " 对 · " + half.score + "/" + half.max_score
+      : half.label + " 未记录")).map(escapeHtml).join("<br>");
+    html.push('<div class="baseline-card"><b>得分 ' + (base.score ?? "—")
+      + " / " + (base.max_score ?? "—") + " · 正确率 " + pct(base.accuracy)
+      + (base.complete ? (base.passed ? " · 已过线" : " · 未过线") : " · 还差一半")
+      + "</b><p>" + rows + "</p>"
+      + '<button type="button" class="ghost small" data-baseline="1">去基线页</button>'
+      + "</div>");
+  } else {
+    html.push('<div class="baseline-card"><b>还没交基线</b><p>计划 '
+      + escapeHtml(base.due || "—") + "；两半各限时 3 小时，按过程自评四个数。</p>"
+      + '<button type="button" class="ghost small" data-baseline="1">去录入基线</button>'
+      + "</div>");
+  }
+
+  const icons = { baseline: "考", review: "复", weak: "弱", behind: "补",
+                  steady: "稳", overtime: "时", untouched: "书" };
+  html.push('<div class="panel-title">下一步</div>');
+  for (let index = 0; index < (d.next_actions || []).length; index += 1) {
+    const action = d.next_actions[index];
+    html.push('<button type="button" class="action" data-report-action="'
+      + index + '"><span class="icon">'
+      + escapeHtml(icons[action.kind] || "做")
+      + '</span><span class="txt"><b>' + escapeHtml(action.title || "")
+      + "</b><span>" + escapeHtml(action.detail || "")
+      + '</span></span><span class="go">›</span></button>');
+  }
+
+  html.push('<div class="panel-title">已保存的报告</div><div class="cat-table">');
+  if (!(saved || []).length) {
+    html.push('<div class="empty">还没有保存过报告；周日把这页存下来，下周能对比。</div>');
+  } else {
+    for (const row of saved) {
+      html.push('<div class="saved-row"><span class="main"><b>'
+        + escapeHtml(row.title || row.key) + "</b><span>"
+        + escapeHtml(shortStamp(row.saved_at)) + " · 练习 " + (row.attempts ?? "—")
+        + " 题 · 复习 " + (row.reviews ?? "—") + " 次</span></span>"
+        + '<button type="button" class="ghost small" data-report-view="'
+        + escapeHtml(row.key) + '">查看</button>'
+        + '<a class="ghost small" href="/api/reports/'
+        + encodeURIComponent(row.key) + '/file">下载</a>'
+        + '<button type="button" class="del" data-report-delete="'
+        + escapeHtml(row.key) + '">×</button></div>');
+    }
+  }
+  html.push("</div>");
+  html.push('<div id="reportPreview" class="hidden"><div class="saved-row">'
+    + '<span class="main"><b id="reportPreviewTitle"></b>'
+    + '<span>保存时的快照</span></span>'
+    + '<button type="button" class="ghost small" id="reportPreviewHide">收起</button>'
+    + '</div><pre class="report-md" id="reportPreviewBody"></pre></div>');
+
+  const box = $("dataReport");
+  box.innerHTML = html.join("");
+  $("reportSave").addEventListener("click", saveCurrentReport);
+  for (const button of box.querySelectorAll("[data-report-period]")) {
+    button.addEventListener("click", () =>
+      loadReport(button.dataset.reportPeriod, ""));
+  }
+  for (const button of box.querySelectorAll("[data-report-nav]")) {
+    button.addEventListener("click", () => {
+      const where = button.dataset.reportNav;
+      if (where === "prev") loadReport(d.period, info.prev_anchor);
+      else if (where === "next") loadReport(d.period, info.next_anchor);
+      else loadReport(d.period, "");
+    });
+  }
+  for (const button of box.querySelectorAll("[data-report-action]")) {
+    button.addEventListener("click", () => {
+      const action = (d.next_actions || [])[Number(button.dataset.reportAction)];
+      if (action) runAction(action);
+    });
+  }
+  for (const button of box.querySelectorAll("[data-baseline]")) {
+    button.addEventListener("click", openBaseline);
+  }
+  for (const button of box.querySelectorAll("[data-report-view]")) {
+    button.addEventListener("click", () => viewSavedReport(button.dataset.reportView));
+  }
+  for (const button of box.querySelectorAll("[data-report-delete]")) {
+    button.addEventListener("click", () => deleteSavedReport(button.dataset.reportDelete));
+  }
+  $("reportPreviewHide").addEventListener("click", () =>
+    $("reportPreview").classList.add("hidden"));
+}
+
+async function saveCurrentReport() {
+  const data = state.data.report.data;
+  if (!data) return;
+  const button = $("reportSave");
+  button.disabled = true;
+  try {
+    const res = await fetch("/api/report/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ period: data.period, anchor: data.range.start }),
+    });
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.detail || res.statusText);
+    state.data.report.data = payload.report;
+    state.data.report.saved = payload.reports || [];
+    renderReport(payload.report, state.data.report.saved);
+    toast("已保存 " + (payload.saved ? payload.saved.key : "报告"));
+  } catch (err) {
+    toast("保存失败：" + err.message);
+  } finally {
+    const current = $("reportSave");
+    if (current) current.disabled = false;
+  }
+}
+
+async function viewSavedReport(key) {
+  try {
+    const res = await fetch("/api/reports/" + encodeURIComponent(key));
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    $("reportPreviewTitle").textContent = data.title || key;
+    $("reportPreviewBody").textContent = data.markdown || "";
+    $("reportPreview").classList.remove("hidden");
+    $("reportPreview").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (err) {
+    toast("读取失败：" + err.message);
+  }
+}
+
+async function deleteSavedReport(key) {
+  if (!confirm("删除保存的报告 " + key + "？")) return;
+  try {
+    const res = await fetch("/api/reports/" + encodeURIComponent(key), {
+      method: "DELETE",
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    state.data.report.saved = data.reports || [];
+    renderReport(state.data.report.data, state.data.report.saved);
+    toast("已删除");
+  } catch (err) {
+    toast("删除失败：" + err.message);
+  }
+}
 
 // --- standards map --------------------------------------------------------
 

@@ -36,7 +36,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 import crop_question as CQ  # noqa: E402
 import recognize_qid as RQ  # noqa: E402
-from app import analytics, baseline as baseline_app, plan as study_plan, standards  # noqa: E402
+from app import analytics, baseline as baseline_app, plan as study_plan, report as report_app, standards  # noqa: E402
 from app.answer_ocr import analyze_crop  # noqa: E402
 from app.catalog import Catalog  # noqa: E402
 from app.curriculum import CASE_BY_KEY, category_key, load_exam_tags  # noqa: E402
@@ -63,7 +63,7 @@ CHAPTER_RE = re.compile(r"^([CZ])(\d{1,2})-(\d{1,3})$")
 EXAM_RE = re.compile(r"^[AK]\d{4}-[A-Z]-\d{1,3}$")
 MOCK_RE = re.compile(r"^M\d{1,2}-\d{1,3}$")
 
-app = FastAPI(title="岩土错题本 M7")
+app = FastAPI(title="岩土错题本 M8")
 
 
 def _warm_ocr():
@@ -303,6 +303,75 @@ def stats(days: int = 30):
         chapters=catalog.chapters,
         days=days,
     )
+
+
+@app.get("/api/report")
+def get_report(period: str = "week", anchor: str = ""):
+    try:
+        return report_app.build(
+            store, DATA, settings_store.load(),
+            exam_tags=exam_tags(), baseline=baseline_view(),
+            period=period, anchor=anchor or None,
+        )
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+
+
+@app.post("/api/report/save")
+def save_report(payload: dict = Body(...)):
+    try:
+        data = report_app.build(
+            store, DATA, settings_store.load(),
+            exam_tags=exam_tags(), baseline=baseline_view(),
+            period=payload.get("period") or "week",
+            anchor=payload.get("anchor") or None,
+        )
+        saved = report_app.save(DATA, data)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    return {
+        "report": data,
+        "saved": saved,
+        "reports": report_app.list_saved(DATA),
+    }
+
+
+@app.get("/api/reports")
+def list_reports():
+    return {"reports": report_app.list_saved(DATA), "dir": "data/reports"}
+
+
+@app.get("/api/reports/{key}")
+def get_saved_report(key: str):
+    try:
+        return report_app.load_saved(DATA, key)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    except KeyError:
+        raise HTTPException(404, "报告不存在")
+
+
+@app.get("/api/reports/{key}/file")
+def download_report(key: str):
+    try:
+        path = report_app.report_file(DATA, key)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    except KeyError:
+        raise HTTPException(404, "报告不存在")
+    return FileResponse(path, media_type="text/markdown; charset=utf-8",
+                        filename=path.name)
+
+
+@app.delete("/api/reports/{key}")
+def delete_report(key: str):
+    try:
+        removed = report_app.delete_saved(DATA, key)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    if not removed:
+        raise HTTPException(404, "报告不存在")
+    return {"deleted": True, "reports": report_app.list_saved(DATA)}
 
 
 @app.get("/api/plan")
@@ -1288,5 +1357,5 @@ if __name__ == "__main__":
     import uvicorn
 
     port = int(os.environ.get("PORT", "8000"))
-    print("岩土错题本 M7  ->  http://%s:%d" % (lan_ip(), port), flush=True)
+    print("岩土错题本 M8  ->  http://%s:%d" % (lan_ip(), port), flush=True)
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="warning")

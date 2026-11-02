@@ -93,9 +93,20 @@
     基线记录不能在「最近练习」里删，必须回基线页
   - 答案纸照片（半卷级）、错题过程状态（可选）、深链 `?tab=data&view=plan&baseline=A`
   - **177 条测试全绿**；CDP 无头 Chrome 端到端 17 项 PASS（两半录入→刷新恢复→入错题本→删除回滚）
+- **M8 周报/月报完成（11-02）**：数据页新增「周报」，周/月一键生成可保存的一页
+  - 周期按自然周（周一–周日，ISO 周号）与自然月；可上一期/下一期/回本期
+  - 一页内容：练习四个数、计划达成（周目标按阶段与每周小时数折算，跨阶段按天摊）、
+    复习日志、新增错题/掌握/顽固、对比上期的增减、九大类分项、每日节奏、
+    2025 基线、三条下一步、一条带数据依据的鼓励
+  - **保存 = 冻结**：`data/reports/week-2026-W45.md` + `.json`；同一期重存覆盖；
+    页面内可查看快照/下载 Markdown/删除；`data/backups` 一起带走
+  - 空周不编数据：没有练习/复习就写「没有记录」并给下一步
+  - API：`/api/report`、`/api/report/save`、`/api/reports`、`/api/reports/{key}[/file]`
+  - 新模块：`app/report.py`；**195 条测试全绿**；CDP 无头 Chrome 17 项 PASS
 - **下一步**：**11-04 前后交基线**（各限时 3 小时，考场规则）；
   在「计划 → 2025 案例基线」逐题或只记四个数，两半齐后调复习节奏与题量。
-  之后：周报/月报 → 题目到条文级推荐
+  基线后每周日存一页周报，按月对比正确率与弱项变化。
+  之后：题目到条文级推荐
 - 备考策略见 `docs/study-plan.md`，陪练规则见 `docs/coach/playbook.md`，
   做题顺序见 `docs/coach/practice-order.md`，原型全图见 `docs/coach/prototypes.md`
 
@@ -291,7 +302,7 @@
 - [x] M5 学习驾驶舱：倒计时/统计/规范/手册/鼓励/PWA（11-02，见 journal）
 - [x] M5.1 案例/客观题边界修正：过程状态 + 过程照片，知识题独立客观判分（11-02，134 条测试）
 - [x] 应用内 2025 基线记分（四个数 + 逐题状态/答案纸照片 → 总分/正确率，替代 CLI）
-- [ ] 周报/月报：把统计与下一步动作保存成一页
+- [x] M8 周报/月报：周/月一页，含计划达成、分项、对比上期、下一步；保存为 md+json（11-02）
 - [ ] 题目 → 条文级推荐（现在只到大类；M4 已抽引用，可做按题推荐）
 - [ ] 官方考试日期公布后改设置默认值（当前 2027-11-01 为估算）
 - [ ] 14 个单册标签人工看原页核对（优先级低）
@@ -418,6 +429,7 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `app/standards.py` | **M5 规范/手册**：规范库扫描与编号匹配、安全取文件、手册全文索引/搜索/页图；**M6 章节索引/条文定位/规范页图** |
 | `app/plan.py` | **M6 计划**：阶段/周题量、练习记录统计、阶段目标、纠偏规则、任务生成、打印选题 |
 | `app/baseline.py` | **M7 基线**：2025 两半 25 题清单、四个数校验、逐题状态、分项/合计、错题清单 |
+| `app/report.py` | **M8 周报/月报**：自然周/月区间、练习/复习/基线/计划聚合、对比上期、下一步、Markdown 冻结与保存 |
 | `tools/build_standards_index.py` | **M6 规范索引构建**：文字/OCR 目录、双分辨率合并、页码偏移、正文缓存 |
 | `index/standards_index.json` | 50 本标准 → 章节/印刷页/PDF 页（不含正文） |
 | `app/static/manifest.webmanifest` | PWA 清单（名称/图标/快捷方式） |
@@ -435,8 +447,8 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `app/photo_import.py` | 旧照片解析与幂等导入（`4-12 4-13错.jpg` 两题） |
 | `tools/import_old_photos.py` | 旧照片导入 CLI（预览 / `--apply`） |
 | `tools/backup_wrongbook.py` | 备份 / 恢复 CLI（恢复需 `--yes`） |
-| `data/` | **用户数据唯一位置**：`wrongbook.db` + `attachments/` + `backups/` |
-| `tests/` | 单元测试 177 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
+| `data/` | **用户数据唯一位置**：`wrongbook.db` + `attachments/` + `backups/` + `reports/` |
+| `tests/` | 单元测试 195 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
 | `.github/workflows/ci.yml` | GitHub Actions：最小依赖 → compileall → pytest（PR / push main） |
 | `requirements-ci.txt` | CI 最小依赖（不含 OCR/ONNX/FastAPI） |
 | `.cache/crops/` | 裁图缓存（可随时删，自动重建） |

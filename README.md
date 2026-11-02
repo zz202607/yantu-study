@@ -20,6 +20,8 @@
   半卷 50 分、两半合计 100 / 通过线 60；九大类分项；错题一键入本。
 - **规范 / 手册联动**：九大类 → 核心规范 → 章节目录 → App 内页图；条文号定位；
   《工程地质手册》全文检索 + 页图查看。
+- **周报 / 月报**：按自然周/月生成一页，含练习、复习、计划达成、对比上期、九大类分项、
+  基线、下一步与证据型鼓励；可保存为 Markdown 快照（`.md` + `.json`），在 App 内查看/下载。
 - **打印**：A4 题面/答案分页、手写区、Z 族答案遮罩、封面任务单、每题回填格、基线卷与周任务卷。
 
 ## 快速开始
@@ -44,7 +46,7 @@ py -3 app/server.py
 |---|---|
 | `compressed/` | 12 本扫描题库的唯一副本（约 1.5 GB）；书名需与 `index/books.json` 对应 |
 | `工程地质手册（第五版）.pdf` | 手册原件，放项目根目录（不入库） |
-| `data/` | **唯一用户数据**：`wrongbook.db`、照片、备份、导出；首次启动自动建库 |
+| `data/` | **唯一用户数据**：`wrongbook.db`、照片、备份、导出、周报快照；首次启动自动建库 |
 | `print_samples/` | 打印样张与基线卷 PDF，可由 `tools/print_baseline.py` 重建 |
 | `拍照错题/` | 18 张真实错题照片，仅作 OCR/裁图基准 |
 
@@ -65,7 +67,7 @@ py -3 app/server.py
 PYTHONIOENCODING=utf-8 py -3 -m pytest -q
 ```
 
-- **177 条**单测全绿；GitHub Actions 在 PR / push `main` 时运行 compileall + pytest。
+- **195 条**单测全绿；GitHub Actions 在 PR / push `main` 时运行 compileall + pytest。
 - CI 只装 `requirements-ci.txt`（pytest / pymupdf / pillow / numpy），
   不含 OCR / ONNX / FastAPI 重依赖。
 
@@ -77,6 +79,7 @@ app/
   store.py           SQLite：错题、复习排期、练习台账、2025 基线
   baseline.py        2025 案例两半：四个数校验、逐题状态、九大类分项
   plan.py            五阶段计划、周题量、纠偏、任务卷选题
+  report.py          自然周/月报告：聚合、对比上期、下一步、Markdown 快照
   analytics.py       首页/统计：倒计时、连续天数、九大类、错误型鼓励
   curriculum.py      十篇 / 九大类 / 权重 / 核心规范
   standards.py       规范库与手册：索引、条文定位、页图、全文检索
@@ -86,9 +89,9 @@ app/
 
 tools/              索引提取、题号识别、裁题、打印、基准与备份 CLI
 index/              lookup.json（8,826 题）、书目/章节/题号框/2025 分类/规范索引
-tests/              177 条单测
+tests/              195 条单测
 docs/               备考策略、陪练规则、架构总结与 journal
-data/               用户数据（本地，不入库）
+data/               用户数据（本地，不入库；含 reports/ 周报快照）
 compressed/         扫描题库（本地，不入库）
 ```
 

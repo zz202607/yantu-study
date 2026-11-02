@@ -225,6 +225,20 @@ def phase_for(phases, today):
     return phase
 
 
+def phase_on(settings, day):
+    """The phase containing `day`, with its week window filled in."""
+    return phase_for(_phase_list(settings), _today(day))
+
+
+def weekly_target(phase, weekly_hours=DEFAULT_WEEKLY_HOURS):
+    """Scale the phase's 11-hour weekly target to the user's weekly hours."""
+    try:
+        hours = float(weekly_hours)
+    except (TypeError, ValueError):
+        hours = DEFAULT_WEEKLY_HOURS
+    return int(round(phase.get("weekly_questions", 0) * hours / DEFAULT_WEEKLY_HOURS))
+
+
 def _in_range(day, start, end):
     return str(start) <= str(day)[:10] <= str(end)
 

@@ -2068,12 +2068,19 @@ class Store:
             self._snapshot_db(snap)
             counts = self.stats()
             originals = list((self.root / "attachments" / "orig").rglob("*.jpg"))
+            reports = self.root / "reports"
+            report_files = (
+                sorted(reports.glob("*.md")) + sorted(reports.glob("*.json"))
+                if reports.exists() else []
+            )
             with zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED) as zf:
                 zf.write(snap, "wrongbook.db")
                 for extra in ("settings.json", "plan.json"):
                     path = self.root / extra
                     if path.exists():
                         zf.write(path, extra)
+                for path in report_files:
+                    zf.write(path, path.relative_to(self.root).as_posix())
                 for kind in ("orig", "thumb"):
                     folder = self.root / "attachments" / kind
                     if not folder.exists():
@@ -2089,6 +2096,7 @@ class Store:
                             "created_at": now_iso(),
                             "attempts": counts["total"],
                             "photos": len(originals),
+                            "reports": len(report_files),
                         },
                         ensure_ascii=False,
                         indent=2,
@@ -2150,6 +2158,11 @@ class Store:
             for extra in ("settings.json", "plan.json"):
                 if (tmp / extra).exists():
                     shutil.copy2(tmp / extra, data_dir / extra)
+            reports = data_dir / "reports"
+            if (tmp / "reports").exists():
+                if reports.exists():
+                    shutil.rmtree(reports)
+                shutil.copytree(tmp / "reports", reports)
             attach = data_dir / "attachments"
             if attach.exists():
                 shutil.rmtree(attach)
