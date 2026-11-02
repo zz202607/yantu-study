@@ -572,6 +572,36 @@
   .bq-photo img { width: 46px; height: 46px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
   .bq-hint { font-size: 11px; color: var(--muted); margin: 6px 0; line-height: 1.5; }
   .sheet-panel.baseline-sheet { max-height: 92vh; overflow: auto; }
+  .sim-card { border-style: solid; border-color: rgba(22,103,217,.28); background: #fff; }
+  .sim-card .sim-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 8px 0; }
+  .sim-card .sim-grid div { background: var(--paper); border-radius: 8px; padding: 6px 8px; font-size: 10.5px; color: var(--muted); line-height: 1.4; }
+  .sim-card .sim-grid b { display: block; font-size: 15px; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .quad-card { border: 1px solid var(--line); border-radius: 12px; padding: 11px 12px; background: #fff; }
+  .quad-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .quad-head b { font-size: 13px; }
+  .quad-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+  .quad-tile { display: flex; align-items: baseline; gap: 6px; border: 1px solid var(--line); background: var(--paper); border-radius: 10px; padding: 8px 9px; font-family: inherit; text-align: left; color: var(--ink); }
+  .quad-tile .n { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .quad-tile .lb { font-size: 12px; font-weight: 600; }
+  .quad-tile .act { margin-left: auto; font-size: 10px; color: var(--muted); }
+  .quad-tile.q-fast { border-left: 3px solid var(--good); }
+  .quad-tile.q-slow { border-left: 3px solid var(--warn); }
+  .quad-tile.q-wrong { border-left: 3px solid #b3261e; }
+  .quad-tile.q-skipped { border-left: 3px solid var(--muted); }
+  .quad-note { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+  .quad-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin: 6px 0; }
+  .quad-tabs button { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: 4px 10px; font-family: inherit; font-size: 11px; color: var(--muted); }
+  .quad-tabs button.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .quad-row { display: grid; grid-template-columns: 26px 40px 62px 1fr auto; gap: 6px; align-items: center; padding: 6px 8px; border-bottom: 1px solid var(--line); font-size: 11px; }
+  .quad-row:last-child { border-bottom: 0; }
+  .quad-row .n { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .quad-row .half { color: var(--muted); }
+  .quad-row .cat { color: var(--muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .quad-row .qid { font-family: ui-monospace, monospace; font-size: 10px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .quad-triage { display: flex; gap: 3px; }
+  .quad-triage button { border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 3px 7px; font-family: inherit; font-size: 10px; color: var(--muted); }
+  .quad-triage button.on { border-color: var(--warn); color: var(--warn); background: #fff8ef; font-weight: 700; }
+  .quad-empty { padding: 14px; text-align: center; color: var(--muted); font-size: 12px; }
   .plan-task.done .dot { background: var(--good); border-color: var(--good); color: #fff; display: grid; place-items: center; font-size: 10px; }
   .standard-card { border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px; margin-bottom: 9px; background: #fff; }
   .standard-card.flash { animation: flash 1.4s ease; }
@@ -1160,6 +1190,21 @@
   </div>
 </div>
 
+<div id="quadrantSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="quadrantTitle">
+  <div class="sheet-panel baseline-sheet">
+    <div class="sheet-head">
+      <h3 id="quadrantTitle">四象限复盘</h3>
+      <span class="hint" id="quadrantHint"></span>
+    </div>
+    <p class="hint" id="quadrantNote" style="line-height:1.6"></p>
+    <div class="quad-tabs" id="quadrantTabs"></div>
+    <div class="bq-list" id="quadrantList"></div>
+    <div class="sheet-actions" id="quadrantActions">
+      <button id="quadrantClose" class="ghost" type="button">关闭</button>
+    </div>
+  </div>
+</div>
+
 <div id="sessionSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="sessionTitle">
   <div class="sheet-panel">
     <div class="sheet-head">
@@ -1327,6 +1372,8 @@ const state = {
     photoSha: null,
     photoUrl: null,
     busy: false,
+    quadrant: "slow",   // active tab in the four-quadrant sheet
+    quadrantBusy: false,
   },
   review: {
     session: null,
@@ -4069,6 +4116,59 @@ function baselineWrongCount(detail) {
   return (detail.items || []).filter((row) => row.result === "wrong").length;
 }
 
+const BASELINE_QUADRANT_ORDER = ["fast", "slow", "wrong", "skipped"];
+const BASELINE_QUADRANT_NOTE = {
+  fast: "已做对且未超时：保持手感，不用重复刷。",
+  slow: "做对但超过 10 分钟。先按 8 分钟硬上限重做，超时即停；还是慢再入本。",
+  wrong: "过程或结果错。入错题本后按原型补，先不看答案重做。",
+  skipped: "先分「没时间 / 不会」。没时间 → 限时重做；不会 → 补原型并入错题本。",
+};
+
+function baselineQuadrantItems(quadrant) {
+  const data = state.baseline.data || {};
+  const items = ((data.quadrants || {}).items) || [];
+  return items.filter((row) => row.quadrant === quadrant);
+}
+
+function baselineQuadrantPanelHtml(data) {
+  const quad = data.quadrants || {};
+  if (!quad.available) return "";
+  const counts = quad.counts || {};
+  const labels = quad.labels || {};
+  const actions = quad.actions || {};
+  const coverage = quad.coverage || {};
+  const html = ['<div class="quad-card"><div class="quad-head"><b>四象限复盘</b>'
+    + '<span class="hint">逐题 ' + (coverage.done || 0) + "/"
+    + (coverage.total || 0) + '</span></div><div class="quad-grid">'];
+  for (const key of BASELINE_QUADRANT_ORDER) {
+    html.push('<button type="button" class="quad-tile q-' + key
+      + '" data-quadrant="' + key + '"><span class="n">' + (counts[key] || 0)
+      + '</span><span class="lb">' + escapeHtml(labels[key] || key)
+      + '</span><span class="act">'
+      + escapeHtml(String(actions[key] || "").split("：")[0])
+      + "</span></button>");
+  }
+  html.push("</div><div class=\"quad-note\">会且快 → 维持；会但慢 → 限时；"
+    + "做错 → 补原型；放弃 → 分流。点开看题号与分流。</div></div>");
+  return html.join("");
+}
+
+function baselineSimulationHtml(data) {
+  const sim = data.simulation || {};
+  if (!sim.available) return "";
+  const gaps = sim.gaps || {};
+  return '<div class="baseline-card sim-card"><b>考场推演 · '
+    + (sim.score ?? "—") + " / " + (sim.target_score ?? "—") + "</b>"
+    + "<p>" + escapeHtml(sim.headline || "") + "</p>"
+    + '<div class="sim-grid">'
+    + "<div><b>" + (sim.per_question_minutes ?? "—") + "</b>分钟/题 · 目标 "
+    + sim.target_minutes_per_question + "</div>"
+    + "<div><b>" + (sim.capacity_per_half ?? "—") + "</b>题/半 · 目标 "
+    + sim.target_per_half + "</div>"
+    + "<div><b>" + (gaps.correct ?? "—") + "</b>道对题缺口 · 到 "
+    + sim.target_score + " 分</div></div></div>";
+}
+
 function renderBaselinePanel() {
   const box = $("planBaseline");
   if (!box) return;
@@ -4134,6 +4234,8 @@ function renderBaselinePanel() {
         : ' · <span class="warn">未过线</span>')
       + "</div>");
   }
+  html.push(baselineSimulationHtml(data));
+  html.push(baselineQuadrantPanelHtml(data));
   box.innerHTML = html.join("");
   for (const button of box.querySelectorAll("[data-baseline-open]")) {
     button.addEventListener("click", () => openBaselineSheet(button.dataset.baselineOpen));
@@ -4141,6 +4243,151 @@ function renderBaselinePanel() {
   for (const button of box.querySelectorAll("[data-baseline-wrongs]")) {
     button.addEventListener("click", () => importBaselineWrongs(
       button.dataset.baselineWrongs, Number(button.dataset.wrongs)));
+  }
+  for (const button of box.querySelectorAll("[data-quadrant]")) {
+    button.addEventListener("click", () => openQuadrantSheet(button.dataset.quadrant));
+  }
+}
+
+function openQuadrantSheet(quadrant) {
+  if (!state.baseline.data) return;
+  state.baseline.quadrant = BASELINE_QUADRANT_ORDER.includes(quadrant)
+    ? quadrant : "slow";
+  renderQuadrantSheet();
+  $("quadrantSheet").classList.remove("hidden");
+}
+
+function quadrantRowHtml(row) {
+  let tail = "";
+  if (row.quadrant === "skipped") {
+    const current = row.triage || "";
+    tail = '<span class="quad-triage">'
+      + [["no_time", "没时间"], ["no_idea", "不会"]].map(([key, label]) =>
+        '<button type="button" data-triage="' + key + '" data-triage-qid="'
+        + escapeHtml(row.qid) + '" data-triage-half="' + row.half + '"'
+        + (current === key ? ' class="on"' : "") + ">" + label + "</button>").join("")
+      + "</span>";
+  } else if (row.quadrant === "slow") {
+    tail = '<span class="hint">8 分钟</span>';
+  } else if (row.quadrant === "wrong") {
+    tail = '<span class="hint">补原型</span>';
+  }
+  return '<div class="quad-row"><span class="n">' + row.seq + "</span>"
+    + '<span class="half">' + escapeHtml(BASELINE_HALVES[row.half] || row.half)
+    + '</span><span class="cat">' + escapeHtml(row.category || "") + "</span>"
+    + '<span class="qid">' + escapeHtml(row.qid)
+    + (row.overtime ? " · 超时" : "") + "</span>" + tail + "</div>";
+}
+
+function renderQuadrantActions(quadrant, items) {
+  const box = $("quadrantActions");
+  const buttons = ['<button id="quadrantClose" class="ghost" type="button">关闭</button>'];
+  if (["wrong", "slow", "skipped"].includes(quadrant)) {
+    const kind = quadrant === "slow" ? "overtime"
+      : quadrant === "skipped" ? "skipped" : "wrong";
+    for (const half of ["A", "P"]) {
+      const halfRows = items.filter((row) => row.half === half);
+      const eligible = quadrant === "skipped"
+        ? halfRows.filter((row) => row.triage === "no_idea")
+        : halfRows;
+      if (!eligible.length) continue;
+      const label = quadrant === "skipped" ? "「不会」入本"
+        : quadrant === "slow" ? "超时题入本" : "错题入本";
+      buttons.push('<button type="button" class="ghost small" data-import-half="'
+        + half + '" data-import-kind="' + kind + '" data-import-triage="'
+        + (quadrant === "skipped" ? "no_idea" : "") + '">'
+        + BASELINE_HALVES[half] + label + " (" + eligible.length + ")</button>");
+    }
+    if (quadrant === "skipped") {
+      const pending = items.filter((row) => !row.triage).length;
+      if (pending) {
+        buttons.push('<span class="hint">还有 ' + pending + " 题未分流</span>");
+      }
+    }
+  }
+  box.innerHTML = buttons.join("");
+  $("quadrantClose").addEventListener("click",
+    () => $("quadrantSheet").classList.add("hidden"));
+  for (const button of box.querySelectorAll("[data-import-half]")) {
+    button.addEventListener("click", () => importBaselineList(
+      button.dataset.importHalf, button.dataset.importKind,
+      button.dataset.importTriage, button));
+  }
+}
+
+function renderQuadrantSheet() {
+  const data = state.baseline.data || {};
+  const quad = data.quadrants || {};
+  const counts = quad.counts || {};
+  const labels = quad.labels || {};
+  const active = state.baseline.quadrant;
+  const coverage = quad.coverage || {};
+  $("quadrantTabs").innerHTML = BASELINE_QUADRANT_ORDER.map((key) =>
+    '<button type="button" data-quad-tab="' + key + '"'
+    + (key === active ? ' class="on"' : "") + ">"
+    + escapeHtml(labels[key] || key) + " " + (counts[key] || 0)
+    + "</button>").join("");
+  $("quadrantTitle").textContent = "四象限 · " + (labels[active] || active);
+  $("quadrantHint").textContent = "逐题 " + (coverage.done || 0) + "/"
+    + (coverage.total || 0);
+  $("quadrantNote").textContent = BASELINE_QUADRANT_NOTE[active] || "";
+  const items = baselineQuadrantItems(active);
+  $("quadrantList").innerHTML = items.length
+    ? items.map(quadrantRowHtml).join("")
+    : '<div class="quad-empty">这一类还没有逐题记录。</div>';
+  renderQuadrantActions(active, items);
+}
+
+async function setBaselineTriage(half, qid, triage, button) {
+  if (state.baseline.quadrantBusy) return;
+  state.baseline.quadrantBusy = true;
+  if (button) button.disabled = true;
+  try {
+    const res = await fetch("/api/baseline/" + half + "/triage", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ qid: qid, triage: triage }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    state.baseline.data = data.baseline;
+    renderQuadrantSheet();
+    renderBaselinePanel();
+    toast(triage ? "已分流：" + (triage === "no_time" ? "没时间" : "不会")
+      : "已清除分流");
+  } catch (err) {
+    toast("分流失败：" + err.message);
+  } finally {
+    state.baseline.quadrantBusy = false;
+    if (button) button.disabled = false;
+  }
+}
+
+async function importBaselineList(half, kind, triage, button) {
+  const label = kind === "wrong" ? "错题"
+    : kind === "skipped" ? "「不会」的弃题" : "超时做对的题";
+  if (!confirm("把" + BASELINE_HALVES[half] + "的" + label
+    + "加入错题本？已在本里的题会跳过，不重复计。")) return;
+  if (button) button.disabled = true;
+  try {
+    const res = await fetch("/api/baseline/" + half + "/import", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind: kind, triage: triage || null }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    const added = data.added || 0;
+    const skipped = data.skipped || 0;
+    toast(added
+      ? "已加入 " + added + " 题" + (skipped ? " · 跳过 " + skipped + " 道已在库" : "")
+      : (skipped ? "这 " + skipped + " 题都已在错题本" : "没有可加入的题"));
+    refreshNavCount();
+    loadHome();
+  } catch (err) {
+    toast("加入失败：" + err.message);
+  } finally {
+    if (button) button.disabled = false;
   }
 }
 
@@ -4518,6 +4765,25 @@ $("bqPhotoClear").addEventListener("click", () => {
 });
 $("baselineSheet").addEventListener("click", (event) => {
   if (event.target === $("baselineSheet")) $("baselineSheet").classList.add("hidden");
+});
+$("quadrantTabs").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-quad-tab]");
+  if (!button) return;
+  state.baseline.quadrant = button.dataset.quadTab;
+  renderQuadrantSheet();
+});
+$("quadrantList").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-triage]");
+  if (!button) return;
+  const half = button.dataset.triageHalf;
+  const qid = button.dataset.triageQid;
+  const value = button.dataset.triage;
+  const row = baselineQuadrantItems("skipped")
+    .find((item) => item.qid === qid && item.half === half);
+  setBaselineTriage(half, qid, row && row.triage === value ? "" : value, button);
+});
+$("quadrantSheet").addEventListener("click", (event) => {
+  if (event.target === $("quadrantSheet")) $("quadrantSheet").classList.add("hidden");
 });
 
 function renderDashReview(data) {

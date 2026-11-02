@@ -302,7 +302,12 @@ def test_existing_m2_database_migrates_in_place(tmp_path):
         version = check.execute(
             "SELECT value FROM meta WHERE key = 'schema_version'"
         ).fetchone()[0]
-    assert version == "5"
+        triage = check.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table'"
+            " AND name = 'baseline_triage'"
+        ).fetchone()
+    assert version == "6"
+    assert triage == ("baseline_triage",)
 
 
 def test_remark_wrong_resets_a_mastered_question(tmp_path):

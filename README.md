@@ -67,7 +67,7 @@ py -3 app/server.py
 PYTHONIOENCODING=utf-8 py -3 -m pytest -q
 ```
 
-- **195 条**单测全绿；GitHub Actions 在 PR / push `main` 时运行 compileall + pytest。
+- **202 条**单测全绿；GitHub Actions 在 PR / push `main` 时运行 compileall + pytest。
 - CI 只装 `requirements-ci.txt`（pytest / pymupdf / pillow / numpy），
   不含 OCR / ONNX / FastAPI 重依赖。
 
@@ -76,8 +76,8 @@ PYTHONIOENCODING=utf-8 py -3 -m pytest -q
 ```text
 app/
   server.py          FastAPI：拍照识别、裁图、错题本、复习、计划、基线、规范/手册、打印
-  store.py           SQLite：错题、复习排期、练习台账、2025 基线
-  baseline.py        2025 案例两半：四个数校验、逐题状态、九大类分项
+  store.py           SQLite：错题、复习排期、练习台账、2025 基线与弃题分流
+  baseline.py        2025 案例两半：四个数、逐题状态、四象限、必拿分项、考场推演
   plan.py            五阶段计划、周题量、纠偏、任务卷选题
   report.py          自然周/月报告：聚合、对比上期、下一步、Markdown 快照
   analytics.py       首页/统计：倒计时、连续天数、九大类、错误型鼓励
@@ -89,7 +89,7 @@ app/
 
 tools/              索引提取、题号识别、裁题、打印、基准与备份 CLI
 index/              lookup.json（8,826 题）、书目/章节/题号框/2025 分类/规范索引
-tests/              195 条单测
+tests/              202 条单测
 docs/               备考策略、陪练规则、架构总结与 journal
 data/               用户数据（本地，不入库；含 reports/ 周报快照）
 compressed/         扫描题库（本地，不入库）

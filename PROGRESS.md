@@ -105,12 +105,20 @@
   - 空周不编数据：没有练习/复习就写「没有记录」并给下一步
   - API：`/api/report`、`/api/report/save`、`/api/reports`、`/api/reports/{key}[/file]`
   - 新模块：`app/report.py`；**195 条测试全绿**；CDP 无头 Chrome 17 项 PASS
-- **下一步（M9，基线后）**：从「记录错题」转向「训练考场动作」
-  1. **四象限复盘 + 超时/放弃题入本**（基线数据已有，不新增采集；现在只导 `wrong`）
-  2. **考场推演卡**：用 38/100、10.6 分钟/题 → 目标 20 题/9 分钟/75%
-  3. **限时拆解**：5–10 题，单题 8 分钟硬上限；记录做对/做错/超时/放弃但写首步
-  4. **认题卡 + 首步卡**：30 秒识别原型/主规范；不会也能写两行过程分
-  5. **历年整卷打印**：12 月中用 2024 卷复测；2025 已用作基线，避免背答案
+- **M9.1 四象限复盘完成（11-02）**：基线从「一个分数」拆成可执行清单
+  - 会且快 / 会但慢 / 做错 / 放弃 四类，对应 维持 / 限时 / 补原型 / 分流；
+    每类可点开看半卷、题号、类别
+  - 放弃题必须分流「没时间 / 不会」，存 `baseline_triage`（schema 6），重存半卷不丢；
+    「不会」入错题本，「没时间」留在限时重做清单
+  - 导入分三类：`wrong`、`skipped`（可按分流过滤）、`correct+overtime`；幂等、按类备注
+  - **考场推演卡**：用实际用时算 10.6 分钟/题 → 每半只能做 17 题；目标 20 题 × 9 分钟 = 180 分钟
+  - 计划接入基线分项：`baseline_must_accuracy` 替代空转的 `must_accuracy`；低于 85% 直接点名弱类
+  - API：`POST /api/baseline/{half}/triage`、`POST /api/baseline/{half}/import`
+  - **202 条测试全绿**；CDP 无头 Chrome 冒烟（面板/弹层/分流/切换/0 JS 异常）
+- **下一步（M9 余下，基线后）**：把清单变成训练
+  1. **限时拆解**：5–10 题，单题 8 分钟硬上限；记录做对/做错/超时/放弃但写首步
+  2. **认题卡 + 首步卡**：30 秒识别原型/主规范；不会也能写两行过程分
+  3. **历年整卷打印**：12 月中用 2024 卷复测；2025 已用作基线，避免背答案
   - 6 周内先把必拿四类从 42% 拉到 75%；本周先分类 16 道放弃题，5 道超时题做 8 分钟重做
 - 备考策略见 `docs/study-plan.md`，陪练规则见 `docs/coach/playbook.md`，
   做题顺序见 `docs/coach/practice-order.md`，原型全图见 `docs/coach/prototypes.md`
@@ -453,7 +461,7 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `tools/import_old_photos.py` | 旧照片导入 CLI（预览 / `--apply`） |
 | `tools/backup_wrongbook.py` | 备份 / 恢复 CLI（恢复需 `--yes`） |
 | `data/` | **用户数据唯一位置**：`wrongbook.db` + `attachments/` + `backups/` + `reports/` |
-| `tests/` | 单元测试 195 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
+| `tests/` | 单元测试 202 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
 | `.github/workflows/ci.yml` | GitHub Actions：最小依赖 → compileall → pytest（PR / push main） |
 | `requirements-ci.txt` | CI 最小依赖（不含 OCR/ONNX/FastAPI） |
 | `.cache/crops/` | 裁图缓存（可随时删，自动重建） |
