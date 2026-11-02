@@ -97,9 +97,26 @@ M5 解决了「有什么」：倒计时、统计、规范地图、手册。_ming
 3. 做完照封面「结果回填」把四个数录进 App。
 4. 错题拍照或手动记入错题本；复习按排期走。
 
+## 照片存储
+
+- 新照片：长边压到 **2400 px**，JPEG q85；缩略图 480 px q78；仍按 sha256 去重。
+- 过程照片默认每题保留最近 2 张；设置页「照片存储」显示总占用，可一键清理：
+  清理前自动 zip 备份，标记原图（`attempts.photo_id`）永不删除，旧 review_log
+  引用置空后再删孤儿文件。
+- API：`GET /api/storage`、`POST /api/storage/prune`（必须 `confirm: true`）。
+- 现有老照片不重新编码（二次压缩会降质）；靠「保留最近 N 张」控制增量。
+
+## CI 门禁
+
+- `.github/workflows/ci.yml`：PR / push main / 手动触发。
+- 最小依赖 `requirements-ci.txt`（pytest/pymupdf/pillow/numpy），不装 OCR/ONNX；
+  `compileall` + `pytest`。
+- 本地无 `compressed/` 的 3 条打印测试在 CI 自动跳过。
+- 本地最小 venv 验证：155 passed（排除 3 条打印测试）；全量 158 passed。
+
 ## 验证
 
-- `PYTHONIOENCODING=utf-8 py -3 -m pytest -q` → **155 passed**。
+- `PYTHONIOENCODING=utf-8 py -3 -m pytest -q` → **158 passed**。
 - 计划 API：创建练习记录、周目标缩放、阶段任务、原型打勾。
 - 规范 API：`locate 5.2.4 → 5.2 → p30`；页图 200；索引 50 本。
 - 打印 API：`scope=plan` 生成 38 页（封面 1 + 题面 18 + 答案 19），

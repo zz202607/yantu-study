@@ -74,8 +74,13 @@ STUCK_TIMES = 3
 STUCK_IN_QUEUE = 3
 CORRECT_LADDER = (7, 15, 30)
 
-PHOTO_MAX_SIDE = 3200
-THUMB_MAX_SIDE = 640
+# A phone photo of a question/process page is legible well below camera
+# resolution.  2400 px q85 is the storage/legibility compromise; thumbnails
+# are only for list rows.
+PHOTO_MAX_SIDE = 2400
+PHOTO_JPEG_QUALITY = 85
+THUMB_MAX_SIDE = 480
+THUMB_JPEG_QUALITY = 78
 NOTE_MAX = 2000
 SHA_RE = re.compile(r"^[0-9a-f]{64}$")
 
@@ -399,10 +404,10 @@ class Store:
         for path in (orig_path, thumb_path):
             path.parent.mkdir(parents=True, exist_ok=True)
 
-        self._write_jpeg(img, orig_path, quality=92)
+        self._write_jpeg(img, orig_path, quality=PHOTO_JPEG_QUALITY)
         thumb = img.copy()
         thumb.thumbnail((THUMB_MAX_SIDE, THUMB_MAX_SIDE), Image.LANCZOS)
-        self._write_jpeg(thumb, thumb_path, quality=80)
+        self._write_jpeg(thumb, thumb_path, quality=THUMB_JPEG_QUALITY)
 
         moment = now_iso()
         with self._lock:
@@ -451,6 +456,131 @@ class Store:
         " UNION SELECT process_photo_after FROM review_log"
         "       WHERE process_photo_after IS NOT NULL"
     )
+
+    @staticmethod
+    def _dir_bytes(path):
+        total = 0
+        root = Path(path)
+        if not root.exists():
+            return 0
+        for item in root.rglob("*"):
+            if item.is_file():
+                try:
+                    total += item.stat().st_size
+                except OSError:
+                    pass
+        return total
+
+    def storage_stats(self):
+        """Disk usage for the one data root, including the DB and backups."""
+        conn = self._connect()
+        try:
+            photo_count = conn.execute("SELECT COUNT(*) AS n FROM photos").fetchone()["n"]
+            orphan = conn.execute(
+                "SELECT COUNT(*) AS n FROM photos WHERE id NOT IN (%s)"
+                % self._PHOTO_REFS
+            ).fetchone()["n"]
+        finally:
+            conn.close()
+        attachments = self.root / "attachments"
+        backups = self.root / "backups"
+        exports = self.root / "exports"
+        db_bytes = 0
+        for name in ("wrongbook.db", "wrongbook.db-wal", "wrongbook.db-shm"):
+            path = self.root / name
+            if path.exists():
+                try:
+                    db_bytes += path.stat().st_size
+                except OSError:
+                    pass
+        attachments_bytes = self._dir_bytes(attachments)
+        backups_bytes = self._dir_bytes(backups)
+        exports_bytes = self._dir_bytes(exports)
+        return {
+            "photos": photo_count,
+            "orphan_photos": orphan,
+            "attachments_bytes": attachments_bytes,
+            "backups_bytes": backups_bytes,
+            "exports_bytes": exports_bytes,
+            "database_bytes": db_bytes,
+            "total_bytes": (attachments_bytes + backups_bytes + exports_bytes
+                            + db_bytes),
+        }
+
+    def prune_process_photos(self, keep=2):
+        """Keep only the latest N process photos per attempt; backup first.
+
+        Marking photos (`attempts.photo_id`) are never removed.  Old process
+        references in review_log are cleared, then orphan files are deleted.
+        This is destructive by design; the caller must confirm.
+        """
+        try:
+            keep = int(keep)
+        except (TypeError, ValueError):
+            raise ValueError("保留张数必须是整数")
+        if not 0 <= keep <= 5:
+            raise ValueError("每题保留张数应在 0–5 之间")
+        before = self.storage_stats()
+        backup_path = self.backup() if before["photos"] else None
+        removed = 0
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    attempts = conn.execute(
+                        "SELECT id, process_photo_id FROM attempts"
+                    ).fetchall()
+                    for attempt in attempts:
+                        logs = conn.execute(
+                            "SELECT id, process_photo_before, process_photo_after"
+                            " FROM review_log WHERE attempt_id = ? ORDER BY id DESC",
+                            (attempt["id"],),
+                        ).fetchall()
+                        keep_ids = []
+                        for log in logs:
+                            if log["process_photo_after"] and log["process_photo_after"] not in keep_ids:
+                                keep_ids.append(log["process_photo_after"])
+                        if attempt["process_photo_id"] and attempt["process_photo_id"] not in keep_ids:
+                            keep_ids.insert(0, attempt["process_photo_id"])
+                        kept = set(keep_ids[:keep])
+                        all_ids = set()
+                        for log in logs:
+                            for key in ("process_photo_before", "process_photo_after"):
+                                if log[key]:
+                                    all_ids.add(log[key])
+                        if attempt["process_photo_id"]:
+                            all_ids.add(attempt["process_photo_id"])
+                        drop = all_ids - kept
+                        if drop:
+                            marks = ",".join("?" for _ in drop)
+                            conn.execute(
+                                "UPDATE review_log SET"
+                                " process_photo_before = CASE"
+                                "   WHEN process_photo_before IN (%s) THEN NULL"
+                                "   ELSE process_photo_before END,"
+                                " process_photo_after = CASE"
+                                "   WHEN process_photo_after IN (%s) THEN NULL"
+                                "   ELSE process_photo_after END"
+                                " WHERE attempt_id = ?" % (marks, marks),
+                                tuple(drop) + tuple(drop) + (attempt["id"],),
+                            )
+                        conn.execute(
+                            "UPDATE attempts SET process_photo_id = ? WHERE id = ?",
+                            (keep_ids[0] if keep_ids and keep > 0 else None,
+                             attempt["id"]),
+                        )
+            finally:
+                conn.close()
+        removed = self.prune_orphan_photos()
+        after = self.storage_stats()
+        return {
+            "removed_photos": removed,
+            "keep_per_attempt": keep,
+            "backup": str(backup_path) if backup_path else None,
+            "freed_bytes": max(0, before["attachments_bytes"] - after["attachments_bytes"]),
+            "before": before,
+            "after": after,
+        }
 
     def prune_orphan_photos(self):
         """Drop preview-only photos that never landed in an attempt or review."""

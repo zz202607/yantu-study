@@ -238,6 +238,10 @@
   .suggest-cite a::after { content: " ↗"; font-size: 10px; }
   code { background: var(--paper); border: 1px solid var(--line); border-radius: 4px; padding: 0 3px; font-size: 12px; }
   .baseline-status { margin: 10px 0 0; font-size: 12.5px; color: var(--muted); }
+  .storage-box { border: 1px dashed var(--line); border-radius: 11px; padding: 10px 12px; margin: 10px 0; background: var(--paper); }
+  .storage-line { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 12.5px; }
+  .storage-line span { color: var(--muted); font-size: 11.5px; text-align: right; }
+  .storage-box .hint { margin: 4px 0 8px; }
   .suggest .chip { background: #fff; font-size: 12.5px; padding: 5px 10px; }
   .suggest-evidence { font-size: 12px; color: var(--muted); line-height: 1.45; margin-top: 3px; }
   .suggest-note { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
@@ -1047,6 +1051,11 @@
     </label>
     <p class="hint">倒计时、周目标、基线提醒都会随这里更新。</p>
     <p class="hint">手机用浏览器菜单「添加到主屏幕」即可当 App 打开；局域网 HTTP 下系统不会弹自动安装提示。</p>
+    <div class="storage-box">
+      <div class="storage-line"><b>照片存储</b><span id="storageText">读取中…</span></div>
+      <p class="hint">新照片压到 2400px q85；每题默认保留最近 2 张过程照片。标记原图不会被清理。</p>
+      <button id="prunePhotos" class="ghost small" type="button">清理旧过程照片</button>
+    </div>
     <div class="sheet-actions">
       <button id="settingsCancel" class="ghost">取消</button>
       <button id="settingsSave" class="primary">保存</button>
@@ -3496,10 +3505,54 @@ async function openSettings() {
     $("setDailyTarget").value = data.daily_target || 20;
     $("setBaselineDue").value = data.baseline_due || "";
     $("settingsSheet").classList.remove("hidden");
+    loadStorage();
   } catch (err) {
     toast("读取设置失败：" + err.message);
   }
 }
+
+function formatBytes(bytes) {
+  const value = Number(bytes) || 0;
+  if (value >= 1024 * 1024 * 1024) return (value / 1024 / 1024 / 1024).toFixed(2) + " GB";
+  if (value >= 1024 * 1024) return (value / 1024 / 1024).toFixed(1) + " MB";
+  return Math.round(value / 1024) + " KB";
+}
+
+async function loadStorage() {
+  try {
+    const res = await fetch("/api/storage");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    $("storageText").textContent = data.photos + " 张 · "
+      + formatBytes(data.total_bytes) + "（附件 "
+      + formatBytes(data.attachments_bytes) + "）";
+  } catch (err) {
+    $("storageText").textContent = "读取失败";
+  }
+}
+
+$("prunePhotos").addEventListener("click", async () => {
+  if (!confirm("清理旧过程照片？每题保留最近 2 张，标记原图不删；清理前会自动备份。")) {
+    return;
+  }
+  $("prunePhotos").disabled = true;
+  try {
+    const res = await fetch("/api/storage/prune", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirm: true, keep: 2 }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    toast("已清理 " + data.removed_photos + " 张，释放 "
+      + formatBytes(data.freed_bytes) + "；备份已生成");
+    loadStorage();
+  } catch (err) {
+    toast("清理失败：" + err.message);
+  } finally {
+    $("prunePhotos").disabled = false;
+  }
+});
 
 async function saveSettings() {
   $("settingsSave").disabled = true;

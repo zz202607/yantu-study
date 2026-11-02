@@ -1021,6 +1021,23 @@ def backup():
     )
 
 
+@app.get("/api/storage")
+def storage():
+    return store.storage_stats()
+
+
+@app.post("/api/storage/prune")
+def prune_storage(payload: dict = Body(...)):
+    if not payload.get("confirm"):
+        raise HTTPException(400, "清理旧过程照片需要确认")
+    try:
+        return store.prune_process_photos(
+            keep=payload.get("keep", 2)
+        )
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+
+
 @app.get("/api/print")
 def print_questions(
     scope: str = "filter",

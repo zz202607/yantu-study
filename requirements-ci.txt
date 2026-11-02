@@ -1,0 +1,6 @@
+# CI-only subset: tests do not need the OCR/ONNX stack or FastAPI server.
+# Full local install remains requirements-dev.txt.
+pytest==9.1.1
+pymupdf==1.28.2
+pillow==12.3.0
+numpy==2.5.4

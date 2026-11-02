@@ -79,8 +79,11 @@
     条文号 `5.2.4` → 5.2 节；错题引用直接定位
   - **打印中心**：本周任务卷（按未完成原型选 30 题）+ 封面任务单 + 每题回填格 +
     手写区标准/更多/最多；JPEG 220dpi，30 题 ~28 MB
+  - **照片存储**：新照片 2400px q85、缩略图 480px；设置页可清理旧过程照片
+    （每题保留最近 2 张，标记原图不删，清理前自动备份）
+  - **CI 门禁**：GitHub Actions（PR / push main）安装最小依赖 → compileall → pytest
   - 新模块：`app/plan.py`、`tools/build_standards_index.py`、`index/standards_index.json`
-  - **155 条测试全绿**；计划/规范/打印逐屏验收
+  - **158 条测试全绿**；计划/规范/打印逐屏验收
 - **下一步**：**11-04 前后交基线**（各限时 3 小时，考场规则）；
   按过程自评四个数，`score_baseline.py --half A --answered ... --correct ... --write`，
   两半齐后调复习节奏与题量。
@@ -419,7 +422,9 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `tools/import_old_photos.py` | 旧照片导入 CLI（预览 / `--apply`） |
 | `tools/backup_wrongbook.py` | 备份 / 恢复 CLI（恢复需 `--yes`） |
 | `data/` | **用户数据唯一位置**：`wrongbook.db` + `attachments/` + `backups/` |
-| `tests/` | 单元测试 155 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
+| `tests/` | 单元测试 158 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
+| `.github/workflows/ci.yml` | GitHub Actions：最小依赖 → compileall → pytest（PR / push main） |
+| `requirements-ci.txt` | CI 最小依赖（不含 OCR/ONNX/FastAPI） |
 | `.cache/crops/` | 裁图缓存（可随时删，自动重建） |
 | `.cache/answer_ocr/` | 解析 OCR + 候选缓存（可随时删，自动重建） |
 | `tools/build_lookup.py` | 合并成 `index/lookup.json`（v1 的唯一数据入口） |

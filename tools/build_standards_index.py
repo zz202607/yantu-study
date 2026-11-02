@@ -33,7 +33,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np  # noqa: E402
 import pymupdf  # noqa: E402
-from rapidocr import RapidOCR  # noqa: E402
 
 from app.standards import _decode_name, code_key  # noqa: E402
 
@@ -49,6 +48,9 @@ ENGINE = None
 def engine():
     global ENGINE
     if ENGINE is None:
+        # Import lazily so parser/index tests and the CI gate do not need the
+        # ONNX OCR stack just to read a TOC.
+        from rapidocr import RapidOCR
         ENGINE = RapidOCR(params={"Global.log_level": "warning", "Rec.rec_batch_num": 32})
     return ENGINE
 
