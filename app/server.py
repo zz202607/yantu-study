@@ -36,14 +36,14 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 import crop_question as CQ  # noqa: E402
 import recognize_qid as RQ  # noqa: E402
-from app import analytics, standards  # noqa: E402
+from app import analytics, plan as study_plan, standards  # noqa: E402
 from app.answer_ocr import analyze_crop  # noqa: E402
 from app.catalog import Catalog  # noqa: E402
 from app.curriculum import CASE_BY_KEY, category_key, load_exam_tags  # noqa: E402
 from app.photo_import import import_photos, scan_photos  # noqa: E402
 from app.print_export import MAX_QUESTIONS, export_pdf  # noqa: E402
 from app.settings import Settings  # noqa: E402
-from app.store import PROCESS_LABELS, Store, TAGS  # noqa: E402
+from app.store import PRACTICE_SOURCES, PROCESS_LABELS, Store, TAGS  # noqa: E402
 
 INDEX = ROOT / "index"
 CACHE = ROOT / ".cache" / "crops"
@@ -277,6 +277,13 @@ def home():
         "reasons": overview["reasons"],
         "session": _session_view(store.session()),
     }
+    plan_view = study_plan.overview(store, DATA, conf)
+    data["plan"] = {
+        "phase": plan_view["phase"],
+        "week": plan_view["week"],
+        "targets": plan_view["targets"],
+        "advice": plan_view["advice"][:1],
+    }
     return data
 
 
@@ -296,6 +303,73 @@ def stats(days: int = 30):
         chapters=catalog.chapters,
         days=days,
     )
+
+
+@app.get("/api/plan")
+def get_plan():
+    return study_plan.overview(store, DATA, settings_store.load())
+
+
+@app.patch("/api/plan")
+def patch_plan(payload: dict = Body(...)):
+    try:
+        study_plan.save_config(DATA, payload.get("weekly_hours"))
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    return study_plan.overview(store, DATA, settings_store.load())
+
+
+@app.get("/api/plan/sessions")
+def plan_sessions(limit: int = 30):
+    return {
+        "sessions": store.list_practice_sessions(limit=limit),
+        "sources": PRACTICE_SOURCES,
+    }
+
+
+@app.post("/api/plan/sessions")
+def create_plan_session(payload: dict = Body(...)):
+    try:
+        session = store.add_practice_session(
+            day=payload.get("day"),
+            source=payload.get("source") or "exercise",
+            category=payload.get("category") or "mixed",
+            attempted=payload.get("attempted"),
+            correct=payload.get("correct"),
+            abandoned=payload.get("abandoned") or 0,
+            overtime=payload.get("overtime") or 0,
+            minutes=payload.get("minutes") or 0,
+            note=payload.get("note") or "",
+        )
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    return {
+        "session": session,
+        "plan": study_plan.overview(store, DATA, settings_store.load()),
+    }
+
+
+@app.delete("/api/plan/sessions/{session_id}")
+def delete_plan_session(session_id: int):
+    if not store.delete_practice_session(session_id):
+        raise HTTPException(404, "练习记录不存在")
+    return {"deleted": True, "plan": study_plan.overview(store, DATA, settings_store.load())}
+
+
+@app.patch("/api/plan/progress/{key:path}")
+def patch_plan_progress(key: str, payload: dict = Body(...)):
+    if not study_plan.valid_progress_key(key):
+        raise HTTPException(400, "不认识的计划项：%s" % key)
+    try:
+        row = store.set_plan_progress(
+            key,
+            status=payload.get("status") or "done",
+            accuracy=payload.get("accuracy"),
+            note=payload.get("note") or "",
+        )
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    return {"progress": row, "plan": study_plan.overview(store, DATA, settings_store.load())}
 
 
 @app.get("/api/settings")
@@ -325,6 +399,58 @@ def standards_map():
                         "count": 0, "files": [],
                         "error": "规范库读取失败：%s" % exc},
         }
+
+
+@app.get("/api/standards/index")
+def standards_index():
+    index = standards.load_standard_index()
+    return {
+        "built_at": index.get("built_at"),
+        "folder": index.get("folder"),
+        "standards": standards.standard_summaries(),
+    }
+
+
+@app.get("/api/standards/toc")
+def standards_toc(code: str):
+    result = standards.standard_toc(code)
+    if not result:
+        raise HTTPException(404, "规范索引里没有：%s" % code)
+    return result
+
+
+@app.get("/api/standards/locate")
+def standards_locate(code: str, clause: str):
+    result = standards.locate_clause(code, clause)
+    if not result:
+        raise HTTPException(404, "没定位到条文：%s %s" % (code, clause))
+    return result
+
+
+@app.get("/api/standards/search")
+def standards_search(code: str, q: str, limit: int = 20):
+    return standards.search_standard(code, q, limit=limit)
+
+
+@app.get("/api/standards/page")
+def standards_page(code: str, p: int, dpi: int = 110):
+    try:
+        path, page_count, standard = standards.standard_page(code, p, dpi)
+    except FileNotFoundError as exc:
+        raise HTTPException(404, str(exc))
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(500, "规范页渲染失败：%s" % exc)
+    return FileResponse(
+        path,
+        media_type="image/png",
+        headers={
+            "Cache-Control": "max-age=86400",
+            "X-Page-Count": str(page_count),
+            "X-Standard": standard.get("code", ""),
+        },
+    )
 
 
 @app.get("/api/standards/file")
@@ -696,9 +822,15 @@ def suggest_attempt(attempt_id: int):
             citation["file"] = standards.match_standard(
                 citation.get("title"), citation.get("code"), files
             )
+            clauses = citation.get("clauses") or []
+            citation["locate"] = (
+                standards.locate_clause(citation.get("code"), clauses[0])
+                if clauses else None
+            )
     except Exception:  # noqa: BLE001 - the panel still works without links
         for citation in result.get("citations", []):
             citation.setdefault("file", None)
+            citation.setdefault("locate", None)
     return result
 
 
@@ -898,10 +1030,38 @@ def print_questions(
     chapter: str = None,
     status: str = "active",
     days: int = 0,
+    writing_scale: float = 1.0,
+    result_boxes: int = 0,
+    cover: int = 0,
+    per_prototype: int = 5,
+    jpeg_dpi: int = 220,
+    jpeg_quality: int = 85,
 ):
     """One-click A4 sheet: question pages first, answers on their own pages."""
     scope = (scope or "filter").lower()
-    if scope == "review":
+    cover_data = None
+    if scope == "plan":
+        selection = study_plan.week_drill(
+            store, DATA, settings_store.load(),
+            per_prototype=per_prototype, limit=MAX_QUESTIONS,
+        )
+        qids = selection["qids"]
+        phase = selection.get("phase") or {}
+        week = selection.get("week") or {}
+        title = "第 %s 周任务卷" % phase.get("week", "?")
+        if phase.get("key") == "baseline":
+            subtitle = "基线准备 · 先交 2025 上午/下午基线，不按周题量"
+        else:
+            subtitle = "%s · 第 %s/%s 周 · 目标 %s 题" % (
+                phase.get("name", ""), phase.get("week", "?"),
+                phase.get("weeks", "?"), week.get("target", "?"))
+        cover_data = {
+            "title": "本周任务卷",
+            "subtitle": subtitle,
+            "tasks": selection.get("tasks") or [],
+            "qids": qids,
+        }
+    elif scope == "review":
         session = store.session(session_id=session_id) if session_id else store.session()
         qids = list(session.get("queue") or [])
         if not qids:
@@ -946,8 +1106,16 @@ def print_questions(
         scratch_root = CACHE.parent
         scratch_root.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=str(scratch_root)) as tmp:
+            jpeg = None
+            if jpeg_dpi and jpeg_dpi > 0:
+                jpeg = (max(120, min(int(jpeg_dpi), 300)),
+                        max(60, min(int(jpeg_quality), 95)))
             stats = export_pdf(
-                qids, out, header, tmp, engine=RQ.engine(), ocr_lock=_ocr_lock
+                qids, out, header, tmp, engine=RQ.engine(), ocr_lock=_ocr_lock,
+                jpeg=jpeg,
+                writing_scale=writing_scale,
+                result_boxes=bool(result_boxes),
+                cover=cover_data if cover else None,
             )
     except HTTPException:
         raise

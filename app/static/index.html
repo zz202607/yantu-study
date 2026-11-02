@@ -429,6 +429,64 @@
   .stat-grid div { background: var(--paper); border: 1px solid var(--line); border-radius: 11px; padding: 9px 3px; text-align: center; }
   .stat-grid b { display: block; font-size: 19px; line-height: 1.25; font-variant-numeric: tabular-nums; }
   .stat-grid span { font-size: 10.5px; color: var(--muted); }
+  .plan-mini {
+    display: block; width: 100%; text-align: left; cursor: pointer;
+    border: 1px solid var(--line); background: #fff; color: var(--ink);
+    border-radius: 13px; padding: 11px 13px; margin: 0 0 12px;
+    font-family: inherit;
+  }
+  .plan-mini-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 12px; }
+  .plan-mini-top b { font-size: 16px; font-variant-numeric: tabular-nums; }
+  .plan-mini-track { display: block; height: 6px; background: var(--paper); border-radius: 999px; overflow: hidden; margin: 7px 0 5px; }
+  .plan-mini-track span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #1667d9, #4aa3d9); border-radius: 999px; }
+  .plan-head {
+    background: linear-gradient(145deg, #0b2233, #123f5c); color: #fff;
+    border-radius: 16px; padding: 15px; margin-bottom: 12px;
+  }
+  .plan-head .top { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; opacity: .85; }
+  .plan-head .phase { font-size: 20px; font-weight: 700; margin: 6px 0 2px; }
+  .plan-head .focus { font-size: 11.5px; opacity: .78; line-height: 1.45; }
+  .plan-head .weekline { display: flex; align-items: baseline; gap: 6px; margin-top: 12px; font-size: 13px; }
+  .plan-head .weekline b { font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .plan-head .track { height: 7px; background: rgba(255,255,255,.18); border-radius: 999px; overflow: hidden; margin: 9px 0 7px; }
+  .plan-head .track span { display: block; height: 100%; width: 0; background: linear-gradient(90deg,#f0c987,#e8b15c); border-radius: 999px; }
+  .plan-head .meta { font-size: 11px; opacity: .8; }
+  .plan-advice {
+    border: 1px solid rgba(163,90,0,.22); background: rgba(163,90,0,.06);
+    border-radius: 12px; padding: 10px 12px; font-size: 12px; line-height: 1.55;
+    color: var(--warn); margin-bottom: 8px;
+  }
+  .plan-target { display: grid; grid-template-columns: 80px 1fr 52px; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 12px; }
+  .plan-target:last-child { border-bottom: 0; }
+  .plan-target .track { height: 6px; background: var(--paper); border-radius: 999px; overflow: hidden; }
+  .plan-target .fill { height: 100%; background: var(--accent); border-radius: 999px; }
+  .plan-target .num { text-align: right; color: var(--muted); font-size: 10.5px; font-variant-numeric: tabular-nums; }
+  .plan-task { display: flex; gap: 8px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 12.5px; }
+  .plan-task:last-child { border-bottom: 0; }
+  .plan-task .dot { flex: 0 0 auto; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--line); margin-top: 1px; }
+  .plan-task b { display: block; font-size: 12.5px; }
+  .plan-task span { display: block; color: var(--muted); font-size: 11px; margin-top: 1px; line-height: 1.4; }
+  .plan-check { display: grid; grid-template-columns: 1fr; gap: 0; border: 1px solid var(--line); border-radius: 12px; padding: 0 12px; background: #fff; }
+  .plan-check button { display: flex; gap: 8px; align-items: center; width: 100%; border: 0; border-bottom: 1px solid var(--line); background: transparent; padding: 8px 0; font-family: inherit; text-align: left; font-size: 12px; color: var(--ink); }
+  .plan-check button:last-child { border-bottom: 0; }
+  .plan-check .box { flex: 0 0 auto; width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--line); display: grid; place-items: center; font-size: 11px; color: #fff; }
+  .plan-check button.done .box { background: var(--good); border-color: var(--good); }
+  .plan-check button.done b { color: var(--muted); text-decoration: line-through; font-weight: 500; }
+  .plan-check b { flex: 1; font-weight: 500; }
+  .plan-check small { color: var(--muted); font-size: 10px; }
+  .session-row { display: flex; gap: 8px; align-items: baseline; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 11.5px; }
+  .session-row:last-child { border-bottom: 0; }
+  .session-row .main { flex: 1; min-width: 0; }
+  .session-row b { font-size: 12px; }
+  .session-row span { color: var(--muted); }
+  .session-row .del { border: 0; background: transparent; color: var(--muted); font-size: 16px; padding: 2px 4px; }
+  .session-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .session-grid label { font-size: 11px; color: var(--muted); }
+  .session-grid input, .session-grid select {
+    display: block; width: 100%; margin-top: 3px; padding: 9px 8px;
+    border: 1px solid var(--line); border-radius: 9px; font-family: inherit;
+    font-size: 14px; color: var(--ink); background: #fff;
+  }
   .panel-title { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: .04em; margin: 18px 0 7px; }
   .cat-table { border: 1px solid var(--line); border-radius: 12px; padding: 0 12px; background: #fff; }
   .cat-table .row {
@@ -476,6 +534,32 @@
     border-radius: 999px; padding: 4px 9px; font-family: inherit; font-size: 11px;
   }
   .standard-card .ranges button:active { background: #fff; }
+  .std-index {
+    border: 1px solid var(--line); border-radius: 14px; background: #fff;
+    padding: 12px; margin-bottom: 12px;
+  }
+  .std-index .select-row { display: flex; gap: 6px; margin-bottom: 7px; }
+  .std-index select {
+    flex: 1; min-width: 0; background: #fff; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 9px; padding: 8px;
+    font-family: inherit; font-size: 12.5px;
+  }
+  .std-index input {
+    flex: 0 0 108px; min-width: 0; border: 1px solid var(--line);
+    border-radius: 9px; padding: 8px; font-family: inherit; font-size: 13px;
+  }
+  .std-toc { max-height: 320px; overflow: auto; margin-top: 6px; border-top: 1px solid var(--line); }
+  .std-toc button {
+    display: grid; grid-template-columns: 44px 1fr 44px; gap: 6px;
+    width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line);
+    background: transparent; padding: 7px 2px; font-family: inherit;
+    color: var(--ink); font-size: 11.5px;
+  }
+  .std-toc button:last-child { border-bottom: 0; }
+  .std-toc .num { color: var(--accent); font-variant-numeric: tabular-nums; }
+  .std-toc .page { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .std-toc .title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .std-toc button.lvl2 .title { padding-left: 10px; color: var(--muted); }
   .lib-list { max-height: 340px; overflow: auto; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
   .lib-item { display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line); background: transparent; padding: 9px 12px; font-family: inherit; color: var(--ink); }
   .lib-item:last-child { border-bottom: 0; }
@@ -504,7 +588,7 @@
   .page-nav .ghost { padding: 8px 9px; font-size: 12.5px; }
   .page-nav input { width: 60px; flex: 0 0 auto; font-size: 14px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; text-align: center; }
   .settings-field { display: block; margin: 12px 0; font-size: 12.5px; color: var(--muted); }
-  .settings-field input {
+  .settings-field input, .settings-field select {
     display: block; width: 100%; margin-top: 4px; font-size: 15px;
     padding: 10px; border: 1px solid var(--line); border-radius: 10px;
     font-family: inherit; color: var(--ink); background: #fff;
@@ -567,6 +651,15 @@
       <span class="track"><span class="fill" id="dashMilestoneFill"></span></span>
       <span id="dashMilestoneNum">0/10</span>
     </div>
+
+    <button id="dashPlanCard" type="button" class="plan-mini">
+      <span class="plan-mini-top">
+        <span id="dashPlanPhase">本周计划</span>
+        <b id="dashPlanNum">—</b>
+      </span>
+      <span class="plan-mini-track"><span id="dashPlanFill"></span></span>
+      <span id="dashPlanHint" class="hint">—</span>
+    </button>
 
     <button id="dashReview" type="button" class="review-cta">
       <span id="dashReviewTitle">今日复习</span>
@@ -773,10 +866,12 @@
   <section id="data" class="card hidden">
     <div class="data-tabs" id="dataTabs">
       <button type="button" data-view="stats" class="on">统计</button>
-      <button type="button" data-view="standards">规范地图</button>
-      <button type="button" data-view="handbook">手册检索</button>
+      <button type="button" data-view="plan">计划</button>
+      <button type="button" data-view="standards">规范</button>
+      <button type="button" data-view="handbook">手册</button>
     </div>
     <div id="dataStats"></div>
+    <div id="dataPlan" class="hidden"></div>
     <div id="dataStandards" class="hidden"></div>
     <div id="dataHandbook" class="hidden"></div>
   </section>
@@ -901,6 +996,9 @@
     </div>
     <p class="hint">默认按原尺寸排版，每题留手写区，答案单独成页。最多 30 题。</p>
     <div class="print-options">
+      <button type="button" class="print-opt" data-scope="plan">
+        <b>本周任务卷</b><span id="printPlanCount">按当前原型</span>
+      </button>
       <button type="button" class="print-opt" data-scope="filter">
         <b>当前筛选</b><span id="printFilterCount">—</span>
       </button>
@@ -911,6 +1009,15 @@
         <b>今日复习</b><span id="printReviewCount">—</span>
       </button>
     </div>
+    <label class="check"><input type="checkbox" id="printCover" checked> 封面任务单 + 结果回填格</label>
+    <label class="check"><input type="checkbox" id="printBoxes" checked> 每题打印对/错/放弃/超时格</label>
+    <label class="settings-field">手写区
+      <select id="printWriting">
+        <option value="1">标准</option>
+        <option value="1.25" selected>更多</option>
+        <option value="1.5">最多</option>
+      </select>
+    </label>
     <div class="status hidden" id="printStatus">
       <span class="spinner"></span><span>生成中，题目多时需要几十秒…</span>
     </div>
@@ -978,6 +1085,65 @@
   </div>
 </div>
 
+<div id="sessionSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="sessionTitle">
+  <div class="sheet-panel">
+    <div class="sheet-head">
+      <h3 id="sessionTitle">记一次练习</h3>
+      <span class="hint">只记四个数，系统算节奏</span>
+    </div>
+    <div class="session-grid">
+      <label>日期<input type="date" id="psDay"></label>
+      <label>来源<select id="psSource">
+        <option value="exercise">习题</option>
+        <option value="real_exam">真题</option>
+        <option value="mock">模拟</option>
+        <option value="other">其他</option>
+      </select></label>
+      <label>类别<select id="psCategory">
+        <option value="mixed">混合</option>
+        <option value="C2">C2 勘察</option>
+        <option value="C3">C3 浅基础</option>
+        <option value="C4">C4 深基础</option>
+        <option value="C5">C5 地基处理</option>
+        <option value="C6">C6 边坡</option>
+        <option value="C7">C7 基坑</option>
+        <option value="C8">C8 特殊土</option>
+        <option value="C9">C9 地震</option>
+        <option value="C10">C10 检测</option>
+        <option value="C1">C1 土力学</option>
+        <option value="knowledge">知识题</option>
+      </select></label>
+      <label>用时（分钟）<input type="number" id="psMinutes" min="0" max="600" inputmode="numeric" placeholder="180"></label>
+      <label>作答<input type="number" id="psAttempted" min="1" max="200" inputmode="numeric" placeholder="25"></label>
+      <label>做对<input type="number" id="psCorrect" min="0" max="200" inputmode="numeric" placeholder="15"></label>
+      <label>放弃<input type="number" id="psAbandoned" min="0" max="200" inputmode="numeric" placeholder="0"></label>
+      <label>超时<input type="number" id="psOvertime" min="0" max="200" inputmode="numeric" placeholder="0"></label>
+    </div>
+    <textarea id="psNote" rows="2" placeholder="一句话备注（可不填）"></textarea>
+    <div class="sheet-actions">
+      <button id="sessionCancel" class="ghost" type="button">取消</button>
+      <button id="sessionSave" class="primary" type="button">保存</button>
+    </div>
+  </div>
+</div>
+
+<div id="planSettingsSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="planSettingsTitle">
+  <div class="sheet-panel">
+    <div class="sheet-head">
+      <h3 id="planSettingsTitle">调整计划</h3>
+      <span class="hint">题量会按比例调整</span>
+    </div>
+    <label class="settings-field">每周可投入小时数
+      <input type="number" id="planHours" min="4" max="30" inputmode="numeric">
+    </label>
+    <p class="hint">当前方案按 10–12 小时/周设计；改小时数只影响每周题量，不改阶段顺序。</p>
+    <div class="sheet-actions">
+      <button id="planSettingsCancel" class="ghost" type="button">取消</button>
+      <button id="planSettingsSave" class="primary" type="button">保存</button>
+    </div>
+  </div>
+</div>
+
 <div id="pageSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="pageTitle">
   <div class="sheet-panel page-panel">
     <div class="sheet-head">
@@ -992,6 +1158,7 @@
       <button id="pageNext" class="ghost small">下一页 ›</button>
     </div>
     <div class="toolbar page-tools">
+      <button id="pagePdf" class="ghost small hidden">原 PDF</button>
       <button id="pageZoom" class="ghost small">放大</button>
       <span class="grow"></span>
       <button id="pageClose" class="ghost small">关闭</button>
@@ -1066,8 +1233,11 @@ const state = {
     stats: null,
     statsDays: 30,
     standards: null,
+    standardIndex: null,
+    standardToc: null,
     standardsFilter: "",
     focus: null,
+    plan: null,
     handbookMeta: null,
     handbookToc: null,
     handbookQuery: "",
@@ -1172,6 +1342,7 @@ $("tabbar").addEventListener("click", (event) => {
 });
 
 $("dashReview").addEventListener("click", startReview);
+$("dashPlanCard").addEventListener("click", () => openData("plan"));
 $("dashSettings").addEventListener("click", openSettings);
 $("quickSettings").addEventListener("click", openSettings);
 $("quickShot").addEventListener("click", () => {
@@ -1908,7 +2079,23 @@ function renderSuggest(ui, data) {
     for (const citation of data.citations.slice(0, 4)) {
       const line = document.createElement("div");
       const text = citationText(citation);
-      if (citation.file && citation.file.url) {
+      if (citation.locate) {
+        const link = document.createElement("a");
+        link.href = "#";
+        link.textContent = text;
+        link.title = "在 App 里打开对应章节";
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          const found = citation.locate;
+          openStandardPage(
+            found.code, found.pdf_page,
+            (found.matched || "") + " " + (found.section_title || ""),
+            found.page_count,
+            citation.file ? citation.file.name : ""
+          );
+        });
+        line.appendChild(link);
+      } else if (citation.file && citation.file.url) {
         const link = document.createElement("a");
         link.href = citation.file.url;
         link.target = "_blank";
@@ -2265,6 +2452,7 @@ function renderHome(d) {
   $("dashEncourage").textContent = encourage.text || "";
   $("dashEvidence").textContent = encourage.evidence || "";
   renderDashReview(d.review || { count: 0 });
+  renderPlanMini(d.plan);
   renderDashActions(d.next_actions || []);
   renderDashCategories(d.categories || []);
   $("installCard").classList.toggle("hidden", !state.installPrompt);
@@ -2333,15 +2521,17 @@ function openData(view, category) {
 }
 
 function setDataView(view) {
-  if (!["stats", "standards", "handbook"].includes(view)) view = "stats";
+  if (!["stats", "plan", "standards", "handbook"].includes(view)) view = "stats";
   state.data.view = view;
   for (const button of $("dataTabs").querySelectorAll("button")) {
     button.classList.toggle("on", button.dataset.view === view);
   }
   $("dataStats").classList.toggle("hidden", view !== "stats");
+  $("dataPlan").classList.toggle("hidden", view !== "plan");
   $("dataStandards").classList.toggle("hidden", view !== "standards");
   $("dataHandbook").classList.toggle("hidden", view !== "handbook");
   if (view === "stats") loadStats();
+  else if (view === "plan") loadPlan();
   else if (view === "standards") loadStandards();
   else loadHandbook();
 }
@@ -2503,6 +2693,284 @@ function renderStats(d) {
   });
 }
 
+// --- study plan -----------------------------------------------------------
+
+function planStatusLabel(status) {
+  return { on_track: "正常", behind: "落后", ahead: "超前" }[status] || "正常";
+}
+
+function planBar(done, total) {
+  const percent = total ? Math.min(100, Math.round(done / total * 100)) : 0;
+  return '<span class="track"><span class="fill" style="width:' + percent + '%"></span></span>';
+}
+
+async function loadPlan() {
+  $("dataPlan").innerHTML =
+    '<div class="status"><span class="spinner"></span>读取计划…</div>';
+  try {
+    const res = await fetch("/api/plan");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    state.data.plan = data;
+    renderPlan(data);
+  } catch (err) {
+    $("dataPlan").innerHTML =
+      '<div class="empty">计划加载失败：' + escapeHtml(err.message) + "</div>";
+  }
+}
+
+function renderPlan(d) {
+  const phase = d.phase || {};
+  const week = d.week || {};
+  const baseline = phase.key === "baseline";
+  const target = baseline ? Math.max(1, week.attempted || 0) : (week.target || 0);
+  const actual = week.attempted || 0;
+  const percent = target ? Math.min(100, Math.round(actual / target * 100)) : 0;
+  const status = baseline ? "baseline" : (week.status || "on_track");
+  const hours = d.config ? d.config.weekly_hours : 11;
+  const html = [];
+  html.push('<div class="plan-head">'
+    + '<div class="top"><span>' + escapeHtml(phase.name || "")
+    + " · 第 " + (phase.week || 1) + "/" + (phase.weeks || 1) + " 周</span>"
+    + "<span>" + escapeHtml(phase.start || "") + " → "
+    + escapeHtml(phase.end || "") + "</span></div>"
+    + '<div class="phase">' + escapeHtml(phase.name || "计划") + "</div>"
+    + '<div class="focus">' + escapeHtml(phase.focus || "") + "</div>"
+    + '<div class="weekline"><b>' + actual + "</b><span>"
+    + (baseline ? "题 · 基线记录" : "/ " + target + " 题 · " + planStatusLabel(status))
+    + "</span></div>"
+    + '<div class="track"><span style="width:' + percent + '%"></span></div>'
+    + '<div class="meta">用时 ' + ((week.minutes || 0) / 60).toFixed(1)
+    + " h · 正确率 " + pct(week.accuracy) + " · 平均 "
+    + (week.avg_minutes == null ? "—" : week.avg_minutes + " 分钟/题")
+    + " · 每周 " + hours + " 小时</div>"
+    + "</div>");
+  html.push('<div class="toolbar wrap" style="margin:0 0 10px">'
+    + '<button id="planSession" class="primary" type="button">记一次练习</button>'
+    + '<button id="planPrint" class="ghost" type="button">打印本周任务</button>'
+    + '<button id="planSettings" class="ghost" type="button">调整计划</button>'
+    + "</div>");
+  if ((d.advice || []).length) {
+    html.push('<div class="plan-advice">' + d.advice.map(escapeHtml).join("<br>")
+      + "</div>");
+  }
+  html.push('<div class="panel-title">阶段目标</div><div class="cat-table">');
+  for (const row of (d.targets || [])) {
+    html.push('<div class="plan-target"><span>' + escapeHtml(row.label) + "</span>"
+      + planBar(row.done, row.total)
+      + '<span class="num">' + row.done + " / " + row.total + "</span></div>");
+  }
+  html.push("</div>");
+  html.push('<div class="panel-title">本周任务</div><div class="plan-check" style="border:0;padding:0">');
+  for (const task of (d.tasks || [])) {
+    html.push('<div class="plan-task"><span class="dot"></span><span>'
+      + "<b>" + escapeHtml(task.label) + "</b><span>"
+      + escapeHtml(task.detail || "") + "</span></span></div>");
+  }
+  html.push("</div>");
+  html.push('<div class="panel-title">原型卡 · 核心 '
+    + (d.prototypes || []).filter((row) => row.core).length + " 个</div>");
+  html.push('<div class="plan-check">');
+  for (const row of (d.prototypes || [])) {
+    html.push('<button type="button" data-progress-key="prototype:'
+      + escapeHtml(row.key) + '" class="' + (row.done ? "done" : "") + '">'
+      + '<span class="box">' + (row.done ? "✓" : "") + "</span><b>"
+      + escapeHtml(row.key + " · " + row.label) + "</b><small>"
+      + (row.core ? row.tier : row.tier + " · 选做") + "</small></button>");
+  }
+  html.push("</div>");
+  html.push('<div class="panel-title">土力学章节</div><div class="plan-check">');
+  for (const row of (d.soil_chapters || [])) {
+    html.push('<button type="button" data-progress-key="soil:' + row.chapter
+      + '" class="' + (row.done ? "done" : "") + '"><span class="box">'
+      + (row.done ? "✓" : "") + "</span><b>第 " + row.chapter + " 章 · "
+      + escapeHtml(row.label) + "</b></button>");
+  }
+  html.push("</div>");
+  html.push('<div class="panel-title">核心规范</div><div class="plan-check">');
+  for (const row of (d.core_standards || [])) {
+    html.push('<button type="button" data-progress-key="standard:'
+      + escapeHtml(row.key) + '" class="' + (row.done ? "done" : "") + '">'
+      + '<span class="box">' + (row.done ? "✓" : "") + "</span><b>"
+      + escapeHtml(row.code + " " + row.title) + "</b></button>");
+  }
+  html.push("</div>");
+  html.push('<div class="panel-title">最近练习</div><div class="cat-table">');
+  for (const row of (d.recent_sessions || [])) {
+    html.push('<div class="session-row"><span class="main"><b>'
+      + escapeHtml(row.day) + " · " + escapeHtml(row.source_label)
+      + " · " + escapeHtml(row.category) + "</b><span> 作 " + row.attempted
+      + " · 对 " + row.correct + " · " + row.minutes + " 分钟"
+      + (row.note ? " · " + escapeHtml(row.note) : "") + "</span></span>"
+      + '<button type="button" class="del" data-session-delete="' + row.id
+      + '" aria-label="删除">×</button></div>');
+  }
+  if (!(d.recent_sessions || []).length) {
+    html.push('<div class="empty">还没有练习记录。</div>');
+  }
+  html.push("</div>");
+  const box = $("dataPlan");
+  box.innerHTML = html.join("");
+  $("planSession").addEventListener("click", openSessionSheet);
+  $("planPrint").addEventListener("click", openPrintSheet);
+  $("planSettings").addEventListener("click", openPlanSettings);
+  for (const button of box.querySelectorAll("[data-progress-key]")) {
+    button.addEventListener("click", () => togglePlanProgress(button));
+  }
+  for (const button of box.querySelectorAll("[data-session-delete]")) {
+    button.addEventListener("click", () => deletePlanSession(button.dataset.sessionDelete));
+  }
+}
+
+async function togglePlanProgress(button) {
+  const key = button.dataset.progressKey;
+  const done = button.classList.contains("done");
+  button.disabled = true;
+  try {
+    const res = await fetch("/api/plan/progress/" + encodeURIComponent(key), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: done ? "todo" : "done" }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    state.data.plan = data.plan;
+    renderPlan(data.plan);
+  } catch (err) {
+    toast("更新失败：" + err.message);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function openSessionSheet() {
+  const today = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  $("psDay").value = today.getFullYear() + "-" + pad(today.getMonth() + 1)
+    + "-" + pad(today.getDate());
+  $("psSource").value = "exercise";
+  $("psCategory").value = "mixed";
+  for (const id of ["psMinutes", "psAttempted", "psCorrect", "psAbandoned", "psOvertime"]) {
+    $(id).value = "";
+  }
+  $("psNote").value = "";
+  $("sessionSheet").classList.remove("hidden");
+}
+
+async function saveSession() {
+  const body = {
+    day: $("psDay").value,
+    source: $("psSource").value,
+    category: $("psCategory").value,
+    attempted: Number($("psAttempted").value),
+    correct: Number($("psCorrect").value),
+    abandoned: Number($("psAbandoned").value) || 0,
+    overtime: Number($("psOvertime").value) || 0,
+    minutes: Number($("psMinutes").value) || 0,
+    note: $("psNote").value.trim(),
+  };
+  $("sessionSave").disabled = true;
+  try {
+    const res = await fetch("/api/plan/sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    state.data.plan = data.plan;
+    $("sessionSheet").classList.add("hidden");
+    toast("已记一次练习");
+    renderPlan(data.plan);
+    loadHome();
+    if (state.data.view === "stats") loadStats();
+  } catch (err) {
+    toast("保存失败：" + err.message);
+  } finally {
+    $("sessionSave").disabled = false;
+  }
+}
+
+async function deletePlanSession(id) {
+  if (!confirm("删除这条练习记录？")) return;
+  try {
+    const res = await fetch("/api/plan/sessions/" + encodeURIComponent(id), {
+      method: "DELETE",
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    state.data.plan = data.plan;
+    renderPlan(data.plan);
+    loadHome();
+    toast("已删除");
+  } catch (err) {
+    toast("删除失败：" + err.message);
+  }
+}
+
+function openPlanSettings() {
+  $("planHours").value = (state.data.plan && state.data.plan.config
+    && state.data.plan.config.weekly_hours) || 11;
+  $("planSettingsSheet").classList.remove("hidden");
+}
+
+async function savePlanSettings() {
+  $("planSettingsSave").disabled = true;
+  try {
+    const res = await fetch("/api/plan", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ weekly_hours: Number($("planHours").value) }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    state.data.plan = data;
+    $("planSettingsSheet").classList.add("hidden");
+    renderPlan(data);
+    loadHome();
+    toast("计划已调整");
+  } catch (err) {
+    toast("保存失败：" + err.message);
+  } finally {
+    $("planSettingsSave").disabled = false;
+  }
+}
+
+function renderPlanMini(plan) {
+  if (!plan || !plan.week) {
+    $("dashPlanPhase").textContent = "本周计划";
+    $("dashPlanNum").textContent = "—";
+    $("dashPlanHint").textContent = "点开看计划";
+    $("dashPlanFill").style.width = "0%";
+    return;
+  }
+  const week = plan.week;
+  const phase = plan.phase || {};
+  const baseline = phase.key === "baseline";
+  const target = baseline ? Math.max(1, week.attempted || 0) : (week.target || 0);
+  const actual = week.attempted || 0;
+  $("dashPlanPhase").textContent = (phase.name || "计划") + " · 第 "
+    + (phase.week || 1) + " 周";
+  $("dashPlanNum").textContent = baseline
+    ? actual + " 题 · 基线" : actual + " / " + target + " 题";
+  $("dashPlanFill").style.width = (target
+    ? Math.min(100, Math.round(actual / target * 100)) : 0) + "%";
+  const advice = (plan.advice || [])[0] || "按本周任务走";
+  $("dashPlanHint").textContent = "正确率 " + pct(week.accuracy)
+    + " · " + advice;
+}
+
+$("sessionCancel").addEventListener("click", () => $("sessionSheet").classList.add("hidden"));
+$("sessionSave").addEventListener("click", saveSession);
+$("sessionSheet").addEventListener("click", (event) => {
+  if (event.target === $("sessionSheet")) $("sessionSheet").classList.add("hidden");
+});
+$("planSettingsCancel").addEventListener("click", () => $("planSettingsSheet").classList.add("hidden"));
+$("planSettingsSave").addEventListener("click", savePlanSettings);
+$("planSettingsSheet").addEventListener("click", (event) => {
+  if (event.target === $("planSettingsSheet")) $("planSettingsSheet").classList.add("hidden");
+});
+
 // --- standards map --------------------------------------------------------
 
 async function loadStandards() {
@@ -2510,10 +2978,15 @@ async function loadStandards() {
     $("dataStandards").innerHTML =
       '<div class="status"><span class="spinner"></span>读取规范库…</div>';
     try {
-      const res = await fetch("/api/standards");
+      const [res, indexRes] = await Promise.all([
+        fetch("/api/standards"),
+        fetch("/api/standards/index"),
+      ]);
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || res.statusText);
       state.data.standards = data;
+      state.data.standardIndex = indexRes.ok
+        ? await indexRes.json() : { standards: [] };
       state.data.loaded.standards = true;
     } catch (err) {
       $("dataStandards").innerHTML =
@@ -2522,6 +2995,7 @@ async function loadStandards() {
     }
   }
   renderStandardsShell();
+  renderStandardsIndex();
   renderStandardsBody();
   if (state.data.focus) {
     flashCategory(state.data.focus);
@@ -2532,7 +3006,14 @@ async function loadStandards() {
 function renderStandardsShell() {
   if ($("stdSearch")) return;
   $("dataStandards").innerHTML =
-    '<div class="search-row"><input id="stdSearch" type="search" '
+    '<div class="std-index">'
+    + '<div class="select-row"><select id="stdSelect" aria-label="选择规范"></select>'
+    + '<input id="stdClause" type="text" inputmode="text" placeholder="条文号 5.2.4" autocomplete="off">'
+    + '<button id="stdLocate" type="button" class="ghost small">定位</button></div>'
+    + '<p class="hint" id="stdIndexMeta"></p>'
+    + '<div class="std-toc" id="stdToc"></div>'
+    + "</div>"
+    + '<div class="search-row"><input id="stdSearch" type="search" '
     + 'placeholder="搜类别、规范号或书名，如 浅基础 / GB 50007" autocomplete="off">'
     + '<button id="stdClear" type="button" class="ghost small">清空</button></div>'
     + '<p class="hint" id="stdMeta"></p><div id="stdBody"></div>';
@@ -2545,6 +3026,20 @@ function renderStandardsShell() {
     $("stdSearch").value = "";
     renderStandardsBody();
     $("stdSearch").focus();
+  });
+  $("stdSelect").addEventListener("change", (event) => {
+    loadStandardToc(event.target.value);
+  });
+  $("stdLocate").addEventListener("click", locateStandardClause);
+  $("stdClause").addEventListener("keydown", (event) => {
+    if (event.key === "Enter") locateStandardClause();
+  });
+  $("stdToc").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-std-page]");
+    if (!button) return;
+    const toc = state.data.standardToc;
+    if (!toc) return;
+    openStandardPage(toc.code, Number(button.dataset.stdPage), button.dataset.stdTitle);
   });
   $("stdBody").addEventListener("click", (event) => {
     const range = event.target.closest("[data-page]");
@@ -2563,6 +3058,133 @@ function renderStandardsShell() {
       window.open(file.dataset.file, "_blank", "noopener");
     }
   });
+}
+
+function renderStandardsIndex() {
+  const select = $("stdSelect");
+  if (!select) return;
+  const rows = ((state.data.standardIndex || {}).standards || [])
+    .filter((row) => row.toc_count);
+  if (!rows.length) {
+    select.innerHTML = '<option value="">索引未生成</option>';
+    $("stdIndexMeta").textContent =
+      "规范索引为空：运行 tools/build_standards_index.py 后刷新。";
+    $("stdToc").innerHTML = "";
+    return;
+  }
+  const previous = select.value;
+  select.innerHTML = "";
+  for (const row of rows) {
+    const option = document.createElement("option");
+    option.value = row.code || row.code_key;
+    option.textContent = (row.code || row.code_key) + " " + (row.title || "")
+      + (row.source === "bookmark" ? "（书签）" : "");
+    select.appendChild(option);
+  }
+  const core = rows.find((row) => (row.code_key || "").startsWith("GB50007"));
+  if (previous) select.value = previous;
+  else if (core) select.value = core.code || core.code_key;
+  $("stdIndexMeta").textContent = "已建索引 " + rows.length + " 本"
+    + ((state.data.standardIndex || {}).built_at
+      ? " · " + state.data.standardIndex.built_at : "")
+    + " · 扫描件为目录级，有文字层的可全文检索";
+  const code = select.value;
+  if (code && (!state.data.standardToc
+      || state.data.standardToc.code !== code)) {
+    loadStandardToc(code);
+  }
+}
+
+async function loadStandardToc(code) {
+  if (!code) return;
+  $("stdToc").innerHTML =
+    '<div class="status"><span class="spinner"></span>读取目录…</div>';
+  try {
+    const res = await fetch("/api/standards/toc?code=" + encodeURIComponent(code));
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    state.data.standardToc = data;
+    renderStandardToc(data);
+  } catch (err) {
+    $("stdToc").innerHTML =
+      '<div class="empty">目录读取失败：' + escapeHtml(err.message) + "</div>";
+  }
+}
+
+function renderStandardToc(data) {
+  const box = $("stdToc");
+  if (!box) return;
+  const sourceLabel = {
+    text_toc: "文字目录", ocr_toc: "OCR 目录",
+    bookmark: "PDF 书签", none: "无目录",
+  }[data.source] || data.source;
+  $("stdIndexMeta").textContent = data.code + " · " + data.title
+    + " · " + sourceLabel + " · " + data.toc.length + " 条"
+    + (data.offset ? " · 页码偏移 " + data.offset : "")
+    + (data.has_text ? " · 可全文检索" : "");
+  if (!data.toc.length) {
+    box.innerHTML = '<div class="empty">这本规范没有可用目录。</div>';
+    return;
+  }
+  box.innerHTML = data.toc.map((entry) => {
+    const label = entry.number
+      ? entry.number + " " + entry.title
+      : entry.title;
+    return '<button type="button" data-std-page="' + entry.pdf_page
+      + '" data-std-title="' + escapeHtml(label) + '" class="lvl'
+      + (entry.level > 1 ? "2" : "") + '">'
+      + '<span class="num">' + escapeHtml(entry.number || "·") + "</span>"
+      + '<span class="title">' + escapeHtml(entry.title || "")
+      + (entry.estimated ? "（估）" : "") + "</span>"
+      + '<span class="page">p' + entry.pdf_page + "</span></button>";
+  }).join("");
+}
+
+async function locateStandardClause() {
+  const code = $("stdSelect").value;
+  const clause = $("stdClause").value.trim();
+  if (!code || !clause) {
+    toast("先选规范并写条文号");
+    return;
+  }
+  try {
+    const res = await fetch("/api/standards/locate?code=" + encodeURIComponent(code)
+      + "&clause=" + encodeURIComponent(clause));
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    openStandardPage(
+      data.code, data.pdf_page,
+      data.matched + " " + (data.section_title || "")
+    );
+    toast("定位到 " + data.matched + " · p" + data.pdf_page
+      + (data.estimated ? "（页码为估算）" : ""));
+  } catch (err) {
+    toast("没定位到：" + err.message);
+  }
+}
+
+function openStandardPage(code, page, title, count, file) {
+  const toc = state.data.standardToc || {};
+  openPageViewer({
+    kind: "standard",
+    code,
+    page: Number(page),
+    count: Number(count || toc.page_count) || 0,
+    title: code + " · " + (title || ""),
+    file: file || toc.name || "",
+  });
+}
+
+function openStandardClause(code, clause) {
+  fetch("/api/standards/locate?code=" + encodeURIComponent(code)
+    + "&clause=" + encodeURIComponent(clause))
+    .then(async (res) => {
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || res.statusText);
+      openStandardPage(data.code, data.pdf_page,
+        data.matched + " " + (data.section_title || ""));
+    })
+    .catch((err) => toast("规范定位失败：" + err.message));
 }
 
 function stdLine(label, items) {
@@ -2789,33 +3411,67 @@ function renderHandbookResults(data) {
   box.innerHTML = html.join("");
 }
 
+function openPageViewer(options) {
+  const count = Number(options.count) || 0;
+  const number = Math.max(1, Math.min(Number(options.page) || 1, count || 1));
+  state.page = {
+    kind: options.kind || "handbook",
+    code: options.code || "",
+    file: options.file || "",
+    title: options.title || "手册",
+    n: number,
+    count: count || 1,
+  };
+  $("pageTitle").textContent = state.page.title + " · p" + number;
+  $("pageMeta").textContent = "PDF 第 " + number + " / " + (count || "—") + " 页";
+  $("pageInput").value = number;
+  $("pageInput").max = count || 1;
+  $("pagePrev").disabled = number <= 1;
+  $("pageNext").disabled = number >= (count || 1);
+  $("pagePdf").classList.toggle("hidden",
+    !(state.page.kind === "standard" && state.page.file));
+  const wrap = $("pageImg").closest(".paper-wrap");
+  wrap.classList.remove("zoom");
+  $("pageZoom").textContent = "放大";
+  $("pageImg").src = state.page.kind === "standard"
+    ? "/api/standards/page?code=" + encodeURIComponent(state.page.code)
+      + "&p=" + number + "&dpi=110"
+    : "/api/handbook/page?p=" + number + "&dpi=110";
+  $("pageSheet").classList.remove("hidden");
+}
+
+function loadPageViewer(page) {
+  if (!state.page.count) return;
+  const number = Math.max(1, Math.min(Number(page) || 1, state.page.count));
+  openPageViewer({ ...state.page, page: number });
+}
+
 async function openHandbookPage(page) {
   const meta = state.data.handbookMeta || {};
   const count = Number(meta.page_count) || 1426;
-  const number = Math.max(1, Math.min(Number(page) || 1, count));
-  state.page.n = number;
-  state.page.count = count;
-  $("pageTitle").textContent = "手册 · p" + number;
-  $("pageMeta").textContent = "PDF 第 " + number + " / " + count + " 页";
-  $("pageInput").value = number;
-  $("pageInput").max = count;
-  $("pagePrev").disabled = number <= 1;
-  $("pageNext").disabled = number >= count;
-  $("pageImg").src = "/api/handbook/page?p=" + number + "&dpi=110";
-  $("pageSheet").classList.remove("hidden");
+  openPageViewer({
+    kind: "handbook", page: Number(page), count,
+    title: "工程地质手册",
+  });
 }
 
 function stepHandbookPage(delta) {
   if (!state.page.n) return;
   const next = state.page.n + delta;
-  if (next >= 1 && next <= (state.page.count || 1)) openHandbookPage(next);
+  if (next >= 1 && next <= (state.page.count || 1)) loadPageViewer(next);
 }
 
 $("pagePrev").addEventListener("click", () => stepHandbookPage(-1));
 $("pageNext").addEventListener("click", () => stepHandbookPage(1));
-$("pageGo").addEventListener("click", () => openHandbookPage($("pageInput").value));
+$("pageGo").addEventListener("click", () => loadPageViewer($("pageInput").value));
 $("pageInput").addEventListener("keydown", (event) => {
-  if (event.key === "Enter") openHandbookPage($("pageInput").value);
+  if (event.key === "Enter") loadPageViewer($("pageInput").value);
+});
+$("pagePdf").addEventListener("click", () => {
+  if (state.page.kind === "standard" && state.page.file) {
+    window.open("/api/standards/file?name=" + encodeURIComponent(state.page.file),
+      "_blank", "noopener");
+  }
 });
 $("pageZoom").addEventListener("click", () => {
   const wrap = $("pageImg").closest(".paper-wrap");
@@ -3399,6 +4055,14 @@ function openPrintSheet() {
   $("printReviewCount").textContent = overview
     ? (overview.count ? overview.count + " 题" : "今天没有到期题")
     : "—";
+  const plan = state.data.plan;
+  if (plan && plan.phase && plan.phase.key === "baseline") {
+    $("printPlanCount").textContent = "基线阶段 · 先交基线卷";
+  } else {
+    $("printPlanCount").textContent = plan && plan.week
+      ? "按未完成原型 · 本周 " + plan.week.attempted + "/" + plan.week.target
+      : "按当前未完成原型";
+  }
   $("printStatus").classList.add("hidden");
   $("printSheet").classList.remove("hidden");
 }
@@ -3409,6 +4073,9 @@ function closePrintSheet() {
 
 async function downloadPrint(scope) {
   const q = new URLSearchParams({ scope });
+  q.set("writing_scale", $("printWriting").value || "1");
+  q.set("result_boxes", $("printBoxes").checked ? "1" : "0");
+  q.set("cover", $("printCover").checked ? "1" : "0");
   if (scope === "filter") {
     const f = state.book.filters;
     if (f.family) q.set("family", f.family);
@@ -3437,14 +4104,15 @@ async function downloadPrint(scope) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "错题打印卷.pdf";
+    a.download = scope === "plan" ? "本周任务卷.pdf" : "错题打印卷.pdf";
     document.body.appendChild(a);
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 4000);
     toast(stats.pages
       ? "已生成 " + stats.pages + " 页（题面 " + stats.question_pages
-        + " + 答案 " + stats.answer_pages + "）"
+        + " + 答案 " + stats.answer_pages
+        + (stats.cover_pages ? " + 封面 1" : "") + "）"
       : "已生成打印卷");
     closePrintSheet();
   } catch (err) {
