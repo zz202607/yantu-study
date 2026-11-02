@@ -2,9 +2,11 @@
 
 The nine exam categories are not printed anywhere in the book, so a paper has
 to be tagged by reading it. This tool does the mechanical half: crop each
-question, OCR its first lines, and OCR the first line of its answer (which
-carries the option letter). A human -- or the tagging pass -- then assigns the
-category.
+question, OCR its first lines, and OCR the first line of its answer.  Some
+2025 case questions are printed by the publisher as an option exercise, so the
+answer crop may start with `【答案】（C）`; that is a **publisher option**, not
+an exam scoring key (the real case exam is process-scored).  A human -- or the
+tagging pass -- then assigns the category.  Never use this letter for scoring.
 
 Output: index/tags/<paper>.jsonl, one line per question, resumable.
 

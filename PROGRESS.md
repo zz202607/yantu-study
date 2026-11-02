@@ -15,7 +15,8 @@
   → 工具一律用 `tools/bookpath.py` 找 PDF，不要再拼 `ROOT/<书名>.pdf`
 - **待你做的一件事**：
   - **11-04 前后交基线**：打印 `print_samples/baseline_2025_{A,P}.pdf` 的**题面页**
-    （上午 1–17、下午 1–16），各限时 3 小时；做完用 `tools/score_baseline.py` 记四个数
+    （上午 1–17、下午 1–16），各限时 3 小时；做完按过程自评四个数，
+    用 `tools/score_baseline.py` 记录（案例不按选项判分）
 - **M1 网页手机实机验证通过**（2026-11-01，_ming）：拍照 → 候选 → 题干/解析，同一 Wi-Fi 可用
 - **M1 收尾完成（11-01 深夜）**：**拍整页多题勾选** + 批量查看器（题面/解析、上一题/下一题、进度 n/N）
   - 默认勾选本页全部 `start`，`待确认` 候选不预勾；head/full 两阶段之间勾选不丢、新 start 自动补勾
@@ -45,12 +46,33 @@
   - **M4 二轮（11-02）**：复习「没做对」面板接同一套候选（点候选 = 勾选错因，随评分入库）；
     规范候选降噪为「≥2 部规范，或无其它候选」——`standard` 23 → 18/29，有候选仍 24/29
   - 单测 **75 条全绿**；headless Chrome 实测复习/详情两处面板（缓存 0–2 ms、点选同步、标签入库）
+- **M5 学习驾驶舱完成（11-02）**：从「资料库」变成每天打开的学习 App
+  - 首页：考试倒计时（默认 2027-11-01，设置可改）、阶段、周目标、连续天数、错题/掌握/正确率、
+    下一里程碑、今日复习、**由真实日志生成的鼓励**、下一步行动卡、九大类错题分布、快捷入口
+  - 数据页：7/30/90 天统计、九大类 + **70 节细分知识点**、错因分布、14 天活动、题库覆盖、2025 基线分项
+  - 规范联动：九大类 → 核心/配套规范 → 本机 50 本 PDF 一键打开；M4 规范引用变可点链接
+  - 手册联动：**1,426 页全文检索**（索引 6 s；1,372 条原始书签，过滤后 1,344 可用）
+    + 页图查看/翻页/跳页/放大；
+    错题详情新增「规范定位」「手册查这题」
+  - 手机形态：底部 5 栏导航 + PWA manifest/图标/SW；「添加到主屏幕」可当 App 打开
+  - 新模块：`app/curriculum.py`、`app/settings.py`、`app/analytics.py`、`app/standards.py`
+  - 设置存 `data/settings.json`（备份/恢复一并带走）；深链 `?tab=data&view=handbook&q=液化`
+  - **单测 120 条全绿**；无头 Chrome 逐屏验收 14 张；复习闭环在临时库跑通
 - **基线套件就绪（11-02）**：`print_samples/baseline_2025_{A,P}.pdf` 两本 A4 卷
   （题面在前、答案在后，220 dpi JPEG 各 ~24.5 MB）+ `tools/score_baseline.py`
-  （输 25 个字母 → 四个数 + 九大类正确率 + 错题清单）
+  （按过程自评四个数：作答/做对/放弃/超时；**不按选项字母判案例**）
   - 上午只打 1–17 页、下午只打 1–16 页；答案页封存到两半都做完
+- **M5.1 案例/客观题边界修正（11-02）**：华S 案例资料把部分题排成选项练习，
+  旧基线脚本误把 A/B/C/D 当判分依据；案例是主观题，只有答案无过程按 0 分。已修：
+  - `score_baseline.py` 改为四个数 + 过程评分说明，不再读 `A2025.json`
+  - 新增 `app/objective.py` + `tools/score_objective.py`，只服务知识题（单选/多选精确匹配）
+  - 复习新增案例过程状态（过程对·结果对 / 过程对·结果错 / 过程错 / 没思路）+ 手写过程照片；
+    知识题仍是两按钮；存储/撤销/详情全链路打通
+  - 文档：`docs/objective-scoring.md`；`A2025-paper.md` 明确标注为「资料书选项」
 - **下一步**：**11-04 前后交基线**（各限时 3 小时，考场规则）；
-  做完 `score_baseline.py --half A|P --answers "..." --write`，两半齐后调复习节奏与题量
+  按过程自评四个数，`score_baseline.py --half A --answered ... --correct ... --write`，
+  两半齐后调复习节奏与题量。
+  之后：应用内基线记分（四个数 + 过程状态/照片）→ 周报 → 题目到条文级推荐
 - 备考策略见 `docs/study-plan.md`，陪练规则见 `docs/coach/playbook.md`，
   做题顺序见 `docs/coach/practice-order.md`，原型全图见 `docs/coach/prototypes.md`
 
@@ -243,8 +265,14 @@
 - [x] M3 收尾：实打 `print_samples/m3_{C,Z,M}.pdf` 三族样张通过（2026-11-02，_ming）
 - [x] M4 答案页按需 OCR → 错因候选（11-02；详情页「错因建议」，29 题基准，见 journal）
 - [x] M4 二轮：复习「没做对」面板接候选 + 规范候选降噪（11-02，同日，见 journal）
+- [x] M5 学习驾驶舱：倒计时/统计/规范/手册/鼓励/PWA（11-02，见 journal）
+- [x] M5.1 案例/客观题边界修正：过程状态 + 过程照片，知识题独立客观判分（11-02，134 条测试）
+- [ ] 应用内 2025 基线记分（四个数 + 过程状态/照片 → 总分/正确率，替代 CLI）
+- [ ] 周报/月报：把统计与下一步动作保存成一页
+- [ ] 题目 → 条文级推荐（现在只到大类；M4 已抽引用，可做按题推荐）
+- [ ] 官方考试日期公布后改设置默认值（当前 2027-11-01 为估算）
 - [ ] 14 个单册标签人工看原页核对（优先级低）
-- [ ] 《工程地质手册》登记进规范登记表（唯一带文字层的一本，走全文检索而非 OCR）
+- [x] 《工程地质手册》已接规范地图 + 全文检索 + 页图（M5，1,426 页 / 1,344 书签）
 - [ ] 教材章节页码表：OCR 李广信第 3 版前置目录，建 9 章 → 页码映射（v1.5 才用，不急）
 
 ### 已解决的坑（供参考，勿重复踩）
@@ -289,7 +317,7 @@ PYTHONIOENCODING=utf-8 py -3 tools/extract_mock.py
 
 - 结果写入 `index/<书名>.jsonl`，每行一页；进度看 `wc -l index/*.jsonl`
 
-### 网页（手机用：查题 + 错题本）
+### 网页（手机用：学习驾驶舱）
 
 ```bash
 cd "D:/my-project/岩土"
@@ -297,9 +325,19 @@ PYTHONIOENCODING=utf-8 py -3 app/server.py     # 启动后打印 http://<PC-IP>:
 PYTHONIOENCODING=utf-8 py -3 tools/eval_photo_qids.py   # 18 张真图基准
 PYTHONIOENCODING=utf-8 py -3 tools/eval_answer_ocr.py   # M4：29 题条文/候选基准
 PYTHONIOENCODING=utf-8 py -3 tools/print_baseline.py    # 2025 基线卷（两半）
-PYTHONIOENCODING=utf-8 py -3 tools/score_baseline.py --half A --answers "..." --write
+PYTHONIOENCODING=utf-8 py -3 tools/score_baseline.py --half A --answered 25 --correct 15 --overtime 2 --write
+PYTHONIOENCODING=utf-8 py -3 tools/score_objective.py --key key.json --answers answers.json
 ```
 
+- 首页 = 学习驾驶舱：倒计时、今日复习、连续天数、九大类分布、证据型鼓励、下一步；
+  底部 5 栏 = 首页 / 拍题 / 错题 / 复习 / 数据
+- 「数据」页：统计（7/30/90 天、九大类 + 70 节、错因、活动、基线）、规范地图（50 本 PDF）、手册检索
+- 手机「添加到主屏幕」可当 App 打开；局域网 HTTP 不触发自动安装（PWA manifest 已就绪）
+- 设置：考试日期/名称/每日目标/基线日 → `data/settings.json`；改完首页立即刷新
+- 深链：`/?tab=data&view=stats`、`/?tab=data&view=standards&cat=C3`、
+  `/?tab=data&view=handbook&q=液化判别`、`/?tab=review`、`/?qid=C3-11`
+- 规范库默认 `E:\其他文件\2025YT\3注册岩土全套电子版规范（2024大纲）`；
+  换机器/盘符用 `YANTU_STANDARDS_DIR=<目录>`；手册路径用 `YANTU_HANDBOOK=<pdf>`
 - 手机与本机同一 Wi-Fi，浏览器打开打印出的地址；Windows 防火墙首次弹窗要允许**专用网络**
 - 拍照 → 候选题号 → 题干（空白册）/解析（案例习题集）；裁图缓存在 `.cache/crops/`
 - 题号没认出来就手输（如 `3-11`），按当前册自动补前缀
@@ -343,16 +381,27 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `app/static/index.html` | 前端：查题 + 错题本 + 今日复习（两按钮/遮罩/总结）+ 打印卷 + 错因建议 |
 | `app/store.py` | **错题库**：SQLite（attempts/tags/photos/review_sessions/review_log）、排期、过滤、备份/恢复 |
 | `app/answer_ocr.py` | **M4 解析 OCR**：规范条文抽取 + 点评易错句 → 错因候选（纯规则）、磁盘缓存 |
+| `app/curriculum.py` | **M5 课程表**：十篇/九大类、考试权重、核心/配套规范、手册范围、A2025 映射 |
+| `app/settings.py` | **M5 设置**：考试日期/名称/每日目标/基线日 → `data/settings.json`（原子写、校验） |
+| `app/analytics.py` | **M5 统计**：倒计时、连续天数、九大类/70 节、错因、活动、里程碑、证据型鼓励、基线解析 |
+| `app/standards.py` | **M5 规范/手册**：规范库扫描与编号匹配、安全取文件、手册全文索引/搜索/页图 |
+| `app/static/manifest.webmanifest` | PWA 清单（名称/图标/快捷方式） |
+| `app/static/sw.js` | Service Worker（仅安全上下文注册；API 不走缓存） |
+| `app/static/icons/` | 192/512/maskable/apple-touch 图标 |
+| `docs/SUMMARY.md` | **项目一页总结**（目标/架构/决策/指标/限制/下一步） |
+| `..\LESSONS.md` | **跨项目经验库**（根目录，新项目启动先读） |
 | `tools/eval_answer_ocr.py` | **M4 基准**：29 题抽条文/候选 + 计时（`--qids` 可指定） |
 | `tools/print_baseline.py` | **2025 基线卷**：上午/下午 → A4 题面 + 答案（220 dpi JPEG） |
-| `tools/score_baseline.py` | **基线记分**：25 字母 → 四个数 + 九大类正确率 + 错题清单 |
+| `tools/score_baseline.py` | **案例基线**：人工按过程自评四个数；不按选项字母判分 |
+| `app/objective.py` | **知识题客观判分**：单选/多选精确集合匹配；不用于案例 |
+| `tools/score_objective.py` | 知识题答案键 + 作答 JSON → 得分/错题；格式见 `docs/objective-scoring.md` |
 | `app/print_export.py` | **A4 打印卷**：题面/答案分页、混合族手写区、Z 族拆分 |
 | `app/catalog.py` | 题号 → 族/篇/节/书名（只从只读索引派生，不写用户库） |
 | `app/photo_import.py` | 旧照片解析与幂等导入（`4-12 4-13错.jpg` 两题） |
 | `tools/import_old_photos.py` | 旧照片导入 CLI（预览 / `--apply`） |
 | `tools/backup_wrongbook.py` | 备份 / 恢复 CLI（恢复需 `--yes`） |
 | `data/` | **用户数据唯一位置**：`wrongbook.db` + `attachments/` + `backups/` |
-| `tests/` | 单元测试 75 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
+| `tests/` | 单元测试 134 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
 | `.cache/crops/` | 裁图缓存（可随时删，自动重建） |
 | `.cache/answer_ocr/` | 解析 OCR + 候选缓存（可随时删，自动重建） |
 | `tools/build_lookup.py` | 合并成 `index/lookup.json`（v1 的唯一数据入口） |

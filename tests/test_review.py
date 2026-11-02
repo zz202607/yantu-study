@@ -1,10 +1,12 @@
 """M3 review scheduling: queue, sessions, grading, undo and summary."""
 
+import io
 import json
 import sqlite3
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from PIL import Image
 
 from app.store import Store
 
@@ -18,6 +20,12 @@ def iso(moment):
 
 def new_store(tmp_path):
     return Store(tmp_path)
+
+
+def jpeg(color=(180, 40, 40)):
+    buf = io.BytesIO()
+    Image.new("RGB", (200, 150), color).save(buf, "JPEG", quality=90)
+    return buf.getvalue()
 
 
 def add(store, qids, at=BASE, tags=None):
@@ -294,7 +302,7 @@ def test_existing_m2_database_migrates_in_place(tmp_path):
         version = check.execute(
             "SELECT value FROM meta WHERE key = 'schema_version'"
         ).fetchone()[0]
-    assert version == "2"
+    assert version == "3"
 
 
 def test_remark_wrong_resets_a_mastered_question(tmp_path):
@@ -327,3 +335,62 @@ def test_session_resume_and_empty_state(tmp_path):
     resumed = store.start_session(now=moment + timedelta(hours=2))
     assert resumed["id"] == first["id"]
     assert resumed["queue"] == ["C1-1"]
+
+
+def test_case_grade_records_manual_process_status_and_photo(tmp_path):
+    store = new_store(tmp_path)
+    add(store, ["C1-1"])
+    photo = store.save_photo(jpeg())
+    moment = BASE + timedelta(days=2)
+    session = store.start_session(now=moment)
+    result = store.grade(
+        session["id"], "C1-1", None,
+        process_status="process_right_result_wrong",
+        process_photo_sha=photo["sha256"],
+        now=moment,
+    )
+    item = result["attempt"]
+    assert item["last_result"] == "wrong"
+    assert item["process_status"] == "process_right_result_wrong"
+    assert item["process_photo"]["sha256"] == photo["sha256"]
+
+    with sqlite3.connect(store.db_path) as conn:
+        log = conn.execute(
+            "SELECT process_status_after, process_photo_after FROM review_log"
+        ).fetchone()
+    assert log[0] == "process_right_result_wrong"
+    assert log[1] is not None
+
+    store.undo(session["id"], now=moment + timedelta(minutes=1))
+    restored = store.get_attempt_by_qid("C1-1")
+    assert restored["process_status"] is None
+    assert restored["process_photo"] is None
+
+
+def test_process_status_is_rejected_for_knowledge_questions(tmp_path):
+    store = new_store(tmp_path)
+    add(store, ["Z1-1"])
+    moment = BASE + timedelta(days=2)
+    session = store.start_session(now=moment)
+    with pytest.raises(ValueError, match="过程状态只用于案例题"):
+        store.grade(
+            session["id"], "Z1-1", None,
+            process_status="process_right_result_right", now=moment,
+        )
+
+
+def test_process_status_must_match_the_verdict(tmp_path):
+    store = new_store(tmp_path)
+    add(store, ["C1-1"])
+    moment = BASE + timedelta(days=2)
+    session = store.start_session(now=moment)
+    with pytest.raises(ValueError, match="过程状态与判分不一致"):
+        store.grade(
+            session["id"], "C1-1", "correct",
+            process_status="process_right_result_wrong", now=moment,
+        )
+    with pytest.raises(ValueError, match="未知过程状态"):
+        store.grade(
+            session["id"], "C1-1", None,
+            process_status="guessed_from_letter", now=moment,
+        )

@@ -15,6 +15,7 @@ Run:
 import asyncio
 import io
 import json
+import mimetypes
 import os
 import re
 import socket
@@ -35,11 +36,14 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 import crop_question as CQ  # noqa: E402
 import recognize_qid as RQ  # noqa: E402
+from app import analytics, standards  # noqa: E402
 from app.answer_ocr import analyze_crop  # noqa: E402
 from app.catalog import Catalog  # noqa: E402
+from app.curriculum import CASE_BY_KEY, category_key, load_exam_tags  # noqa: E402
 from app.photo_import import import_photos, scan_photos  # noqa: E402
 from app.print_export import MAX_QUESTIONS, export_pdf  # noqa: E402
-from app.store import Store, TAGS  # noqa: E402
+from app.settings import Settings  # noqa: E402
+from app.store import PROCESS_LABELS, Store, TAGS  # noqa: E402
 
 INDEX = ROOT / "index"
 CACHE = ROOT / ".cache" / "crops"
@@ -49,15 +53,17 @@ STATIC = Path(__file__).resolve().parent / "static"
 DATA = Path(os.environ.get("YANTU_DATA", str(ROOT / "data")))
 EXPORTS = DATA / "exports"
 LEGACY_PHOTOS = ROOT / "拍照错题"
+BASELINE_REPORT = ROOT / "docs" / "coach" / "baseline-2025.md"
 
 store = Store(DATA)
+settings_store = Settings(DATA)
 catalog = Catalog(INDEX)
 
 CHAPTER_RE = re.compile(r"^([CZ])(\d{1,2})-(\d{1,3})$")
 EXAM_RE = re.compile(r"^[AK]\d{4}-[A-Z]-\d{1,3}$")
 MOCK_RE = re.compile(r"^M\d{1,2}-\d{1,3}$")
 
-app = FastAPI(title="岩土错题本 M4")
+app = FastAPI(title="岩土错题本 M5")
 
 
 def _warm_ocr():
@@ -251,6 +257,165 @@ def books():
     return {"books": rows, "chapters": catalog.chapter_keys(), "tags": TAGS}
 
 
+# ---------------------------------------------------------------- cockpit
+
+@app.get("/api/home")
+def home():
+    """Everything the landing screen needs, in one local round-trip."""
+    conf = settings_store.load()
+    data = analytics.build_home(
+        store.learning_snapshot(),
+        settings=conf,
+        lookup=lookup(),
+        exam_tags=exam_tags(),
+        baseline=analytics.read_baseline(BASELINE_REPORT),
+    )
+    overview = store.review_overview()
+    data["review"] = {
+        "count": overview["count"],
+        "est_minutes": overview["est_minutes"],
+        "reasons": overview["reasons"],
+        "session": _session_view(store.session()),
+    }
+    return data
+
+
+@app.get("/api/stats")
+def stats(days: int = 30):
+    try:
+        days = max(7, min(int(days), 180))
+    except (TypeError, ValueError):
+        days = 30
+    conf = settings_store.load()
+    return analytics.build_stats(
+        store.learning_snapshot(),
+        settings=conf,
+        lookup=lookup(),
+        exam_tags=exam_tags(),
+        baseline=analytics.read_baseline(BASELINE_REPORT),
+        chapters=catalog.chapters,
+        days=days,
+    )
+
+
+@app.get("/api/settings")
+def get_settings():
+    return settings_store.load()
+
+
+@app.patch("/api/settings")
+def patch_settings(payload: dict = Body(...)):
+    try:
+        return settings_store.update(payload)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+
+
+# ---------------------------------------------------------------- sources
+
+@app.get("/api/standards")
+def standards_map():
+    """Nine categories -> core/companion PDFs, plus the local library list."""
+    try:
+        return standards.standard_map()
+    except Exception as exc:  # noqa: BLE001 - a missing E: drive must not 500
+        return {
+            "categories": standards.category_rows(),
+            "library": {"enabled": False, "dir": str(standards.STANDARDS_DIR),
+                        "count": 0, "files": [],
+                        "error": "规范库读取失败：%s" % exc},
+        }
+
+
+@app.get("/api/standards/file")
+def standards_file(name: str):
+    path = standards.file_path(name)
+    if not path:
+        raise HTTPException(404, "规范文件不存在")
+    media = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+    return FileResponse(
+        path, media_type=media, headers={"Cache-Control": "max-age=3600"}
+    )
+
+
+@app.get("/api/handbook/meta")
+def handbook_meta():
+    try:
+        return standards.meta()
+    except Exception as exc:  # noqa: BLE001
+        return {"exists": False, "error": str(exc), "index_ready": False}
+
+
+@app.get("/api/handbook/search")
+def handbook_search(q: str, limit: int = 20):
+    try:
+        return standards.search(q, limit=limit)
+    except FileNotFoundError as exc:
+        raise HTTPException(404, str(exc))
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    except Exception as exc:  # noqa: BLE001 - OCR text may be odd, never 500
+        raise HTTPException(500, "手册检索失败：%s" % exc)
+
+
+@app.get("/api/handbook/toc")
+def handbook_toc():
+    try:
+        return standards.toc()
+    except FileNotFoundError as exc:
+        raise HTTPException(404, str(exc))
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(500, "手册目录读取失败：%s" % exc)
+
+
+@app.get("/api/handbook/page")
+def handbook_page(p: int, dpi: int = 110):
+    try:
+        path, page_count = standards.page_image(p, dpi)
+    except FileNotFoundError as exc:
+        raise HTTPException(404, str(exc))
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(500, "手册页渲染失败：%s" % exc)
+    return FileResponse(
+        path,
+        media_type="image/png",
+        headers={
+            "Cache-Control": "max-age=86400",
+            "X-Page-Count": str(page_count),
+        },
+    )
+
+
+@app.get("/manifest.webmanifest")
+def web_manifest():
+    return FileResponse(
+        STATIC / "manifest.webmanifest", media_type="application/manifest+json"
+    )
+
+
+@app.get("/sw.js")
+def service_worker():
+    return FileResponse(
+        STATIC / "sw.js",
+        media_type="application/javascript",
+        headers={"Service-Worker-Allowed": "/"},
+    )
+
+
+@app.get("/icons/{name}")
+def app_icon(name: str):
+    if not re.match(r"^[a-z0-9-]+\.png$", name or ""):
+        raise HTTPException(404, "图标不存在")
+    path = STATIC / "icons" / name
+    if not path.exists():
+        raise HTTPException(404, "图标不存在")
+    return FileResponse(
+        path, media_type="image/png", headers={"Cache-Control": "max-age=604800"}
+    )
+
+
 @app.post("/api/recognize")
 async def recognize_image(family: str = Form("C"), file: UploadFile = File(...)):
     """Stream recognition as newline-delimited JSON, one object per stage.
@@ -318,12 +483,24 @@ async def recognize_image(family: str = Form("C"), file: UploadFile = File(...))
     return StreamingResponse(stream(), media_type="application/x-ndjson")
 
 
+def exam_tags():
+    return load_exam_tags(INDEX)
+
+
 def _describe(item):
     """Attach catalog display fields and Chinese tag labels to one attempt."""
     described = catalog.describe(item["qid"])
+    key = category_key(item["qid"], exam_tags())
+    described["category_key"] = key
+    described["category_name"] = CASE_BY_KEY[key]["name"] if key else ""
     described["tag_labels"] = {
         key: TAGS[key] for key in item.get("tags", []) if key in TAGS
     }
+    described["process_status"] = item.get("process_status")
+    described["process_status_label"] = PROCESS_LABELS.get(
+        item.get("process_status"), ""
+    )
+    described["process_photo"] = item.get("process_photo")
     described["attempt"] = {
         key: item[key]
         for key in ("id", "times", "tags", "status", "note")
@@ -340,6 +517,9 @@ def resolve(qid: str, family: str = "C"):
     if not qid_exists(key):
         raise HTTPException(404, "题号 %s 不在当前题库里" % key)
     info = catalog.describe(key)
+    category = category_key(key, exam_tags())
+    info["category_key"] = category
+    info["category_name"] = CASE_BY_KEY[category]["name"] if category else ""
     if key.startswith(("C", "Z")):
         entry = lookup()["chapter"][key]
         info["books"] = list(entry.get("books", {}).keys())
@@ -508,6 +688,17 @@ def suggest_attempt(attempt_id: int):
         "qid": qid,
         "elapsed_ms": int((time.time() - started) * 1000),
     })
+    # A citation is only useful if it opens the book.  Match the OCR'd code
+    # (or, failing that, its title) against the local 2024-outline library.
+    try:
+        files = standards.load_library()["files"]
+        for citation in result.get("citations", []):
+            citation["file"] = standards.match_standard(
+                citation.get("title"), citation.get("code"), files
+            )
+    except Exception:  # noqa: BLE001 - the panel still works without links
+        for citation in result.get("citations", []):
+            citation.setdefault("file", None)
     return result
 
 
@@ -520,6 +711,10 @@ def patch_attempt(attempt_id: int, payload: dict = Body(...)):
         kwargs["note"] = payload.get("note") or ""
     if "status" in payload:
         kwargs["status"] = payload.get("status")
+    if "process_status" in payload:
+        kwargs["process_status"] = payload.get("process_status")
+    if "process_photo_sha" in payload:
+        kwargs["process_photo_sha"] = payload.get("process_photo_sha")
     try:
         item = store.update_attempt(attempt_id, **kwargs)
     except ValueError as exc:
@@ -553,6 +748,8 @@ def _review_item(item):
         "last_result",
         "stuck",
         "tags",
+        "process_status",
+        "process_photo",
     ):
         described[key] = item.get(key)
     return described
@@ -600,7 +797,12 @@ def review_grade(payload: dict = Body(...)):
         raise HTTPException(400, "缺 session_id 或题号")
     try:
         result = store.grade(
-            session_id, qid, payload.get("result"), tags=payload.get("tags")
+            session_id,
+            qid,
+            payload.get("result"),
+            tags=payload.get("tags"),
+            process_status=payload.get("process_status"),
+            process_photo_sha=payload.get("process_photo_sha"),
         )
     except ValueError as exc:
         raise HTTPException(400, str(exc))
@@ -756,6 +958,18 @@ def print_questions(
     return response
 
 
+@app.get("/api/baseline/file/{half}")
+def baseline_file(half: str):
+    """Serve one half's print-ready baseline paper from print_samples/."""
+    key = (half or "").upper()
+    if key not in ("A", "P"):
+        raise HTTPException(404, "基线卷只有 A（上午）或 P（下午）")
+    path = ROOT / "print_samples" / ("baseline_2025_%s.pdf" % key)
+    if not path.exists():
+        raise HTTPException(404, "基线卷还没生成：%s" % path.name)
+    return FileResponse(path, media_type="application/pdf", filename=path.name)
+
+
 @app.get("/api/crop")
 def crop(qid: str, family: str = "C", answer: int = 0, mask: int = 0):
     key = normalize_qid(qid, family)
@@ -785,5 +999,5 @@ if __name__ == "__main__":
     import uvicorn
 
     port = int(os.environ.get("PORT", "8000"))
-    print("岩土错题本 M4  ->  http://%s:%d" % (lan_ip(), port), flush=True)
+    print("岩土错题本 M5  ->  http://%s:%d" % (lan_ip(), port), flush=True)
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="warning")
