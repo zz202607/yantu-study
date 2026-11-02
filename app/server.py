@@ -36,7 +36,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 import crop_question as CQ  # noqa: E402
 import recognize_qid as RQ  # noqa: E402
-from app import analytics, baseline as baseline_app, plan as study_plan, report as report_app, standards  # noqa: E402
+from app import analytics, baseline as baseline_app, drill as drill_app, plan as study_plan, report as report_app, standards  # noqa: E402
 from app.answer_ocr import analyze_crop  # noqa: E402
 from app.catalog import Catalog  # noqa: E402
 from app.curriculum import CASE_BY_KEY, category_key, load_exam_tags  # noqa: E402
@@ -63,7 +63,7 @@ CHAPTER_RE = re.compile(r"^([CZ])(\d{1,2})-(\d{1,3})$")
 EXAM_RE = re.compile(r"^[AK]\d{4}-[A-Z]-\d{1,3}$")
 MOCK_RE = re.compile(r"^M\d{1,2}-\d{1,3}$")
 
-app = FastAPI(title="岩土错题本 M8")
+app = FastAPI(title="岩土学习驾驶舱 M9.3")
 
 
 def _warm_ocr():
@@ -431,6 +431,91 @@ BASELINE_IMPORT_KINDS = {
     "overtime": "2025 基线·超时做对",
 }
 
+# Full-paper re-sits use a past paper with unseen answers.  2018+ papers have
+# 25 questions per half, which is what the baseline scoring contract expects.
+RETEST_MIN_YEAR = 2018
+RETEST_MAX_YEAR = 2024
+RETEST_DEFAULT_YEAR = 2024
+
+
+def _retest_path(year, half):
+    return ROOT / "print_samples" / ("exam_%d_%s.pdf" % (int(year), half))
+
+
+def _require_retest_year(year):
+    try:
+        year = int(year)
+    except (TypeError, ValueError):
+        raise HTTPException(400, "复测年份必须是整数")
+    if not RETEST_MIN_YEAR <= year <= RETEST_MAX_YEAR:
+        raise HTTPException(
+            400, "整卷复测只支持 %d–%d 年；2025 已在基线页"
+            % (RETEST_MIN_YEAR, RETEST_MAX_YEAR))
+    return year
+
+
+def _retest_payload(year):
+    year = _require_retest_year(year)
+    view = baseline_app.summary(store, exam_tags(), year=year)
+    view["year"] = year
+    view["kind"] = "retest"
+    view["papers"] = {
+        half: _retest_path(year, half).exists() for half in ("A", "P")
+    }
+    return view
+
+
+@app.get("/api/retest")
+def get_retest(year: int = RETEST_DEFAULT_YEAR):
+    return _retest_payload(year)
+
+
+@app.put("/api/retest/{year}/{half}")
+def put_retest(year: int, half: str, payload: dict = Body(...)):
+    year = _require_retest_year(year)
+    try:
+        baseline_app.save(store, half, payload, exam_tags(), year=year,
+                          require_paper=False)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    view = _retest_payload(year)
+    return {
+        "retest": view,
+        "plan": study_plan.overview(store, DATA, settings_store.load(),
+                                    baseline=baseline_view()),
+    }
+
+
+@app.delete("/api/retest/{year}/{half}")
+def delete_retest(year: int, half: str):
+    year = _require_retest_year(year)
+    key = (half or "").strip().upper()
+    if key not in ("A", "P"):
+        raise HTTPException(404, "整卷只有上午卷 A 或下午卷 P")
+    if not store.delete_baseline(key, year):
+        raise HTTPException(404, "这一半还没有复测记录")
+    view = _retest_payload(year)
+    return {
+        "deleted": True,
+        "retest": view,
+        "plan": study_plan.overview(store, DATA, settings_store.load(),
+                                    baseline=baseline_view()),
+    }
+
+
+@app.get("/api/retest/file/{year}/{half}")
+def retest_file(year: int, half: str):
+    key = (half or "").upper()
+    if key not in ("A", "P"):
+        raise HTTPException(404, "整卷只有上午卷 A 或下午卷 P")
+    year = _require_retest_year(year)
+    path = _retest_path(year, key)
+    if not path.exists():
+        raise HTTPException(
+            404, "%d 年%s卷还没生成：py -3 tools/print_exam.py --year %d"
+            % (year, "上午" if key == "A" else "下午", year))
+    return FileResponse(path, media_type="application/pdf", filename=path.name)
+
 
 def _import_baseline(half, kind, triage=None):
     """Put one baseline list into the review queue, idempotently."""
@@ -494,6 +579,43 @@ def triage_baseline_question(half: str, payload: dict = Body(...)):
     except ValueError as exc:
         raise HTTPException(400, str(exc))
     return {"triage": row, "baseline": baseline_payload()}
+
+
+@app.get("/api/drill/overview")
+def drill_overview():
+    return drill_app.overview(store, baseline_view(), qid_exists)
+
+
+@app.post("/api/drill")
+def drill_start(payload: dict = Body(...)):
+    try:
+        return drill_app.start(store, payload, baseline_view(), qid_exists)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+
+
+@app.get("/api/drill/{session_id}")
+def drill_state(session_id: int):
+    try:
+        return drill_app.get_state(store, session_id)
+    except ValueError as exc:
+        raise HTTPException(404, str(exc))
+
+
+@app.post("/api/drill/{session_id}/item")
+def drill_record(session_id: int, payload: dict = Body(...)):
+    try:
+        return drill_app.record(store, session_id, payload, exam_tags())
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+
+
+@app.post("/api/drill/{session_id}/finish")
+def drill_finish(session_id: int):
+    try:
+        return drill_app.finish(store, session_id, exam_tags())
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
 
 
 @app.get("/api/plan/sessions")
@@ -1396,5 +1518,5 @@ if __name__ == "__main__":
     import uvicorn
 
     port = int(os.environ.get("PORT", "8000"))
-    print("岩土错题本 M8  ->  http://%s:%d" % (lan_ip(), port), flush=True)
+    print("岩土学习驾驶舱 M9.3  ->  http://%s:%d" % (lan_ip(), port), flush=True)
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="warning")

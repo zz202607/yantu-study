@@ -616,6 +616,20 @@ def _actions(summary, baseline, settings, now):
                 max(1, totals["due"] * 2)),
             "route": "review",
         })
+    quadrant_rows = ((baseline.get("quadrants") or {}).get("items") or [])
+    drillable = sum(
+        1 for row in quadrant_rows
+        if row.get("quadrant") == "slow"
+        or (row.get("quadrant") == "skipped"
+            and row.get("triage") == "no_time")
+    )
+    if baseline.get("complete") and drillable >= 5:
+        actions.append({
+            "kind": "drill",
+            "title": "限时拆解 %d 题" % drillable,
+            "detail": "会但慢 + 放弃·没时间；5 题 × 8 分钟，每题先写首步。",
+            "route": "drill",
+        })
     weak = [
         row for row in summary["categories"]
         if row["reviews"] >= 3 and (row["accuracy"] or 0) < 0.6

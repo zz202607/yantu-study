@@ -551,17 +551,29 @@ def _normalize_items(raw_items, questions):
     return items
 
 
-def save(store, half, payload, tags, year=YEAR):
-    """Validate and persist one half; returns the refreshed summary."""
+def save(store, half, payload, tags, year=YEAR, require_paper=True):
+    """Validate and persist one half; returns the refreshed summary.
+
+    ``require_paper=False`` is the retest path: a past paper has no per-question
+    category tags, so it records the four numbers only.  Per-question items are
+    rejected rather than silently stored without categories.
+    """
     half = str(half or "").strip().upper()
     if half not in HALF_NAMES:
-        raise ValueError("基线只有上午卷 A 或下午卷 P")
+        raise ValueError("整卷只有上午卷 A 或下午卷 P")
     paper = paper_questions(tags, year)
     questions = paper[half]
-    if len(questions) != TOTAL_QUESTIONS:
-        raise ValueError("2025 %s卷题目标签不完整（%d/%d）"
-                         % (HALF_NAMES[half], len(questions), TOTAL_QUESTIONS))
-    items = _normalize_items(payload.get("items"), questions)
+    if require_paper and len(questions) != TOTAL_QUESTIONS:
+        raise ValueError("%d %s卷题目标签不完整（%d/%d）"
+                         % (year, HALF_NAMES[half], len(questions),
+                            TOTAL_QUESTIONS))
+    raw_items = payload.get("items")
+    if require_paper:
+        items = _normalize_items(raw_items, questions)
+    else:
+        if raw_items:
+            raise ValueError("%d 年这卷没有逐题标签，只记四个数" % int(year))
+        items = []
 
     if len(items) == TOTAL_QUESTIONS:
         counts = {
@@ -608,6 +620,9 @@ def save(store, half, payload, tags, year=YEAR):
     if not 0 <= minutes <= 600:
         raise ValueError("用时应在 0–600 分钟之间")
     note = str(payload.get("note") or "").strip()[:2000]
+    if not note:
+        kind = "基线" if int(year) == YEAR else "整卷复测"
+        note = "%d %s·%s" % (int(year), kind, HALF_NAMES[half])
     photo_sha = payload.get("photo_sha")
     photo_sha = str(photo_sha).strip() if photo_sha else None
 

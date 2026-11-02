@@ -2,6 +2,7 @@
 
 import os
 import shutil
+import sqlite3
 import sys
 import tempfile
 import unittest
@@ -228,7 +229,7 @@ class BaselineAppTest(unittest.TestCase):
         sessions = self.store.list_practice_sessions()
         self.assertEqual(len(sessions), 1)
         self.assertEqual(sessions[0]["source"], "real_exam")
-        self.assertEqual(sessions[0]["baseline_half"], "A")
+        self.assertEqual(sessions[0]["baseline_half"], "2025-A")
         self.assertEqual(sessions[0]["attempted"], 25)
         self.assertEqual(sessions[0]["correct"], 15)
         self.assertEqual(sessions[0]["abandoned"], 0)
@@ -256,6 +257,55 @@ class BaselineAppTest(unittest.TestCase):
         summary = baseline.summary(self.store, self.tags)
         self.assertFalse(summary["half_detail"]["A"]["recorded"])
         self.assertTrue(summary["half_detail"]["P"]["recorded"])
+
+    def test_deleting_a_half_clears_stale_triage(self):
+        self.save("A", items=items("A", ["skipped"] * 25))
+        self.store.set_baseline_triage(2025, "A", "A2025-A-1", "no_time")
+        self.assertEqual(self.store.baseline_triage(2025)["A"],
+                         {"A2025-A-1": "no_time"})
+        self.store.delete_baseline("A", 2025)
+        self.assertEqual(self.store.baseline_triage(2025)["A"], {})
+
+    def test_a_2024_retest_does_not_overwrite_the_2025_ledger(self):
+        self.save("A")
+        result = baseline.save(
+            self.store, "A",
+            {"day": "2026-12-15", "minutes": 180, "answered": 20,
+             "correct": 15, "skipped": 5, "overtime": 3, "items": []},
+            {}, year=2024, require_paper=False,
+        )
+        self.assertEqual(result["year"], 2024)
+        self.assertTrue(result["half_detail"]["A"]["recorded"])
+        self.assertEqual(result["half_detail"]["A"]["items_done"], 0)
+        self.assertEqual(result["score"], 30)
+        sessions = self.store.list_practice_sessions()
+        self.assertEqual(len(sessions), 2)
+        self.assertEqual({row["baseline_half"] for row in sessions},
+                         {"2025-A", "2024-A"})
+        self.assertTrue(self.store.delete_baseline("A", 2024))
+        remaining = self.store.list_practice_sessions()
+        self.assertEqual([row["baseline_half"] for row in remaining], ["2025-A"])
+
+    def test_retest_rejects_per_question_items(self):
+        with self.assertRaisesRegex(ValueError, "只记四个数"):
+            baseline.save(
+                self.store, "A",
+                {"day": "2026-12-15", "answered": 20, "correct": 15,
+                 "skipped": 5, "overtime": 0,
+                 "items": [{"qid": "A2024-A-1", "result": "correct"}]},
+                {}, year=2024, require_paper=False,
+            )
+
+    def test_legacy_bare_ledger_key_migrates_to_2025(self):
+        self.save("A")
+        with sqlite3.connect(self.store.db_path) as conn:
+            conn.execute(
+                "UPDATE practice_sessions SET baseline_half = 'A'"
+                " WHERE baseline_half = '2025-A'"
+            )
+        Store(self.tmp)  # init runs the v8 migration
+        sessions = self.store.list_practice_sessions()
+        self.assertEqual(sessions[0]["baseline_half"], "2025-A")
 
     def test_wrong_qids_are_in_paper_order(self):
         results = ["skipped"] * 25

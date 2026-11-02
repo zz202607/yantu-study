@@ -144,6 +144,32 @@ class AnalyticsTest(unittest.TestCase):
         weak = next(row for row in home["next_actions"] if row["kind"] == "weak")
         self.assertEqual(weak["category"], "C3")
 
+    def test_drill_action_counts_slow_and_no_time_only(self):
+        baseline = {
+            "available": True,
+            "complete": True,
+            "score": 60,
+            "quadrants": {"items": [
+                {"quadrant": "slow"},
+                {"quadrant": "slow"},
+                {"quadrant": "slow"},
+                {"quadrant": "slow"},
+                {"quadrant": "slow"},
+                {"quadrant": "skipped", "triage": "no_time"},
+                {"quadrant": "skipped", "triage": "no_idea"},
+                {"quadrant": "wrong"},
+            ]},
+        }
+        home = analytics.build_home(
+            self.snapshot, settings=self.settings, lookup=self.lookup,
+            exam_tags=self.exam_tags, baseline=baseline, now=self.NOW,
+        )
+        action = next(row for row in home["next_actions"]
+                      if row["kind"] == "drill")
+        self.assertEqual(action["title"], "限时拆解 6 题")
+        self.assertEqual(action["route"], "drill")
+        self.assertIn("8 分钟", action["detail"])
+
     def test_milestone_picks_the_closest_unfinished_target(self):
         home = self.home()
         self.assertEqual(home["milestone"]["label"], "错题入本")
