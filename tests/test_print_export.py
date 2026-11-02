@@ -57,3 +57,30 @@ def test_empty_selection_is_rejected(tmp_path):
 
     with pytest.raises(ValueError):
         export_pdf([], tmp_path / "empty.pdf", "空卷", tmp_path)
+
+
+def test_cover_and_result_boxes(tmp_path):
+    import recognize_qid as RQ
+
+    from app.print_export import export_pdf
+
+    out = tmp_path / "plan.pdf"
+    stats = export_pdf(
+        ["C3-8"], out, "本周任务卷", tmp_path,
+        engine=RQ.engine(), ocr_lock=threading.Lock(),
+        writing_scale=1.25, result_boxes=True,
+        cover={"title": "本周任务卷", "subtitle": "基础期 · 第 1 周",
+               "tasks": [{"key": "A1", "label": "原型 A1", "qids": ["C3-8"]}]},
+    )
+    assert stats["cover_pages"] == 1
+    assert stats["errors"] == []
+    doc = pymupdf.open(out)
+    try:
+        assert doc.page_count == stats["pages"]
+        assert "本周任务卷" in doc[0].get_text()
+        assert "结果回填" in doc[0].get_text()
+        body = doc[1].get_text()
+        assert "题面" in body
+        assert "对" in body and "错" in body
+    finally:
+        doc.close()

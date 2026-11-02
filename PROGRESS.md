@@ -69,6 +69,21 @@
   - 复习新增案例过程状态（过程对·结果对 / 过程对·结果错 / 过程错 / 没思路）+ 手写过程照片；
     知识题仍是两按钮；存储/撤销/详情全链路打通
   - 文档：`docs/objective-scoring.md`；`A2025-paper.md` 明确标注为「资料书选项」
+- **M6 计划/规范索引/打印中心完成（11-02）**：
+  - **计划控制**：五阶段（基线/基础/强化/套卷/冲刺）+ 周题量 20/32/38/55（按 11h/周缩放）
+  - 练习记录：`practice_sessions` 四个数（作答/做对/放弃/超时）+ 用时/类别/来源
+  - 阶段目标：原型卡 25、土力学 9 章、核心规范 7 本、真题 751、总题量 1200
+  - 纠偏：落后 10–20% 砍低频；连续两周落后 >20% 减新题；必拿 <85% 停新题；
+    平均 >10 分钟做限时拆解；复习积压先清复习
+  - **规范章节索引**：37/50 本有目录；核心 7 本全覆盖；选规范 → 章节树 → App 内页图；
+    条文号 `5.2.4` → 5.2 节；错题引用直接定位
+  - **打印中心**：本周任务卷（按未完成原型选 30 题）+ 封面任务单 + 每题回填格 +
+    手写区标准/更多/最多；JPEG 220dpi，30 题 ~28 MB
+  - **照片存储**：新照片 2400px q85、缩略图 480px；设置页可清理旧过程照片
+    （每题保留最近 2 张，标记原图不删，清理前自动备份）
+  - **CI 门禁**：GitHub Actions（PR / push main）安装最小依赖 → compileall → pytest
+  - 新模块：`app/plan.py`、`tools/build_standards_index.py`、`index/standards_index.json`
+  - **158 条测试全绿**；计划/规范/打印逐屏验收
 - **下一步**：**11-04 前后交基线**（各限时 3 小时，考场规则）；
   按过程自评四个数，`score_baseline.py --half A --answered ... --correct ... --write`，
   两半齐后调复习节奏与题量。
@@ -331,7 +346,10 @@ PYTHONIOENCODING=utf-8 py -3 tools/score_objective.py --key key.json --answers a
 
 - 首页 = 学习驾驶舱：倒计时、今日复习、连续天数、九大类分布、证据型鼓励、下一步；
   底部 5 栏 = 首页 / 拍题 / 错题 / 复习 / 数据
-- 「数据」页：统计（7/30/90 天、九大类 + 70 节、错因、活动、基线）、规范地图（50 本 PDF）、手册检索
+- 「数据」页：统计（7/30/90 天、九大类 + 70 节、错因、活动、基线）、
+  **计划**（阶段/周题量/练习记录/纠偏）、**规范**（章节索引/条文定位/页图/50 本 PDF）、手册检索
+- 计划：练习后记四个数；每周看计划 vs 实际；按未完成原型打印本周任务卷
+- 打印：本周任务卷/错题卷/筛选卷/复习卷；封面任务单 + 每题回填格 + 手写区缩放
 - 手机「添加到主屏幕」可当 App 打开；局域网 HTTP 不触发自动安装（PWA manifest 已就绪）
 - 设置：考试日期/名称/每日目标/基线日 → `data/settings.json`；改完首页立即刷新
 - 深链：`/?tab=data&view=stats`、`/?tab=data&view=standards&cat=C3`、
@@ -384,7 +402,10 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `app/curriculum.py` | **M5 课程表**：十篇/九大类、考试权重、核心/配套规范、手册范围、A2025 映射 |
 | `app/settings.py` | **M5 设置**：考试日期/名称/每日目标/基线日 → `data/settings.json`（原子写、校验） |
 | `app/analytics.py` | **M5 统计**：倒计时、连续天数、九大类/70 节、错因、活动、里程碑、证据型鼓励、基线解析 |
-| `app/standards.py` | **M5 规范/手册**：规范库扫描与编号匹配、安全取文件、手册全文索引/搜索/页图 |
+| `app/standards.py` | **M5 规范/手册**：规范库扫描与编号匹配、安全取文件、手册全文索引/搜索/页图；**M6 章节索引/条文定位/规范页图** |
+| `app/plan.py` | **M6 计划**：阶段/周题量、练习记录统计、阶段目标、纠偏规则、任务生成、打印选题 |
+| `tools/build_standards_index.py` | **M6 规范索引构建**：文字/OCR 目录、双分辨率合并、页码偏移、正文缓存 |
+| `index/standards_index.json` | 50 本标准 → 章节/印刷页/PDF 页（不含正文） |
 | `app/static/manifest.webmanifest` | PWA 清单（名称/图标/快捷方式） |
 | `app/static/sw.js` | Service Worker（仅安全上下文注册；API 不走缓存） |
 | `app/static/icons/` | 192/512/maskable/apple-touch 图标 |
@@ -395,13 +416,15 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `tools/score_baseline.py` | **案例基线**：人工按过程自评四个数；不按选项字母判分 |
 | `app/objective.py` | **知识题客观判分**：单选/多选精确集合匹配；不用于案例 |
 | `tools/score_objective.py` | 知识题答案键 + 作答 JSON → 得分/错题；格式见 `docs/objective-scoring.md` |
-| `app/print_export.py` | **A4 打印卷**：题面/答案分页、混合族手写区、Z 族拆分 |
+| `app/print_export.py` | **A4 打印卷**：题面/答案分页、混合族手写区、Z 族拆分；M6 封面/回填格/手写区缩放/JPEG |
 | `app/catalog.py` | 题号 → 族/篇/节/书名（只从只读索引派生，不写用户库） |
 | `app/photo_import.py` | 旧照片解析与幂等导入（`4-12 4-13错.jpg` 两题） |
 | `tools/import_old_photos.py` | 旧照片导入 CLI（预览 / `--apply`） |
 | `tools/backup_wrongbook.py` | 备份 / 恢复 CLI（恢复需 `--yes`） |
 | `data/` | **用户数据唯一位置**：`wrongbook.db` + `attachments/` + `backups/` |
-| `tests/` | 单元测试 134 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
+| `tests/` | 单元测试 158 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
+| `.github/workflows/ci.yml` | GitHub Actions：最小依赖 → compileall → pytest（PR / push main） |
+| `requirements-ci.txt` | CI 最小依赖（不含 OCR/ONNX/FastAPI） |
 | `.cache/crops/` | 裁图缓存（可随时删，自动重建） |
 | `.cache/answer_ocr/` | 解析 OCR + 候选缓存（可随时删，自动重建） |
 | `tools/build_lookup.py` | 合并成 `index/lookup.json`（v1 的唯一数据入口） |

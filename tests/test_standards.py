@@ -168,3 +168,92 @@ class HandbookTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StandardIndexTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="std-index-")
+        self.index = os.path.join(self.tmp, "standards_index.json")
+        self.text = os.path.join(self.tmp, "text")
+        os.makedirs(self.text)
+        self.library = os.path.join(self.tmp, "library")
+        os.makedirs(self.library)
+        self.pdf = os.path.join(self.library, "GB 50007-2011 test.pdf")
+        doc = pymupdf.open()
+        for _ in range(4):
+            page = doc.new_page(width=595, height=842)
+            page.insert_text((72, 72), "alpha beta", fontsize=14)
+        doc.save(self.pdf)
+        doc.close()
+        with open(os.path.join(self.text, "GB50007-2011.json"), "w",
+                  encoding="utf-8") as fh:
+            json.dump({"pages": [
+                "第一章 总则 alpha",
+                "第二章 术语 beta",
+                "5.2 承载力计算 gamma",
+                "5.2.4 具体条文 delta",
+            ]}, fh, ensure_ascii=False)
+        with open(self.index, "w", encoding="utf-8") as fh:
+            json.dump({"built_at": "2026-11-02", "folder": self.library,
+                       "standards": [{
+                           "name": os.path.basename(self.pdf),
+                           "code": "GB 50007-2011",
+                           "code_key": "GB50007-2011",
+                           "title": "建筑地基基础设计规范",
+                           "page_count": 4,
+                           "source": "ocr_toc",
+                           "confidence": "high",
+                           "offset": 0,
+                           "has_text": True,
+                           "toc": [
+                               {"level": 1, "number": "5", "title": "地基计算",
+                                "printed_page": 18, "pdf_page": 3},
+                               {"level": 2, "number": "5.2", "title": "承载力计算",
+                                "printed_page": 21, "pdf_page": 4, "estimated": True},
+                           ],
+                       }]}, fh, ensure_ascii=False)
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_summaries_and_toc(self):
+        rows = standards.standard_summaries(self.index)
+        self.assertEqual(rows[0]["code"], "GB 50007-2011")
+        toc = standards.standard_toc("GB 50007-2011", self.index)
+        self.assertEqual(toc["toc"][0]["pdf_page"], 3)
+        self.assertTrue(toc["has_text"])
+
+    def test_clause_resolves_to_longest_prefix(self):
+        found = standards.locate_clause("GB 50007-2011", "第5.2.4条", self.index)
+        self.assertEqual(found["matched"], "5.2")
+        self.assertEqual(found["pdf_page"], 4)
+        self.assertTrue(found["estimated"])
+        exact = standards.locate_clause("GB50007-2011", "5", self.index)
+        self.assertEqual(exact["matched"], "5")
+
+    def test_clause_normalisation(self):
+        self.assertEqual(standards.normalize_clause("第5.2.4条"), "5.2.4")
+        self.assertEqual(standards.normalize_clause("附录A.0.1"), "附录A")
+
+    def test_text_search(self):
+        result = standards.search_standard(
+            "GB 50007-2011", "gamma", index_path=self.index,
+            text_cache=self.text,
+        )
+        self.assertTrue(result["available"])
+        self.assertEqual(result["total"], 1)
+        self.assertEqual(result["results"][0]["page"], 3)
+
+    def test_page_renders_and_rejects_out_of_range(self):
+        path, count, row = standards.standard_page(
+            "GB 50007-2011", 1, dpi=72, index_path=self.index,
+            library_dir=self.library, cache_dir=os.path.join(self.tmp, "pages"),
+        )
+        self.assertTrue(os.path.exists(path))
+        self.assertEqual(count, 4)
+        self.assertEqual(row["code"], "GB 50007-2011")
+        with self.assertRaises(ValueError):
+            standards.standard_page(
+                "GB 50007-2011", 99, index_path=self.index,
+                library_dir=self.library, cache_dir=os.path.join(self.tmp, "pages"),
+            )

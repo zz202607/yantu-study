@@ -55,6 +55,15 @@ PROCESS_RESULT = {
 }
 PROCESS_STATUSES = tuple(PROCESS_RESULT)
 
+PRACTICE_SOURCES = {
+    "real_exam": "真题",
+    "exercise": "习题",
+    "mock": "模拟",
+    "other": "其他",
+}
+PLAN_CATEGORIES = tuple("C%d" % i for i in range(1, 11)) + ("mixed", "knowledge")
+PLAN_STATUSES = ("todo", "doing", "done")
+
 # M3 scheduling.  A wrong answer comes back in a day (three when it was a
 # relapse after a long gap); correct answers climb a short ladder.  Mastery
 # needs two correct reviews at least seven days apart, so a single lucky pass
@@ -65,8 +74,13 @@ STUCK_TIMES = 3
 STUCK_IN_QUEUE = 3
 CORRECT_LADDER = (7, 15, 30)
 
-PHOTO_MAX_SIDE = 3200
-THUMB_MAX_SIDE = 640
+# A phone photo of a question/process page is legible well below camera
+# resolution.  2400 px q85 is the storage/legibility compromise; thumbnails
+# are only for list rows.
+PHOTO_MAX_SIDE = 2400
+PHOTO_JPEG_QUALITY = 85
+THUMB_MAX_SIDE = 480
+THUMB_JPEG_QUALITY = 78
 NOTE_MAX = 2000
 SHA_RE = re.compile(r"^[0-9a-f]{64}$")
 
@@ -121,6 +135,27 @@ CREATE TABLE IF NOT EXISTS review_sessions (
     finished_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_day ON review_sessions(day, id DESC);
+CREATE TABLE IF NOT EXISTS practice_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    day TEXT NOT NULL,
+    source TEXT NOT NULL DEFAULT 'exercise',
+    category TEXT NOT NULL DEFAULT 'mixed',
+    attempted INTEGER NOT NULL,
+    correct INTEGER NOT NULL,
+    abandoned INTEGER NOT NULL DEFAULT 0,
+    overtime INTEGER NOT NULL DEFAULT 0,
+    minutes INTEGER NOT NULL DEFAULT 0,
+    note TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_practice_day ON practice_sessions(day, id DESC);
+CREATE TABLE IF NOT EXISTS plan_progress (
+    key TEXT PRIMARY KEY,
+    status TEXT NOT NULL DEFAULT 'todo',
+    accuracy REAL,
+    note TEXT NOT NULL DEFAULT '',
+    updated_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS review_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     session_id INTEGER NOT NULL REFERENCES review_sessions(id) ON DELETE CASCADE,
@@ -152,7 +187,7 @@ CREATE TABLE IF NOT EXISTS review_log (
     process_photo_after INTEGER,
     UNIQUE (session_id, qid)
 );
-INSERT OR IGNORE INTO meta(key, value) VALUES ('schema_version', '3');
+INSERT OR IGNORE INTO meta(key, value) VALUES ('schema_version', '4');
 """
 
 
@@ -303,7 +338,7 @@ class Store:
             "CREATE INDEX IF NOT EXISTS idx_attempts_next ON attempts(next_at)"
         )
         conn.execute(
-            "UPDATE meta SET value = '3' WHERE key = 'schema_version'"
+            "UPDATE meta SET value = '4' WHERE key = 'schema_version'"
         )
 
     # -- photos -----------------------------------------------------------
@@ -369,10 +404,10 @@ class Store:
         for path in (orig_path, thumb_path):
             path.parent.mkdir(parents=True, exist_ok=True)
 
-        self._write_jpeg(img, orig_path, quality=92)
+        self._write_jpeg(img, orig_path, quality=PHOTO_JPEG_QUALITY)
         thumb = img.copy()
         thumb.thumbnail((THUMB_MAX_SIDE, THUMB_MAX_SIDE), Image.LANCZOS)
-        self._write_jpeg(thumb, thumb_path, quality=80)
+        self._write_jpeg(thumb, thumb_path, quality=THUMB_JPEG_QUALITY)
 
         moment = now_iso()
         with self._lock:
@@ -421,6 +456,131 @@ class Store:
         " UNION SELECT process_photo_after FROM review_log"
         "       WHERE process_photo_after IS NOT NULL"
     )
+
+    @staticmethod
+    def _dir_bytes(path):
+        total = 0
+        root = Path(path)
+        if not root.exists():
+            return 0
+        for item in root.rglob("*"):
+            if item.is_file():
+                try:
+                    total += item.stat().st_size
+                except OSError:
+                    pass
+        return total
+
+    def storage_stats(self):
+        """Disk usage for the one data root, including the DB and backups."""
+        conn = self._connect()
+        try:
+            photo_count = conn.execute("SELECT COUNT(*) AS n FROM photos").fetchone()["n"]
+            orphan = conn.execute(
+                "SELECT COUNT(*) AS n FROM photos WHERE id NOT IN (%s)"
+                % self._PHOTO_REFS
+            ).fetchone()["n"]
+        finally:
+            conn.close()
+        attachments = self.root / "attachments"
+        backups = self.root / "backups"
+        exports = self.root / "exports"
+        db_bytes = 0
+        for name in ("wrongbook.db", "wrongbook.db-wal", "wrongbook.db-shm"):
+            path = self.root / name
+            if path.exists():
+                try:
+                    db_bytes += path.stat().st_size
+                except OSError:
+                    pass
+        attachments_bytes = self._dir_bytes(attachments)
+        backups_bytes = self._dir_bytes(backups)
+        exports_bytes = self._dir_bytes(exports)
+        return {
+            "photos": photo_count,
+            "orphan_photos": orphan,
+            "attachments_bytes": attachments_bytes,
+            "backups_bytes": backups_bytes,
+            "exports_bytes": exports_bytes,
+            "database_bytes": db_bytes,
+            "total_bytes": (attachments_bytes + backups_bytes + exports_bytes
+                            + db_bytes),
+        }
+
+    def prune_process_photos(self, keep=2):
+        """Keep only the latest N process photos per attempt; backup first.
+
+        Marking photos (`attempts.photo_id`) are never removed.  Old process
+        references in review_log are cleared, then orphan files are deleted.
+        This is destructive by design; the caller must confirm.
+        """
+        try:
+            keep = int(keep)
+        except (TypeError, ValueError):
+            raise ValueError("保留张数必须是整数")
+        if not 0 <= keep <= 5:
+            raise ValueError("每题保留张数应在 0–5 之间")
+        before = self.storage_stats()
+        backup_path = self.backup() if before["photos"] else None
+        removed = 0
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    attempts = conn.execute(
+                        "SELECT id, process_photo_id FROM attempts"
+                    ).fetchall()
+                    for attempt in attempts:
+                        logs = conn.execute(
+                            "SELECT id, process_photo_before, process_photo_after"
+                            " FROM review_log WHERE attempt_id = ? ORDER BY id DESC",
+                            (attempt["id"],),
+                        ).fetchall()
+                        keep_ids = []
+                        for log in logs:
+                            if log["process_photo_after"] and log["process_photo_after"] not in keep_ids:
+                                keep_ids.append(log["process_photo_after"])
+                        if attempt["process_photo_id"] and attempt["process_photo_id"] not in keep_ids:
+                            keep_ids.insert(0, attempt["process_photo_id"])
+                        kept = set(keep_ids[:keep])
+                        all_ids = set()
+                        for log in logs:
+                            for key in ("process_photo_before", "process_photo_after"):
+                                if log[key]:
+                                    all_ids.add(log[key])
+                        if attempt["process_photo_id"]:
+                            all_ids.add(attempt["process_photo_id"])
+                        drop = all_ids - kept
+                        if drop:
+                            marks = ",".join("?" for _ in drop)
+                            conn.execute(
+                                "UPDATE review_log SET"
+                                " process_photo_before = CASE"
+                                "   WHEN process_photo_before IN (%s) THEN NULL"
+                                "   ELSE process_photo_before END,"
+                                " process_photo_after = CASE"
+                                "   WHEN process_photo_after IN (%s) THEN NULL"
+                                "   ELSE process_photo_after END"
+                                " WHERE attempt_id = ?" % (marks, marks),
+                                tuple(drop) + tuple(drop) + (attempt["id"],),
+                            )
+                        conn.execute(
+                            "UPDATE attempts SET process_photo_id = ? WHERE id = ?",
+                            (keep_ids[0] if keep_ids and keep > 0 else None,
+                             attempt["id"]),
+                        )
+            finally:
+                conn.close()
+        removed = self.prune_orphan_photos()
+        after = self.storage_stats()
+        return {
+            "removed_photos": removed,
+            "keep_per_attempt": keep,
+            "backup": str(backup_path) if backup_path else None,
+            "freed_bytes": max(0, before["attachments_bytes"] - after["attachments_bytes"]),
+            "before": before,
+            "after": after,
+        }
 
     def prune_orphan_photos(self):
         """Drop preview-only photos that never landed in an attempt or review."""
@@ -1439,6 +1599,178 @@ class Store:
             finally:
                 conn.close()
 
+    # -- practice sessions and plan progress --------------------------------
+
+    @staticmethod
+    def _practice_dict(row):
+        return {
+            "id": row["id"],
+            "day": row["day"],
+            "source": row["source"],
+            "source_label": PRACTICE_SOURCES.get(row["source"], row["source"]),
+            "category": row["category"],
+            "attempted": row["attempted"],
+            "correct": row["correct"],
+            "abandoned": row["abandoned"],
+            "overtime": row["overtime"],
+            "minutes": row["minutes"],
+            "note": row["note"],
+            "created_at": row["created_at"],
+        }
+
+    def add_practice_session(self, day=None, source="exercise", category="mixed",
+                             attempted=0, correct=0, abandoned=0, overtime=0,
+                             minutes=0, note=""):
+        """Record one paper/category sitting as aggregate counts.
+
+        The app cannot infer how many questions were practised from the wrong
+        book (it only stores errors), so the plan's throughput comes from these
+        explicit four-number records.
+        """
+        try:
+            attempted = int(attempted)
+            correct = int(correct)
+            abandoned = int(abandoned or 0)
+            overtime = int(overtime or 0)
+            minutes = int(minutes or 0)
+        except (TypeError, ValueError):
+            raise ValueError("题数和用时必须是整数")
+        if not 1 <= attempted <= 200:
+            raise ValueError("作答题数应在 1–200 之间")
+        if not 0 <= correct <= attempted:
+            raise ValueError("做对数应在 0–作答题数之间")
+        if not 0 <= abandoned <= 200:
+            raise ValueError("放弃题数应在 0–200 之间")
+        if not 0 <= overtime <= attempted:
+            raise ValueError("超时题数应在 0–作答题数之间")
+        if not 0 <= minutes <= 600:
+            raise ValueError("用时应在 0–600 分钟之间")
+        source = str(source or "exercise").strip().lower()
+        if source not in PRACTICE_SOURCES:
+            raise ValueError("未知来源：%s" % source)
+        category = str(category or "mixed").strip().upper()
+        if category == "MIXED":
+            category = "mixed"
+        if category == "KNOWLEDGE":
+            category = "knowledge"
+        if category not in PLAN_CATEGORIES:
+            raise ValueError("未知类别：%s" % category)
+        day = str(day or datetime.now().date().isoformat())[:10]
+        try:
+            datetime.fromisoformat(day)
+        except ValueError:
+            raise ValueError("日期应为 YYYY-MM-DD")
+        clean_note = _clean_note(note)
+        stamp = now_iso()
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    cur = conn.execute(
+                        "INSERT INTO practice_sessions"
+                        " (day, source, category, attempted, correct, abandoned,"
+                        "  overtime, minutes, note, created_at)"
+                        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        (day, source, category, attempted, correct, abandoned,
+                         overtime, minutes, clean_note or "", stamp),
+                    )
+                    row = conn.execute(
+                        "SELECT * FROM practice_sessions WHERE id = ?",
+                        (cur.lastrowid,),
+                    ).fetchone()
+                return self._practice_dict(row)
+            finally:
+                conn.close()
+
+    def list_practice_sessions(self, limit=30, since=None):
+        limit = max(1, min(int(limit or 30), 200))
+        conn = self._connect()
+        try:
+            if since:
+                rows = conn.execute(
+                    "SELECT * FROM practice_sessions WHERE day >= ?"
+                    " ORDER BY day DESC, id DESC LIMIT ?",
+                    (str(since)[:10], limit),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM practice_sessions"
+                    " ORDER BY day DESC, id DESC LIMIT ?",
+                    (limit,),
+                ).fetchall()
+            return [self._practice_dict(row) for row in rows]
+        finally:
+            conn.close()
+
+    def delete_practice_session(self, session_id):
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    cur = conn.execute(
+                        "DELETE FROM practice_sessions WHERE id = ?", (session_id,)
+                    )
+                return cur.rowcount > 0
+            finally:
+                conn.close()
+
+    def plan_progress(self):
+        conn = self._connect()
+        try:
+            return {
+                row["key"]: {
+                    "key": row["key"],
+                    "status": row["status"],
+                    "accuracy": row["accuracy"],
+                    "note": row["note"],
+                    "updated_at": row["updated_at"],
+                }
+                for row in conn.execute("SELECT * FROM plan_progress")
+            }
+        finally:
+            conn.close()
+
+    def set_plan_progress(self, key, status="done", accuracy=None, note=""):
+        key = str(key or "").strip()
+        if not key or len(key) > 120:
+            raise ValueError("进度 key 不合法")
+        status = str(status or "done").strip().lower()
+        if status not in PLAN_STATUSES:
+            raise ValueError("未知进度状态：%s" % status)
+        if accuracy is not None:
+            try:
+                accuracy = float(accuracy)
+            except (TypeError, ValueError):
+                raise ValueError("正确率必须是数字")
+            if not 0 <= accuracy <= 1:
+                raise ValueError("正确率应在 0–1 之间")
+        clean_note = _clean_note(note)
+        stamp = now_iso()
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    conn.execute(
+                        "INSERT INTO plan_progress(key, status, accuracy, note, updated_at)"
+                        " VALUES (?, ?, ?, ?, ?)"
+                        " ON CONFLICT(key) DO UPDATE SET"
+                        " status = excluded.status, accuracy = excluded.accuracy,"
+                        " note = excluded.note, updated_at = excluded.updated_at",
+                        (key, status, accuracy, clean_note or "", stamp),
+                    )
+                    row = conn.execute(
+                        "SELECT * FROM plan_progress WHERE key = ?", (key,)
+                    ).fetchone()
+                return {
+                    "key": row["key"],
+                    "status": row["status"],
+                    "accuracy": row["accuracy"],
+                    "note": row["note"],
+                    "updated_at": row["updated_at"],
+                }
+            finally:
+                conn.close()
+
     # -- backup / restore -------------------------------------------------
 
     def _snapshot_db(self, dest):
@@ -1463,9 +1795,10 @@ class Store:
             originals = list((self.root / "attachments" / "orig").rglob("*.jpg"))
             with zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED) as zf:
                 zf.write(snap, "wrongbook.db")
-                settings = self.root / "settings.json"
-                if settings.exists():
-                    zf.write(settings, "settings.json")
+                for extra in ("settings.json", "plan.json"):
+                    path = self.root / extra
+                    if path.exists():
+                        zf.write(path, extra)
                 for kind in ("orig", "thumb"):
                     folder = self.root / "attachments" / kind
                     if not folder.exists():
@@ -1539,8 +1872,9 @@ class Store:
                 except OSError:
                     pass
             shutil.copy2(db, data_dir / "wrongbook.db")
-            if (tmp / "settings.json").exists():
-                shutil.copy2(tmp / "settings.json", data_dir / "settings.json")
+            for extra in ("settings.json", "plan.json"):
+                if (tmp / extra).exists():
+                    shutil.copy2(tmp / extra, data_dir / extra)
             attach = data_dir / "attachments"
             if attach.exists():
                 shutil.rmtree(attach)

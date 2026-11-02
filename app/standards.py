@@ -35,6 +35,11 @@ HANDBOOK = Path(os.environ.get("YANTU_HANDBOOK", ROOT / "工程地质手册（�
 CACHE = ROOT / ".cache"
 INDEX_PATH = CACHE / "handbook_index.json"
 PAGE_CACHE = CACHE / "handbook_pages"
+STD_INDEX_PATH = ROOT / "index" / "standards_index.json"
+STD_TEXT_CACHE = CACHE / "standards_text"
+STD_PAGE_CACHE = CACHE / "standards_pages"
+_STD_INDEX_CACHE = {"stamp": None, "data": None}
+_STD_INDEX_LOCK = threading.Lock()
 
 ALLOWED_SUFFIXES = {".pdf", ".jpg", ".jpeg", ".png"}
 _LIBRARY_CACHE = {"stamp": 0.0, "dir": None, "data": None}
@@ -451,3 +456,216 @@ def meta(handbook=None, index_path=None):
 def toc(index_path=None):
     index = ensure_index(index_path=index_path)
     return {"toc": index["toc"], "page_count": index["page_count"]}
+
+
+# ---------------------------------------------------------------- chapter index
+
+def load_standard_index(index_path=None):
+    """Load index/standards_index.json; cached by mtime."""
+    path = Path(index_path or STD_INDEX_PATH)
+    if not path.exists():
+        return {"standards": [], "built_at": None, "folder": None}
+    try:
+        stamp = path.stat().st_mtime
+    except OSError:
+        stamp = None
+    if _STD_INDEX_CACHE["data"] is not None and _STD_INDEX_CACHE["stamp"] == stamp:
+        return _STD_INDEX_CACHE["data"]
+    with _STD_INDEX_LOCK:
+        if _STD_INDEX_CACHE["data"] is not None and _STD_INDEX_CACHE["stamp"] == stamp:
+            return _STD_INDEX_CACHE["data"]
+        try:
+            with open(path, encoding="utf-8") as fh:
+                data = json.load(fh)
+        except (OSError, ValueError):
+            data = {"standards": [], "built_at": None, "folder": None}
+        _STD_INDEX_CACHE.update(stamp=stamp, data=data)
+        return data
+
+
+def standard_summaries(index_path=None):
+    """Light list for the standards selector (no chapter arrays)."""
+    rows = []
+    for row in load_standard_index(index_path).get("standards", []):
+        rows.append({
+            "name": row.get("name"),
+            "code": row.get("code"),
+            "code_key": row.get("code_key"),
+            "title": row.get("title"),
+            "page_count": row.get("page_count"),
+            "source": row.get("source"),
+            "confidence": row.get("confidence"),
+            "has_text": row.get("has_text", False),
+            "toc_count": len(row.get("toc") or []),
+        })
+    rows.sort(key=lambda row: (
+        0 if (row.get("code_key") or "").startswith(("GB50007", "GB50021",
+                                                    "JGJ94", "JGJ79",
+                                                    "GB50330", "JGJ120",
+                                                    "GB50011")) else 1,
+        row.get("code_key") or "",
+    ))
+    return rows
+
+
+def _find_standard(code, index_path=None):
+    wanted = code_key(code)
+    rows = load_standard_index(index_path).get("standards", [])
+    if wanted:
+        for row in rows:
+            if row.get("code_key") == wanted or code_key(row.get("code")) == wanted:
+                return row
+        for row in rows:
+            key = row.get("code_key") or code_key(row.get("code"))
+            if key and (key.startswith(wanted) or wanted.startswith(key)):
+                return row
+    text = title_key(code)
+    if len(text) >= 4:
+        for row in rows:
+            if text in title_key(row.get("title")):
+                return row
+    return None
+
+
+def normalize_clause(value):
+    """'第5.2.4条' -> '5.2.4'; '附录A.0.1' -> '附录A'."""
+    text = str(value or "").replace("．", ".").replace("　", " ").strip()
+    appendix = re.search(r"附录\s*([A-Z])", text, re.IGNORECASE)
+    if appendix:
+        return "附录" + appendix.group(1).upper()
+    match = re.search(r"(\d+(?:\.\d+){0,4})", text)
+    return match.group(1) if match else ""
+
+
+def locate_clause(code, clause, index_path=None):
+    """Find the section page for a clause number.
+
+    A clause like 5.2.4 has no TOC entry of its own; it resolves to the
+    longest available prefix (5.2, then 5).  The page is the start of that
+    section, which is what a 30-second lookup needs.
+    """
+    standard = _find_standard(code, index_path)
+    if not standard:
+        return None
+    number = normalize_clause(clause)
+    if not number:
+        return None
+    entries = standard.get("toc") or []
+    candidate = number
+    while candidate:
+        for entry in entries:
+            if str(entry.get("number") or "") == candidate:
+                return {
+                    "code": standard.get("code"),
+                    "name": standard.get("name"),
+                    "title": standard.get("title"),
+                    "clause": number,
+                    "matched": candidate,
+                    "section_title": entry.get("title"),
+                    "printed_page": entry.get("printed_page"),
+                    "pdf_page": entry.get("pdf_page"),
+                    "estimated": bool(entry.get("estimated")),
+                    "page_count": standard.get("page_count"),
+                    "source": standard.get("source"),
+                }
+        if "." in candidate:
+            candidate = candidate.rsplit(".", 1)[0]
+        else:
+            break
+    return None
+
+
+def standard_toc(code, index_path=None):
+    standard = _find_standard(code, index_path)
+    if not standard:
+        return None
+    return {
+        "code": standard.get("code"),
+        "name": standard.get("name"),
+        "title": standard.get("title"),
+        "page_count": standard.get("page_count"),
+        "source": standard.get("source"),
+        "confidence": standard.get("confidence"),
+        "offset": standard.get("offset"),
+        "has_text": standard.get("has_text", False),
+        "toc": standard.get("toc") or [],
+    }
+
+
+def search_standard(code, query, limit=20, index_path=None, text_cache=None):
+    """Search a text-layer standard; scanned standards return available=False."""
+    standard = _find_standard(code, index_path)
+    if not standard:
+        return {"available": False, "results": [], "total": 0}
+    key = standard.get("code_key") or code_key(standard.get("code"))
+    cache = Path(text_cache or STD_TEXT_CACHE) / ("%s.json" % key)
+    if not cache.exists():
+        return {"available": False, "results": [], "total": 0}
+    try:
+        with open(cache, encoding="utf-8") as fh:
+            pages = json.load(fh).get("pages", [])
+    except (OSError, ValueError):
+        return {"available": False, "results": [], "total": 0}
+    tokens = [part.lower() for part in re.split(r"\s+", (query or "").strip()) if part]
+    if not tokens:
+        return {"available": True, "results": [], "total": 0}
+    hits = []
+    for number, text in enumerate(pages, start=1):
+        low = text.lower()
+        positions = []
+        ok = True
+        count = 0
+        for token in tokens:
+            position = low.find(token)
+            if position < 0:
+                ok = False
+                break
+            positions.append(position)
+            count += low.count(token)
+        if not ok:
+            continue
+        first = min(positions)
+        start = max(0, first - 50)
+        end = min(len(text), first + 110)
+        snippet = re.sub(r"\s+", " ", text[start:end]).strip()
+        hits.append({
+            "page": number,
+            "snippet": ("…" if start else "") + snippet
+                       + ("…" if end < len(text) else ""),
+            "score": count,
+        })
+    hits.sort(key=lambda row: (-row["score"], row["page"]))
+    return {"available": True, "total": len(hits),
+            "results": hits[:max(1, min(int(limit or 20), 50))],
+            "code": standard.get("code")}
+
+
+def standard_page(code, page, dpi=110, index_path=None, library_dir=None,
+                  cache_dir=None):
+    """Render one standard page to PNG for the in-app viewer."""
+    standard = _find_standard(code, index_path)
+    if not standard:
+        raise FileNotFoundError("规范索引里没有：%s" % code)
+    path = file_path(standard.get("name"), library_dir)
+    if not path:
+        raise FileNotFoundError("规范文件不在：%s" % standard.get("name"))
+    cache = Path(cache_dir or STD_PAGE_CACHE)
+    doc = fitz.open(str(path))
+    try:
+        page_count = doc.page_count
+        number = int(page)
+        if not 1 <= number <= page_count:
+            raise ValueError("页码应在 1–%d 之间" % page_count)
+        dpi = max(72, min(int(dpi or 110), 160))
+        cache.mkdir(parents=True, exist_ok=True)
+        key = standard.get("code_key") or code_key(standard.get("code"))
+        out = cache / ("%s_%04d_%03d.png" % (key, number, dpi))
+        if not out.exists():
+            zoom = dpi / 72
+            pix = doc[number - 1].get_pixmap(
+                matrix=fitz.Matrix(zoom, zoom), colorspace=fitz.csRGB
+            )
+            pix.save(str(out))
+        return out, page_count, standard
+    finally:
+        doc.close()

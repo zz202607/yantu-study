@@ -126,6 +126,7 @@ class Sheet:
         # Optional (dpi, jpeg_quality): embed images as JPEG at a lower
         # resolution.  None keeps the original lossless PNG bytes.
         self.jpeg = None
+        self.result_boxes = False
 
     def add(self, label, source, image_path, min_write=None):
         w, h = image_size(image_path)
@@ -180,6 +181,11 @@ class Sheet:
                 else:
                     page.insert_image(rect, filename=path)
                 y += h + write + GAP
+                if self.result_boxes:
+                    text_line(
+                        page, "对 □    错 □    放弃 □    超时 □",
+                        y - GAP - 10, 8, color=(0.45, 0.45, 0.45),
+                    )
         return self.pages
 
     def _jpeg_stream(self, path):
