@@ -603,6 +603,67 @@
   .quad-triage button.on { border-color: var(--warn); color: var(--warn); background: #fff8ef; font-weight: 700; }
   .quad-empty { padding: 14px; text-align: center; color: var(--muted); font-size: 12px; }
   .plan-task.done .dot { background: var(--good); border-color: var(--good); color: #fff; display: grid; place-items: center; font-size: 10px; }
+  /* --- M9.2 training: timed drills + recognition cards --- */
+  .drill-card { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 10px; background: #fff; }
+  .drill-card .head { display: flex; align-items: baseline; gap: 8px; }
+  .drill-card .head b { font-size: 13.5px; flex: 1; }
+  .drill-card .head .hint { flex: 0 0 auto; }
+  .drill-card .controls { display: flex; gap: 6px; flex-wrap: wrap; align-items: stretch; margin-top: 8px; }
+  .drill-card select {
+    flex: 1 1 120px; min-width: 0; background: #fff; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 9px; padding: 8px;
+    font-family: inherit; font-size: 12.5px;
+  }
+  .drill-card .count { flex: 0 0 72px; }
+  .drill-card .start { flex: 0 0 auto; }
+  .drill-card .last { margin-top: 8px; font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+  .drill-active { display: flex; align-items: center; gap: 8px; margin-top: 8px; padding: 7px 9px; border: 1px dashed var(--accent); border-radius: 9px; background: rgba(22,103,217,.05); font-size: 12px; }
+  .drill-active button { margin-left: auto; }
+  .sheet-panel.drill-panel { max-height: 94vh; overflow: auto; }
+  .drill-timer {
+    margin-left: auto; font-size: 22px; font-weight: 700;
+    font-variant-numeric: tabular-nums; color: var(--accent); line-height: 1.2;
+  }
+  .drill-timer.warn { color: var(--warn); }
+  .drill-timer.over { color: #b3261e; }
+  .drill-meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .drill-meta b { color: var(--ink); }
+  .drill-shot { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 5px; margin: 9px 0; max-height: 38vh; overflow: auto; }
+  .drill-shot img { display: block; width: 100%; height: auto; }
+  .drill-step { margin-top: 8px; }
+  .drill-step label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .drill-step textarea { min-height: 62px; }
+  .drill-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 9px; }
+  .drill-actions button {
+    border: 1px solid var(--line); background: #fff; color: var(--ink);
+    border-radius: 10px; padding: 12px 8px; font-family: inherit;
+    font-size: 14.5px; font-weight: 600;
+  }
+  .drill-actions button.good { border-color: #b9d9c9; background: #eef7f2; color: var(--good); }
+  .drill-actions button.bad { border-color: #e7c3c0; background: #fdf1f0; color: #b3261e; }
+  .drill-actions button.warn { border-color: #ecd3ae; background: #fff7ea; color: var(--warn); }
+  .drill-actions button.primary { border: 0; }
+  .drill-actions button:disabled { opacity: .38; }
+  .drill-tools { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .drill-expired { margin-top: 8px; padding: 8px 10px; border-radius: 9px; background: #fff3e0; color: var(--warn); font-size: 12.5px; font-weight: 600; }
+  .drill-pick { display: grid; gap: 7px; margin-top: 8px; }
+  .drill-pick label { display: grid; gap: 3px; font-size: 11.5px; color: var(--muted); }
+  .drill-pick select { background: #fff; color: var(--ink); border: 1px solid var(--line); border-radius: 9px; padding: 9px; font-family: inherit; font-size: 13px; }
+  .drill-reveal { border: 1px solid var(--line); border-radius: 11px; padding: 11px 12px; margin-top: 10px; background: var(--paper); font-size: 13px; line-height: 1.6; }
+  .drill-reveal .ok { color: var(--good); font-weight: 700; }
+  .drill-reveal .bad { color: #b3261e; font-weight: 700; }
+  .drill-reveal .muted { color: var(--muted); }
+  .drill-summary .stat-grid { margin-top: 8px; }
+  .drill-summary .drill-headline { margin-top: 9px; padding: 9px 11px; border-radius: 10px; background: var(--paper); border: 1px solid var(--line); font-size: 13px; line-height: 1.55; }
+  .drill-list { margin-top: 10px; border: 1px solid var(--line); border-radius: 11px; overflow: hidden; }
+  .drill-row { display: grid; grid-template-columns: 24px 54px 1fr; gap: 6px; padding: 7px 9px; border-bottom: 1px solid var(--line); font-size: 11.5px; align-items: baseline; }
+  .drill-row:last-child { border-bottom: 0; }
+  .drill-row .n { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+  .drill-row .res { font-weight: 700; }
+  .drill-row .res.correct { color: var(--good); }
+  .drill-row .res.wrong, .drill-row .res.overtime { color: var(--warn); }
+  .drill-row .res.abandoned { color: var(--muted); }
+  .drill-row .step { color: var(--muted); line-height: 1.45; }
   .standard-card { border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px; margin-bottom: 9px; background: #fff; }
   .standard-card.flash { animation: flash 1.4s ease; }
   @keyframes flash { 0% { box-shadow: 0 0 0 3px rgba(22,103,217,.3); } 100% { box-shadow: none; } }
@@ -1264,6 +1325,42 @@
   </div>
 </div>
 
+<div id="drillSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="drillTitle">
+  <div class="sheet-panel drill-panel">
+    <div class="sheet-head">
+      <h3 id="drillTitle">训练</h3>
+      <span class="hint" id="drillProgress"></span>
+      <span class="drill-timer" id="drillTimer"></span>
+      <button type="button" class="del" id="drillClose" aria-label="暂停退出">×</button>
+    </div>
+    <div id="drillBody"></div>
+  </div>
+</div>
+
+<div id="retestSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="rtTitle">
+  <div class="sheet-panel baseline-sheet">
+    <div class="sheet-head">
+      <h3 id="rtTitle">整卷复测</h3>
+      <span class="hint" id="rtHint">只记四个数</span>
+    </div>
+    <div class="session-grid">
+      <label>日期<input type="date" id="rtDay"></label>
+      <label>用时（分钟）<input type="number" id="rtMinutes" min="0" max="600" inputmode="numeric" value="180"></label>
+      <label>作答题数<input type="number" id="rtAnswered" min="0" max="25" inputmode="numeric"></label>
+      <label>做对数<input type="number" id="rtCorrect" min="0" max="25" inputmode="numeric"></label>
+      <label>放弃（自动）<input type="number" id="rtSkipped" min="0" max="25" inputmode="numeric" readonly></label>
+      <label>超时题数<input type="number" id="rtOvertime" min="0" max="25" inputmode="numeric"></label>
+    </div>
+    <textarea id="rtNote" rows="2" placeholder="一句话备注（可不填）"></textarea>
+    <p class="hint" id="rtMeta">两半各 25 题 × 2 分；案例按过程自评，不按选项字母判分。</p>
+    <div class="sheet-actions">
+      <button id="rtDelete" class="ghost danger hidden" type="button">删除记录</button>
+      <button id="rtCancel" class="ghost" type="button">取消</button>
+      <button id="rtSave" class="primary" type="button">保存复测</button>
+    </div>
+  </div>
+</div>
+
 <div id="pageSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="pageTitle">
   <div class="sheet-panel page-panel">
     <div class="sheet-head">
@@ -1374,6 +1471,24 @@ const state = {
     busy: false,
     quadrant: "slow",   // active tab in the four-quadrant sheet
     quadrantBusy: false,
+  },
+  drill: {
+    overview: null,     // /api/drill/overview payload
+    session: null,      // full drill state
+    firstStep: {},      // qid -> draft text, kept across re-renders
+    answer: false,      // show the solution crop in the timed drill
+    reveal: null,       // recognition result after submitting
+    deadline: 0,        // absolute ms; a re-render must not restart the clock
+    timer: null,
+    expired: false,
+    busy: false,
+    lastParams: null,   // "再来一组" repeats the same mode/source/count
+  },
+  retest: {
+    data: null,         // /api/retest payload
+    year: 2024,
+    half: null,         // "A" or "P" while the sheet is open
+    busy: false,
   },
   review: {
     session: null,
@@ -2592,8 +2707,8 @@ function renderHome(d) {
 function renderDashActions(actions) {
   const box = $("dashActions");
   box.innerHTML = "";
-  const icons = { baseline: "考", review: "复", weak: "弱", untouched: "书",
-                  stuck: "顽", steady: "稳" };
+  const icons = { baseline: "考", review: "复", drill: "练", weak: "弱",
+                  untouched: "书", stuck: "顽", steady: "稳" };
   for (const action of actions.slice(0, 3)) {
     const button = document.createElement("button");
     button.type = "button";
@@ -2616,10 +2731,25 @@ function runAction(action) {
   if (action.route === "baseline") return openBaseline();
   if (action.route === "book") return openBook();
   if (action.route === "plan") return openData("plan");
+  if (action.route === "drill") return openTraining();
   if (action.route === "standards") {
     return openData("standards", action.category || null);
   }
   show("home");
+}
+
+function openTraining() {
+  openData("plan");
+  let tries = 0;
+  const timer = setInterval(() => {
+    const box = $("planDrill");
+    if (box && box.children.length) {
+      clearInterval(timer);
+      box.scrollIntoView({ behavior: "smooth", block: "center" });
+    } else if (++tries > 24) {
+      clearInterval(timer);
+    }
+  }, 150);
 }
 
 function renderDashCategories(categories) {
@@ -2844,14 +2974,18 @@ async function loadPlan() {
   $("dataPlan").innerHTML =
     '<div class="status"><span class="spinner"></span>读取计划…</div>';
   try {
-    const [res, baseRes] = await Promise.all([
+    const [res, baseRes, drillRes, retestRes] = await Promise.all([
       fetch("/api/plan"),
       fetch("/api/baseline"),
+      fetch("/api/drill/overview"),
+      fetch("/api/retest?year=" + state.retest.year),
     ]);
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || res.statusText);
     state.data.plan = data;
     state.baseline.data = baseRes.ok ? await baseRes.json() : null;
+    state.drill.overview = drillRes.ok ? await drillRes.json() : null;
+    state.retest.data = retestRes.ok ? await retestRes.json() : null;
     renderPlan(data);
   } catch (err) {
     $("dataPlan").innerHTML =
@@ -2896,6 +3030,10 @@ function renderPlan(d) {
   }
   html.push('<div class="panel-title">2025 案例基线</div>'
     + '<div id="planBaseline" class="baseline-panel"></div>');
+  html.push('<div class="panel-title">整卷复测 · 2024</div>'
+    + '<div id="planRetest" class="baseline-panel"></div>');
+  html.push('<div class="panel-title">把清单变成训练</div>'
+    + '<div id="planDrill" class="drill-panel"></div>');
   html.push('<div class="panel-title">阶段目标</div><div class="cat-table">');
   for (const row of (d.targets || [])) {
     html.push('<div class="plan-target"><span>' + escapeHtml(row.label) + "</span>"
@@ -2941,13 +3079,16 @@ function renderPlan(d) {
   html.push('<div class="panel-title">最近练习</div><div class="cat-table">');
   for (const row of (d.recent_sessions || [])) {
     const isBaseline = !!row.baseline_half;
+    const isRetest = isBaseline && !String(row.baseline_half).startsWith("2025-");
+    const locked = isBaseline || row.source === "drill";
     html.push('<div class="session-row"><span class="main"><b>'
       + escapeHtml(row.day) + " · " + escapeHtml(row.source_label)
-      + " · " + (isBaseline ? "基线" : escapeHtml(row.category))
+      + " · " + (isBaseline ? (isRetest ? "整卷复测" : "基线")
+        : escapeHtml(row.category))
       + "</b><span> 作 " + row.attempted
       + " · 对 " + row.correct + " · " + row.minutes + " 分钟"
       + (row.note ? " · " + escapeHtml(row.note) : "") + "</span></span>"
-      + (isBaseline ? ""
+      + (locked ? ""
         : '<button type="button" class="del" data-session-delete="' + row.id
           + '" aria-label="删除">×</button>')
       + "</div>");
@@ -2959,6 +3100,8 @@ function renderPlan(d) {
   const box = $("dataPlan");
   box.innerHTML = html.join("");
   renderBaselinePanel();
+  renderRetestPanel();
+  renderDrillPanel();
   $("planSession").addEventListener("click", openSessionSheet);
   $("planPrint").addEventListener("click", openPrintSheet);
   $("planSettings").addEventListener("click", openPlanSettings);
@@ -3117,6 +3260,737 @@ $("planSettingsCancel").addEventListener("click", () => $("planSettingsSheet").c
 $("planSettingsSave").addEventListener("click", savePlanSettings);
 $("planSettingsSheet").addEventListener("click", (event) => {
   if (event.target === $("planSettingsSheet")) $("planSettingsSheet").classList.add("hidden");
+});
+
+// --- 2024 full-paper retest ----------------------------------------------
+
+function retestHalf(half) {
+  const d = state.retest.data || {};
+  return ((d.halves || []).find((row) => row.half === half))
+    || { half: half, recorded: false };
+}
+
+function renderRetestPanel() {
+  const box = $("planRetest");
+  if (!box) return;
+  const d = state.retest.data;
+  if (!d) {
+    box.innerHTML = '<div class="empty">整卷复测数据没加载；刷新计划页再试。</div>';
+    return;
+  }
+  const papers = d.papers || {};
+  const html = [];
+  let recorded = 0;
+  let score = 0;
+  let maxScore = 0;
+  for (const half of ["A", "P"]) {
+    const row = retestHalf(half);
+    const done = !!row.recorded;
+    if (done) {
+      recorded += 1;
+      score += row.score || 0;
+      maxScore += row.max_score || 50;
+    }
+    html.push('<div class="b-half ' + (done ? "done" : "") + '">'
+      + '<div class="top"><b>' + BASELINE_HALVES[half] + " · " + half + "</b>"
+      + (done
+        ? '<span class="score">' + (row.score ?? "—") + " / " + (row.max_score ?? 50) + "</span>"
+        : '<span class="hint">未录入</span>')
+      + "</div>");
+    if (done) {
+      const rate = row.accuracy != null ? row.accuracy
+        : (row.answered ? row.correct / row.answered : null);
+      html.push('<div class="meta">' + escapeHtml(row.day || "—")
+        + " · 作 " + row.answered + " · 对 " + row.correct
+        + " · 弃 " + row.skipped + " · 超时 " + row.overtime
+        + " · 正确率 " + pct(rate)
+        + (row.note ? " · " + escapeHtml(row.note) : "") + "</div>");
+    } else {
+      html.push('<div class="meta">两半各 25 题 × 2 分；'
+        + "12 月中做，2025 已做基线，这次用 2024 避免背答案。</div>");
+    }
+    html.push('<div class="acts">'
+      + (papers[half]
+        ? '<a class="ghost small" href="/api/retest/file/' + d.year + "/" + half
+          + '" target="_blank" rel="noopener">题面 PDF</a>'
+        : '<span class="hint">PDF 未生成：tools/print_exam.py --year ' + d.year + "</span>")
+      + '<button type="button" class="' + (done ? "ghost" : "primary")
+      + ' small" data-retest-open="' + half + '">'
+      + (done ? "修改复测" : "录入复测") + "</button>"
+      + "</div></div>");
+  }
+  if (!recorded) {
+    html.push('<div class="b-combined">合计 100 分 · 通过线 60；'
+      + "两半都做完再对答案。只记四个数，案例按过程自评。</div>");
+  } else if (recorded === 1) {
+    html.push('<div class="b-combined">已记 ' + score + " / " + maxScore
+      + "；还差一半，两半齐后才看合计与通过线。</div>");
+  } else {
+    html.push('<div class="b-combined">合计 <b>' + score + " / " + maxScore
+      + "</b> · 通过线 " + (d.pass_line || 60)
+      + " · 正确率 " + pct(d.accuracy)
+      + (d.passed ? ' · <span class="ok">已过线</span>'
+        : ' · <span class="warn">未过线</span>') + "</div>");
+  }
+  box.innerHTML = html.join("");
+  for (const button of box.querySelectorAll("[data-retest-open]")) {
+    button.addEventListener("click", () => openRetestSheet(button.dataset.retestOpen));
+  }
+}
+
+function openRetestSheet(half) {
+  const row = retestHalf(half);
+  const today = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  state.retest.half = half;
+  $("rtTitle").textContent = "整卷复测 · " + state.retest.year + " "
+    + (BASELINE_HALVES[half] || half);
+  $("rtHint").textContent = row.recorded ? "修改四个数" : "只记四个数";
+  $("rtDay").value = row.day || (today.getFullYear() + "-"
+    + pad(today.getMonth() + 1) + "-" + pad(today.getDate()));
+  $("rtMinutes").value = row.recorded ? row.minutes : 180;
+  $("rtAnswered").value = row.recorded ? row.answered : "";
+  $("rtCorrect").value = row.recorded ? row.correct : "";
+  $("rtSkipped").value = row.recorded ? row.skipped : "";
+  $("rtOvertime").value = row.recorded ? row.overtime : "";
+  $("rtNote").value = row.note || "";
+  $("rtDelete").classList.toggle("hidden", !row.recorded);
+  $("retestSheet").classList.remove("hidden");
+}
+
+function updateRetestSkipped() {
+  const value = Number($("rtAnswered").value);
+  $("rtSkipped").value = $("rtAnswered").value === "" || !Number.isFinite(value)
+    ? "" : String(Math.max(0, 25 - value));
+}
+
+async function saveRetest() {
+  const half = state.retest.half;
+  if (!half || state.retest.busy) return;
+  const body = {
+    day: $("rtDay").value,
+    minutes: Number($("rtMinutes").value) || 0,
+    answered: Number($("rtAnswered").value),
+    correct: Number($("rtCorrect").value),
+    skipped: Number($("rtSkipped").value),
+    overtime: Number($("rtOvertime").value) || 0,
+    note: $("rtNote").value.trim(),
+  };
+  state.retest.busy = true;
+  $("rtSave").disabled = true;
+  try {
+    const res = await fetch("/api/retest/" + state.retest.year + "/" + half, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.detail || res.statusText);
+    state.retest.data = payload.retest;
+    $("retestSheet").classList.add("hidden");
+    if (payload.plan) {
+      state.data.plan = payload.plan;
+      renderPlan(payload.plan);
+    } else {
+      renderRetestPanel();
+    }
+    loadHome();
+    toast("已保存 " + state.retest.year + " " + (BASELINE_HALVES[half] || half) + "复测");
+  } catch (err) {
+    toast("保存失败：" + err.message);
+  } finally {
+    state.retest.busy = false;
+    $("rtSave").disabled = false;
+  }
+}
+
+async function deleteRetest() {
+  const half = state.retest.half;
+  if (!half || state.retest.busy) return;
+  if (!confirm("删除 " + state.retest.year + " "
+    + (BASELINE_HALVES[half] || half) + " 的复测记录？练习台账一起回滚。")) return;
+  state.retest.busy = true;
+  try {
+    const res = await fetch("/api/retest/" + state.retest.year + "/" + half, {
+      method: "DELETE",
+    });
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.detail || res.statusText);
+    state.retest.data = payload.retest;
+    $("retestSheet").classList.add("hidden");
+    if (payload.plan) {
+      state.data.plan = payload.plan;
+      renderPlan(payload.plan);
+    } else {
+      renderRetestPanel();
+    }
+    loadHome();
+    toast("已删除复测记录");
+  } catch (err) {
+    toast("删除失败：" + err.message);
+  } finally {
+    state.retest.busy = false;
+  }
+}
+
+$("rtAnswered").addEventListener("input", updateRetestSkipped);
+$("rtCancel").addEventListener("click", () => $("retestSheet").classList.add("hidden"));
+$("rtSave").addEventListener("click", saveRetest);
+$("rtDelete").addEventListener("click", deleteRetest);
+$("retestSheet").addEventListener("click", (event) => {
+  if (event.target === $("retestSheet")) $("retestSheet").classList.add("hidden");
+});
+
+// --- M9.2 training: timed drills + recognition cards ----------------------
+
+function drillPrototype(key) {
+  const rows = (state.drill.overview && state.drill.overview.prototypes) || [];
+  return rows.find((row) => row.key === key) || null;
+}
+
+function drillPrototypeLabel(key) {
+  const row = drillPrototype(key);
+  return row ? key + " · " + row.label : (key || "—");
+}
+
+function drillStandardLabel(code) {
+  const rows = (state.drill.overview && state.drill.overview.standards) || [];
+  const row = rows.find((item) => item.code === code);
+  return row ? code + " · " + row.title : (code || "—");
+}
+
+function drillSourceOptions(mode) {
+  const d = state.drill.overview || {};
+  const rows = [];
+  if (mode === "timed") {
+    const labels = (d.timed && d.timed.sources) || {};
+    for (const key of ["mixed", "slow", "skipped", "wrong"]) {
+      rows.push('<option value="' + key + '">'
+        + escapeHtml(labels[key] || key) + "</option>");
+    }
+  } else {
+    const labels = (d.recognize && d.recognize.sources) || {};
+    for (const key of ["weak", "core", "all"]) {
+      rows.push('<option value="' + key + '">'
+        + escapeHtml(labels[key] || key) + "</option>");
+    }
+  }
+  rows.push('<optgroup label="按原型">');
+  for (const row of (d.prototypes || [])) {
+    rows.push('<option value="prototype:' + escapeHtml(row.key) + '">'
+      + escapeHtml(row.key + " · " + row.label) + "</option>");
+  }
+  rows.push("</optgroup>");
+  return rows.join("");
+}
+
+function splitDrillSource(value) {
+  if (value && value.startsWith("prototype:")) {
+    return { source: "prototype", source_key: value.slice(10) };
+  }
+  return { source: value || "mixed" };
+}
+
+function drillCountOptions(mode, total) {
+  const rows = [5, 8, 10].filter((n) => n <= (total || 10));
+  return rows.map((n) => '<option value="' + n + '"'
+    + (n === ((mode === "timed") ? 5 : 8) ? " selected" : "")
+    + ">" + n + " 题</option>").join("");
+}
+
+function drillLastLine(mode) {
+  const data = state.drill.overview || {};
+  const last = (data[mode] || {}).last;
+  if (!last) return '<div class="last">还没有完成过训练。</div>';
+  if (mode === "timed") {
+    const c = last.counts || {};
+    return '<div class="last">上次 ' + escapeHtml(last.day || "") + "：对 "
+      + (c.correct || 0) + " · 错 " + (c.wrong || 0) + " · 超时 "
+      + (c.overtime || 0) + " · 弃 " + (c.abandoned || 0)
+      + " · 首步 " + (last.first_step || 0) + "/" + (last.total || 0)
+      + "</div>";
+  }
+  return '<div class="last">上次 ' + escapeHtml(last.day || "") + "：原型 "
+    + (last.prototype_ok || 0) + "/" + (last.prototype_tried || 0)
+    + " · 主规范 " + (last.standard_ok || 0) + "/" + (last.standard_tried || 0)
+    + " · 平均 " + (last.avg_seconds == null ? "—" : last.avg_seconds) + " 秒</div>";
+}
+
+function renderDrillPanel() {
+  const box = $("planDrill");
+  if (!box) return;
+  const d = state.drill.overview;
+  if (!d) {
+    box.innerHTML = '<div class="empty">训练数据没加载；刷新计划页再试。</div>';
+    return;
+  }
+  const t = d.timed || {};
+  const c = t.counts || {};
+  const r = d.recognize || {};
+  const html = [];
+  html.push('<div class="drill-card">'
+    + '<div class="head"><b>限时拆解 · ' + (t.minutes_per_question || 8)
+    + ' 分钟/题</b><span class="hint">' + (t.min || 5) + "–" + (t.max || 10)
+    + " 题 · 硬停</span></div>"
+    + '<div class="hint">可练：会但慢 ' + (c.slow || 0) + " · 放弃·没时间 "
+    + (c.skipped || 0) + " · 做错 " + (c.wrong || 0)
+    + (c.untriaged
+      ? ' · <span class="warn">' + c.untriaged + " 题未分流</span>"
+      : "") + "</div>");
+  if (t.active_id) {
+    html.push('<div class="drill-active">上次没做完：'
+      + '<button type="button" class="ghost small" data-drill-resume="'
+      + t.active_id + '">继续</button></div>');
+  }
+  html.push('<div class="controls">'
+    + '<select id="drillTimedSource" aria-label="限时拆解来源">'
+    + drillSourceOptions("timed") + "</select>"
+    + '<select id="drillTimedCount" class="count" aria-label="题量">'
+    + drillCountOptions("timed") + "</select>"
+    + '<button type="button" class="primary small start" data-drill-start="timed">开始</button>'
+    + "</div>" + drillLastLine("timed") + "</div>");
+
+  html.push('<div class="drill-card">'
+    + '<div class="head"><b>认题卡 · ' + (r.seconds || 30)
+    + " 秒/题</b><span class=\"hint\">" + (r.min || 5) + "–" + (r.max || 10)
+    + " 题</span></div>"
+    + '<div class="hint">弱项原型 ' + (r.weak_count || 0) + " 个 · 核心 A/B "
+    + (r.core_count || 0) + " 个 · 全部 " + (r.all_count || 0)
+    + " 个；只判原型与主规范，不做题。</div>");
+  if (r.active_id) {
+    html.push('<div class="drill-active">上次没做完：'
+      + '<button type="button" class="ghost small" data-drill-resume="'
+      + r.active_id + '">继续</button></div>');
+  }
+  html.push('<div class="controls">'
+    + '<select id="drillRecogSource" aria-label="认题卡来源">'
+    + drillSourceOptions("recognize") + "</select>"
+    + '<select id="drillRecogCount" class="count" aria-label="题量">'
+    + drillCountOptions("recognize") + "</select>"
+    + '<button type="button" class="primary small start" data-drill-start="recognize">开始</button>'
+    + "</div>" + drillLastLine("recognize") + "</div>");
+  box.innerHTML = html.join("");
+  for (const button of box.querySelectorAll("[data-drill-start]")) {
+    button.addEventListener("click", () => startDrill(button.dataset.drillStart));
+  }
+  for (const button of box.querySelectorAll("[data-drill-resume]")) {
+    button.addEventListener("click", () => openDrillSession(button.dataset.drillResume));
+  }
+}
+
+function clearDrillTimer() {
+  if (state.drill.timer) {
+    clearInterval(state.drill.timer);
+    state.drill.timer = null;
+  }
+}
+
+function formatClock(seconds) {
+  const n = Math.max(0, Math.round(seconds));
+  return String(Math.floor(n / 60)).padStart(2, "0") + ":"
+    + String(n % 60).padStart(2, "0");
+}
+
+function drillQuestionSeconds(totalSeconds) {
+  const deadline = state.drill.deadline;
+  if (!deadline) return 0;
+  const started = deadline - totalSeconds * 1000;
+  return Math.max(0, Math.min(7200, Math.round((Date.now() - started) / 1000)));
+}
+
+function startDrillCountdown(totalSeconds, onExpire, warnAt) {
+  clearDrillTimer();
+  const threshold = warnAt == null ? 60 : warnAt;
+  const tick = () => {
+    const remain = Math.max(0, Math.ceil(
+      (state.drill.deadline - Date.now()) / 1000));
+    const el = $("drillTimer");
+    if (el) {
+      el.textContent = formatClock(remain);
+      el.classList.toggle("warn", remain > 0 && remain <= threshold);
+      el.classList.toggle("over", remain === 0);
+    }
+    if (remain <= 0) {
+      clearDrillTimer();
+      if (!state.drill.expired) {
+        state.drill.expired = true;
+        onExpire();
+      }
+    }
+  };
+  tick();
+  state.drill.timer = setInterval(tick, 250);
+}
+
+async function startDrill(mode, explicit) {
+  const body = explicit || {};
+  if (!explicit) {
+    const sourceEl = $(mode === "timed" ? "drillTimedSource" : "drillRecogSource");
+    const countEl = $(mode === "timed" ? "drillTimedCount" : "drillRecogCount");
+    const parsed = splitDrillSource(sourceEl ? sourceEl.value : "");
+    body.mode = mode;
+    body.source = parsed.source;
+    body.source_key = parsed.source_key || null;
+    body.count = Number(countEl ? countEl.value : 5);
+  }
+  try {
+    const res = await fetch("/api/drill", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    state.drill.lastParams = Object.assign({}, body);
+    openDrillData(data);
+  } catch (err) {
+    toast("开始训练失败：" + err.message);
+  }
+}
+
+async function openDrillSession(sessionId) {
+  try {
+    const res = await fetch("/api/drill/" + encodeURIComponent(sessionId));
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    openDrillData(data);
+  } catch (err) {
+    toast("继续训练失败：" + err.message);
+  }
+}
+
+function openDrillData(data) {
+  clearDrillTimer();
+  state.drill.session = data;
+  state.drill.firstStep = {};
+  state.drill.answer = false;
+  state.drill.reveal = null;
+  state.drill.deadline = 0;
+  state.drill.expired = false;
+  state.drill.busy = false;
+  $("drillSheet").classList.remove("hidden");
+  renderDrill();
+}
+
+function renderDrill() {
+  clearDrillTimer();
+  const data = state.drill.session;
+  if (!data) return;
+  const session = data.session || {};
+  $("drillTitle").textContent = data.labels.mode
+    + (session.source_key ? " · " + session.source_key : "");
+  $("drillProgress").textContent = (data.progress.done || 0) + "/"
+    + (data.progress.total || 0);
+  if (state.drill.reveal) {
+    renderDrillReveal();
+    return;
+  }
+  if (data.finished || !data.next_qid) {
+    renderDrillSummary();
+    return;
+  }
+  if (session.mode === "timed") renderTimedQuestion(data.next_qid);
+  else renderRecognitionQuestion(data.next_qid);
+}
+
+function renderTimedQuestion(qid) {
+  const session = state.drill.session.session;
+  const total = (session.minutes_per_question || 8) * 60;
+  if (!state.drill.deadline) {
+    state.drill.deadline = Date.now() + total * 1000;
+    state.drill.expired = false;
+  }
+  const meta = (state.drill.session.selection
+    && state.drill.session.selection.items
+    && state.drill.session.selection.items[qid]) || {};
+  const step = escapeHtml(state.drill.firstStep[qid] || "");
+  const expired = state.drill.expired;
+  const src = "/api/crop?qid=" + encodeURIComponent(qid)
+    + (state.drill.answer ? "&answer=1" : "");
+  $("drillBody").innerHTML =
+    '<div class="drill-meta"><span>题号 <b>' + escapeHtml(qid) + "</b></span>"
+    + (meta.category ? "<span>" + escapeHtml(meta.category) + "</span>" : "")
+    + (meta.prototype ? "<span>原型 " + escapeHtml(meta.prototype) + "</span>" : "")
+    + "</div>"
+    + '<div class="drill-shot"><img src="' + src + '" alt="题目"></div>'
+    + '<div class="drill-step"><label>首步卡：先查哪本规范 / 先列哪几个量（一句话）</label>'
+    + '<textarea id="drillStep" rows="2" placeholder="例：先按 GB 50007 做深宽修正，再算基底压力">'
+    + step + "</textarea></div>"
+    + (expired ? '<div class="drill-expired">时间到：这一题只能记「超时」或「放弃」，但首步仍要写。</div>' : "")
+    + '<div class="drill-actions">'
+    + '<button type="button" class="good" data-drill-result="correct"'
+    + (expired ? " disabled" : "") + ">做对</button>"
+    + '<button type="button" class="bad" data-drill-result="wrong"'
+    + (expired ? " disabled" : "") + ">做错</button>"
+    + '<button type="button" class="warn" data-drill-result="overtime">超时</button>'
+    + '<button type="button" class="ghost" data-drill-result="abandoned">放弃但已写首步</button>'
+    + "</div>"
+    + '<div class="drill-tools">'
+    + '<button type="button" class="ghost small" id="drillAnswerToggle">'
+    + (state.drill.answer ? "收起答案" : "对答案") + "</button>"
+    + '<span class="hint">先自己判，再看解析；本题计时不会重置。</span></div>';
+  $("drillStep").addEventListener("input", (event) => {
+    state.drill.firstStep[qid] = event.target.value;
+  });
+  for (const button of $("drillBody").querySelectorAll("[data-drill-result]")) {
+    button.addEventListener("click", () => submitTimed(button.dataset.drillResult));
+  }
+  $("drillAnswerToggle").addEventListener("click", () => {
+    state.drill.answer = !state.drill.answer;
+    renderDrill();
+  });
+  if (!expired) {
+    startDrillCountdown(total, () => {
+      toast("时间到：只能记超时或放弃");
+      renderDrill();
+    }, 60);
+  } else {
+    $("drillTimer").textContent = "00:00";
+  }
+}
+
+async function submitTimed(result) {
+  if (state.drill.busy) return;
+  const data = state.drill.session;
+  const qid = data.next_qid;
+  const total = (data.session.minutes_per_question || 8) * 60;
+  const field = $("drillStep");
+  const text = (field ? field.value : (state.drill.firstStep[qid] || "")).trim();
+  if (result === "abandoned" && !text) {
+    toast("放弃也要写首步：两行就够，过程分从这里来");
+    return;
+  }
+  state.drill.busy = true;
+  try {
+    const res = await fetch("/api/drill/" + data.session.id + "/item", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        qid: qid,
+        result: result,
+        first_step: text,
+        seconds: drillQuestionSeconds(total),
+      }),
+    });
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.detail || res.statusText);
+    state.drill.session = payload;
+    state.drill.deadline = 0;
+    state.drill.expired = false;
+    state.drill.answer = false;
+    delete state.drill.firstStep[qid];
+    renderDrill();
+  } catch (err) {
+    toast("记录失败：" + err.message);
+  } finally {
+    state.drill.busy = false;
+  }
+}
+
+function drillPrototypeOptions() {
+  const rows = (state.drill.overview && state.drill.overview.prototypes) || [];
+  const groups = { A: [], B: [], C: [], D: [] };
+  for (const row of rows) {
+    (groups[row.tier] || groups.A).push('<option value="' + escapeHtml(row.key)
+      + '">' + escapeHtml(row.key + " · " + row.label) + "</option>");
+  }
+  const names = { A: "A 必拿", B: "B 争取", C: "C 边坡", D: "D 基坑" };
+  return '<option value="">— 选原型 —</option>'
+    + Object.keys(groups).map((tier) => groups[tier].length
+      ? '<optgroup label="' + names[tier] + '">' + groups[tier].join("")
+        + "</optgroup>" : "").join("");
+}
+
+function drillStandardOptions() {
+  const rows = (state.drill.overview && state.drill.overview.standards) || [];
+  return '<option value="">— 选主规范 —</option>'
+    + rows.map((row) => '<option value="' + escapeHtml(row.code) + '">'
+      + escapeHtml(row.code + " · " + row.title) + "</option>").join("");
+}
+
+function renderRecognitionQuestion(qid) {
+  if (!state.drill.deadline) {
+    state.drill.deadline = Date.now() + 30000;
+    state.drill.expired = false;
+  }
+  $("drillBody").innerHTML =
+    '<div class="drill-meta"><span>题号 <b>' + escapeHtml(qid)
+    + "</b></span><span>只认题，不做题</span></div>"
+    + '<div class="drill-shot"><img src="/api/crop?qid='
+    + encodeURIComponent(qid) + '" alt="题目"></div>'
+    + '<div class="drill-pick">'
+    + '<label>原型<select id="drillProto">' + drillPrototypeOptions()
+    + "</select></label>"
+    + '<label>主规范<select id="drillStd">' + drillStandardOptions()
+    + "</select></label></div>"
+    + '<div class="drill-actions" style="grid-template-columns:1fr">'
+    + '<button type="button" class="primary" id="drillRecogSubmit">提交（30 秒内）</button>'
+    + "</div>"
+    + '<div class="drill-tools"><span class="hint">'
+    + "主规范按原型定；冻土/滑坡/泥石流这类不唯一时只判原型。</span></div>";
+  $("drillRecogSubmit").addEventListener("click", () => submitRecognition(false));
+  startDrillCountdown(30, () => {
+    toast("30 秒到，按当前选择提交");
+    submitRecognition(true);
+  }, 10);
+}
+
+async function submitRecognition(auto) {
+  if (state.drill.busy) return;
+  const data = state.drill.session;
+  const qid = data.next_qid;
+  const proto = $("drillProto");
+  const std = $("drillStd");
+  state.drill.busy = true;
+  try {
+    const res = await fetch("/api/drill/" + data.session.id + "/item", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        qid: qid,
+        guess_prototype: proto ? proto.value : "",
+        guess_standard: std ? std.value : "",
+        seconds: drillQuestionSeconds(30),
+      }),
+    });
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.detail || res.statusText);
+    state.drill.session = payload;
+    state.drill.reveal = payload.item;
+    state.drill.deadline = 0;
+    state.drill.expired = false;
+    if (auto) toast("时间到，已按当前选择提交");
+    renderDrill();
+  } catch (err) {
+    toast("提交失败：" + err.message);
+  } finally {
+    state.drill.busy = false;
+  }
+}
+
+function renderDrillReveal() {
+  clearDrillTimer();
+  const item = state.drill.reveal;
+  const data = state.drill.session;
+  if (!item) {
+    renderDrill();
+    return;
+  }
+  $("drillTimer").textContent = "";
+  const protoOk = item.prototype_ok;
+  const stdKnown = item.correct_standard != null;
+  const stdOk = item.standard_ok;
+  const guessProto = item.guess_prototype || "没选";
+  const guessStd = item.guess_standard || "没选";
+  const next = data.finished ? "查看结果" : "下一题";
+  $("drillBody").innerHTML =
+    '<div class="drill-meta"><span>题号 <b>' + escapeHtml(item.qid)
+    + "</b></span><span>" + escapeHtml(data.labels.mode) + "</span></div>"
+    + '<div class="drill-reveal">'
+    + "<div>正确答案：<b>" + escapeHtml(drillPrototypeLabel(item.correct_prototype))
+    + "</b></div>"
+    + "<div>你的原型：" + escapeHtml(guessProto)
+    + ' <span class="' + (protoOk ? "ok" : "bad") + '">'
+    + (protoOk ? "✓" : "✗") + "</span></div>"
+    + (stdKnown
+      ? "<div>主规范：<b>" + escapeHtml(drillStandardLabel(item.correct_standard))
+        + "</b></div>"
+        + "<div>你的规范：" + escapeHtml(guessStd)
+        + ' <span class="' + (stdOk ? "ok" : "bad") + '">'
+        + (stdOk ? "✓" : "✗") + "</span></div>"
+      : '<div class="muted">这题主规范不唯一，只判原型。</div>')
+    + "</div>"
+    + '<div class="drill-actions" style="grid-template-columns:1fr">'
+    + '<button type="button" class="primary" id="drillRevealNext">'
+    + next + "</button></div>";
+  $("drillRevealNext").addEventListener("click", () => {
+    state.drill.reveal = null;
+    renderDrill();
+  });
+}
+
+function renderDrillSummary() {
+  clearDrillTimer();
+  const data = state.drill.session;
+  const session = data.session || {};
+  const summary = data.summary || {};
+  $("drillTimer").textContent = "";
+  const html = ['<div class="drill-summary">'];
+  if (session.mode === "timed") {
+    const c = summary.counts || {};
+    html.push('<div class="stat-grid">'
+      + statCell(c.correct || 0, "做对")
+      + statCell(c.wrong || 0, "做错")
+      + statCell(c.overtime || 0, "超时")
+      + statCell(c.abandoned || 0, "放弃")
+      + statCell((summary.first_step || 0) + "/" + (summary.total || 0), "首步")
+      + statCell(summary.avg_seconds == null ? "—" : summary.avg_seconds + " s", "平均用时")
+      + "</div>");
+    html.push('<div class="drill-headline">' + escapeHtml(summary.headline || "") + "</div>");
+    html.push('<div class="drill-list">');
+    const labels = data.labels.results || {};
+    for (const item of session.items || []) {
+      html.push('<div class="drill-row"><span class="n">' + item.seq
+        + '</span><span class="res ' + escapeHtml(item.result || "") + '">'
+        + escapeHtml(labels[item.result] || item.result || "—")
+        + '</span><span class="step">' + escapeHtml(item.qid)
+        + (item.first_step ? " · " + escapeHtml(item.first_step) : " · <i>未写首步</i>")
+        + "</span></div>");
+    }
+    html.push("</div>");
+  } else {
+    html.push('<div class="stat-grid">'
+      + statCell((summary.prototype_ok || 0) + "/" + (summary.prototype_tried || 0), "原型")
+      + statCell((summary.standard_ok || 0) + "/" + (summary.standard_tried || 0), "主规范")
+      + statCell(summary.avg_seconds == null ? "—" : summary.avg_seconds + " s", "平均用时")
+      + "</div>");
+    html.push('<div class="drill-headline">' + escapeHtml(summary.headline || "") + "</div>");
+    html.push('<div class="drill-list">');
+    for (const item of session.items || []) {
+      const proto = escapeHtml(item.guess_prototype || "—") + " → "
+        + escapeHtml(item.correct_prototype || "—");
+      const std = item.correct_standard == null
+        ? "规范不唯一"
+        : escapeHtml(item.guess_standard || "—") + " → "
+          + escapeHtml(item.correct_standard);
+      html.push('<div class="drill-row"><span class="n">' + item.seq
+        + '</span><span class="res ' + (item.prototype_ok ? "correct" : "wrong") + '">'
+        + (item.prototype_ok ? "✓" : "✗")
+        + '</span><span class="step">' + escapeHtml(item.qid) + " · " + proto
+        + " · " + std + "</span></div>");
+    }
+    html.push("</div>");
+  }
+  html.push('<div class="drill-actions" style="grid-template-columns:1fr 1fr">'
+    + '<button type="button" class="ghost" id="drillSummaryClose">回计划</button>'
+    + '<button type="button" class="primary" id="drillSummaryAgain">再来一组</button>'
+    + "</div></div>");
+  $("drillBody").innerHTML = html.join("");
+  $("drillSummaryClose").addEventListener("click", closeDrill);
+  $("drillSummaryAgain").addEventListener("click", repeatDrill);
+}
+
+function closeDrill() {
+  clearDrillTimer();
+  state.drill.session = null;
+  state.drill.reveal = null;
+  state.drill.deadline = 0;
+  state.drill.expired = false;
+  state.drill.answer = false;
+  $("drillSheet").classList.add("hidden");
+  if (state.data.view === "plan") loadPlan();
+  loadHome();
+}
+
+async function repeatDrill() {
+  const params = state.drill.lastParams;
+  closeDrill();
+  if (params) await startDrill(params.mode, Object.assign({}, params));
+}
+
+$("drillClose").addEventListener("click", closeDrill);
+$("drillSheet").addEventListener("click", (event) => {
+  if (event.target === $("drillSheet")) closeDrill();
 });
 
 // --- weekly / monthly report ---------------------------------------------

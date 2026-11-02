@@ -59,6 +59,7 @@ PRACTICE_SOURCES = {
     "real_exam": "真题",
     "exercise": "习题",
     "mock": "模拟",
+    "drill": "限时拆解",
     "other": "其他",
 }
 PLAN_CATEGORIES = tuple("C%d" % i for i in range(1, 11)) + ("mixed", "knowledge")
@@ -147,9 +148,43 @@ CREATE TABLE IF NOT EXISTS practice_sessions (
     minutes INTEGER NOT NULL DEFAULT 0,
     note TEXT NOT NULL DEFAULT '',
     baseline_half TEXT,
+    drill_session_id INTEGER,
     created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_practice_day ON practice_sessions(day, id DESC);
+CREATE TABLE IF NOT EXISTS drill_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    day TEXT NOT NULL,
+    mode TEXT NOT NULL,
+    source TEXT NOT NULL,
+    source_key TEXT,
+    minutes_per_question INTEGER NOT NULL DEFAULT 8,
+    queue TEXT NOT NULL,
+    started_at TEXT NOT NULL,
+    finished_at TEXT,
+    ledger_session_id INTEGER,
+    note TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_drill_day ON drill_sessions(day DESC, id DESC);
+CREATE TABLE IF NOT EXISTS drill_items (
+    session_id INTEGER NOT NULL REFERENCES drill_sessions(id) ON DELETE CASCADE,
+    qid TEXT NOT NULL,
+    seq INTEGER NOT NULL,
+    category TEXT NOT NULL DEFAULT '',
+    prototype TEXT,
+    result TEXT,
+    first_step TEXT NOT NULL DEFAULT '',
+    seconds REAL,
+    guess_prototype TEXT,
+    guess_standard TEXT,
+    correct_prototype TEXT,
+    correct_standard TEXT,
+    prototype_ok INTEGER,
+    standard_ok INTEGER,
+    identify_ok INTEGER,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (session_id, qid)
+);
 CREATE TABLE IF NOT EXISTS plan_progress (
     key TEXT PRIMARY KEY,
     status TEXT NOT NULL DEFAULT 'todo',
@@ -384,6 +419,10 @@ class Store:
             conn.execute(
                 "ALTER TABLE practice_sessions ADD COLUMN baseline_half TEXT"
             )
+        if "drill_session_id" not in practice_columns:
+            conn.execute(
+                "ALTER TABLE practice_sessions ADD COLUMN drill_session_id INTEGER"
+            )
         # One baseline half owns at most one ledger row, so editing a score
         # updates the same week entry instead of inflating the plan.
         conn.execute(
@@ -391,8 +430,23 @@ class Store:
             " ON practice_sessions(baseline_half)"
             " WHERE baseline_half IS NOT NULL"
         )
+        # A finished drill writes at most one ledger row, even if finish is
+        # clicked twice or retried after a dropped response.
         conn.execute(
-            "UPDATE meta SET value = '6' WHERE key = 'schema_version'"
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_practice_drill"
+            " ON practice_sessions(drill_session_id)"
+            " WHERE drill_session_id IS NOT NULL"
+        )
+        # A full paper now has more than one year.  The ledger key used to be
+        # just "A"/"P"; qualify the existing 2025 baseline rows so a 2024
+        # retest cannot overwrite them.  Idempotent: the second run finds no
+        # bare A/P values.
+        conn.execute(
+            "UPDATE practice_sessions SET baseline_half = '2025-' || baseline_half"
+            " WHERE baseline_half IN ('A', 'P')"
+        )
+        conn.execute(
+            "UPDATE meta SET value = '8' WHERE key = 'schema_version'"
         )
 
     # -- photos -----------------------------------------------------------
@@ -1671,6 +1725,7 @@ class Store:
             "minutes": row["minutes"],
             "note": row["note"],
             "baseline_half": row["baseline_half"],
+            "drill_session_id": row["drill_session_id"],
             "created_at": row["created_at"],
         }
 
@@ -1763,16 +1818,333 @@ class Store:
             conn = self._connect()
             try:
                 row = conn.execute(
-                    "SELECT baseline_half FROM practice_sessions WHERE id = ?",
+                    "SELECT baseline_half, drill_session_id FROM practice_sessions"
+                    " WHERE id = ?",
                     (session_id,),
                 ).fetchone()
                 if row and row["baseline_half"]:
                     raise ValueError("基线记录请在基线页修改或删除")
+                if row and row["drill_session_id"]:
+                    raise ValueError("限时拆解记录请在训练页重做，不在这里删")
                 with conn:
                     cur = conn.execute(
                         "DELETE FROM practice_sessions WHERE id = ?", (session_id,)
                     )
                 return cur.rowcount > 0
+            finally:
+                conn.close()
+
+    # -- timed drills / recognition cards ---------------------------------
+
+    @staticmethod
+    def _drill_items(conn, session_id):
+        return [
+            {
+                "qid": row["qid"],
+                "seq": row["seq"],
+                "category": row["category"],
+                "prototype": row["prototype"],
+                "result": row["result"],
+                "first_step": row["first_step"],
+                "seconds": row["seconds"],
+                "guess_prototype": row["guess_prototype"],
+                "guess_standard": row["guess_standard"],
+                "correct_prototype": row["correct_prototype"],
+                "correct_standard": row["correct_standard"],
+                "prototype_ok": (
+                    None if row["prototype_ok"] is None
+                    else bool(row["prototype_ok"])
+                ),
+                "standard_ok": (
+                    None if row["standard_ok"] is None
+                    else bool(row["standard_ok"])
+                ),
+                "identify_ok": (
+                    None if row["identify_ok"] is None
+                    else bool(row["identify_ok"])
+                ),
+            }
+            for row in conn.execute(
+                "SELECT * FROM drill_items WHERE session_id = ? ORDER BY seq, qid",
+                (session_id,),
+            )
+        ]
+
+    def _drill_dict(self, conn, row):
+        return {
+            "id": row["id"],
+            "day": row["day"],
+            "mode": row["mode"],
+            "source": row["source"],
+            "source_key": row["source_key"],
+            "minutes_per_question": row["minutes_per_question"],
+            "queue": json.loads(row["queue"]),
+            "started_at": row["started_at"],
+            "finished_at": row["finished_at"],
+            "ledger_session_id": row["ledger_session_id"],
+            "note": row["note"],
+            "items": self._drill_items(conn, row["id"]),
+        }
+
+    def start_drill(self, day, mode, source, source_key, minutes_per_question,
+                    queue, note=""):
+        """Create a frozen queue; items are recorded against it one by one."""
+        mode = str(mode or "").strip().lower()
+        if mode not in ("timed", "recognize"):
+            raise ValueError("训练模式只能是 timed 或 recognize")
+        source = str(source or "").strip().lower()
+        if not source or len(source) > 32:
+            raise ValueError("训练来源不合法")
+        source_key = (str(source_key).strip().upper()
+                      if source_key else None)
+        if source_key and len(source_key) > 32:
+            raise ValueError("训练来源 key 不合法")
+        try:
+            minutes = int(minutes_per_question or 0)
+        except (TypeError, ValueError):
+            raise ValueError("每题限时必须是整数")
+        if minutes not in (0,) and not 1 <= minutes <= 30:
+            raise ValueError("每题限时应在 1–30 分钟之间")
+        qids = []
+        for qid in queue or []:
+            key = str(qid or "").strip().upper()
+            if not key:
+                raise ValueError("训练队列里有空题号")
+            if key not in qids:
+                qids.append(key)
+        if not 5 <= len(qids) <= 10:
+            raise ValueError("一次训练需要 5–10 道题")
+        day = str(day or datetime.now().date().isoformat())[:10]
+        try:
+            datetime.fromisoformat(day)
+        except ValueError:
+            raise ValueError("日期应为 YYYY-MM-DD")
+        clean_note = _clean_note(note) or ""
+        stamp = now_iso()
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    cur = conn.execute(
+                        "INSERT INTO drill_sessions"
+                        " (day, mode, source, source_key, minutes_per_question,"
+                        "  queue, started_at, note)"
+                        " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                        (day, mode, source, source_key, minutes, json.dumps(qids),
+                         stamp, clean_note),
+                    )
+                row = conn.execute(
+                    "SELECT * FROM drill_sessions WHERE id = ?",
+                    (cur.lastrowid,),
+                ).fetchone()
+                return self._drill_dict(conn, row)
+            finally:
+                conn.close()
+
+    def get_drill(self, session_id):
+        conn = self._connect()
+        try:
+            row = conn.execute(
+                "SELECT * FROM drill_sessions WHERE id = ?", (int(session_id),)
+            ).fetchone()
+            return self._drill_dict(conn, row) if row else None
+        finally:
+            conn.close()
+
+    def active_drill(self, mode=None):
+        conn = self._connect()
+        try:
+            sql = "SELECT * FROM drill_sessions WHERE finished_at IS NULL"
+            params = ()
+            if mode:
+                sql += " AND mode = ?"
+                params = (str(mode).lower(),)
+            sql += " ORDER BY id DESC LIMIT 1"
+            row = conn.execute(sql, params).fetchone()
+            return self._drill_dict(conn, row) if row else None
+        finally:
+            conn.close()
+
+    def list_drills(self, limit=10, mode=None, finished=True):
+        limit = max(1, min(int(limit or 10), 100))
+        conn = self._connect()
+        try:
+            sql = "SELECT * FROM drill_sessions WHERE 1 = 1"
+            params = []
+            if mode:
+                sql += " AND mode = ?"
+                params.append(str(mode).lower())
+            if finished is True:
+                sql += " AND finished_at IS NOT NULL"
+            elif finished is False:
+                sql += " AND finished_at IS NULL"
+            sql += " ORDER BY id DESC LIMIT ?"
+            params.append(limit)
+            rows = conn.execute(sql, params).fetchall()
+            return [self._drill_dict(conn, row) for row in rows]
+        finally:
+            conn.close()
+
+    def drill_history_qids(self, mode, source, source_key=None):
+        """Qids already used by the same drill source, to rotate the picks."""
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                "SELECT i.qid FROM drill_items i"
+                " JOIN drill_sessions s ON s.id = i.session_id"
+                " WHERE s.mode = ? AND s.source = ? AND s.source_key IS ?",
+                (str(mode).lower(), str(source).lower(), source_key or None),
+            ).fetchall()
+            return {row["qid"] for row in rows}
+        finally:
+            conn.close()
+
+    def record_drill_item(self, session_id, item):
+        """Insert or update one item; finished sessions are immutable."""
+        required = ("qid", "result")
+        for key in required:
+            if key not in item:
+                raise ValueError("缺少字段：%s" % key)
+        conn = self._connect()
+        try:
+            row = conn.execute(
+                "SELECT * FROM drill_sessions WHERE id = ?", (int(session_id),)
+            ).fetchone()
+            if not row:
+                raise ValueError("训练不存在")
+            if row["finished_at"]:
+                raise ValueError("本次训练已结束，不能再改")
+            queue = json.loads(row["queue"])
+            qid = str(item.get("qid") or "").strip().upper()
+            if qid not in queue:
+                raise ValueError("题号不在本次训练队列里：%s" % qid)
+            seq = queue.index(qid) + 1
+            result = item.get("result")
+            if result is not None:
+                result = str(result).strip().lower()
+                if result not in ("correct", "wrong", "overtime", "abandoned"):
+                    raise ValueError("训练结果不合法：%s" % result)
+            first_step = _clean_note(item.get("first_step") or "")
+            if len(first_step) > 1000:
+                raise ValueError("首步最长 1000 字")
+            seconds = item.get("seconds")
+            if seconds is not None:
+                try:
+                    seconds = float(seconds)
+                except (TypeError, ValueError):
+                    raise ValueError("用时必须是数字")
+                if not 0 <= seconds <= 7200:
+                    raise ValueError("用时应在 0–7200 秒之间")
+            def flag(name):
+                value = item.get(name)
+                return None if value is None else (1 if value else 0)
+            stamp = now_iso()
+            with conn:
+                conn.execute(
+                    "INSERT INTO drill_items"
+                    " (session_id, qid, seq, category, prototype, result,"
+                    "  first_step, seconds, guess_prototype, guess_standard,"
+                    "  correct_prototype, correct_standard, prototype_ok,"
+                    "  standard_ok, identify_ok, created_at)"
+                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                    " ON CONFLICT(session_id, qid) DO UPDATE SET"
+                    " seq = excluded.seq, category = excluded.category,"
+                    " prototype = excluded.prototype, result = excluded.result,"
+                    " first_step = excluded.first_step, seconds = excluded.seconds,"
+                    " guess_prototype = excluded.guess_prototype,"
+                    " guess_standard = excluded.guess_standard,"
+                    " correct_prototype = excluded.correct_prototype,"
+                    " correct_standard = excluded.correct_standard,"
+                    " prototype_ok = excluded.prototype_ok,"
+                    " standard_ok = excluded.standard_ok,"
+                    " identify_ok = excluded.identify_ok,"
+                    " created_at = excluded.created_at",
+                    (
+                        int(session_id), qid, seq,
+                        str(item.get("category") or ""),
+                        item.get("prototype") or None,
+                        result, first_step, seconds,
+                        item.get("guess_prototype") or None,
+                        item.get("guess_standard") or None,
+                        item.get("correct_prototype") or None,
+                        item.get("correct_standard") or None,
+                        flag("prototype_ok"), flag("standard_ok"),
+                        flag("identify_ok"), stamp,
+                    ),
+                )
+            updated = conn.execute(
+                "SELECT * FROM drill_sessions WHERE id = ?", (int(session_id),)
+            ).fetchone()
+            return self._drill_dict(conn, updated)
+        finally:
+            conn.close()
+
+    def finish_drill(self, session_id, attempted, correct, abandoned, overtime,
+                     minutes, category, note="", ledger=True):
+        """Freeze the session and add at most one practice-ledger row.
+
+        Recognition cards pass ``ledger=False``: naming a prototype in 30
+        seconds is a different skill and must not inflate the weekly question
+        count.
+        """
+        session_id = int(session_id)
+        with self._lock:
+            conn = self._connect()
+            try:
+                row = conn.execute(
+                    "SELECT * FROM drill_sessions WHERE id = ?", (session_id,)
+                ).fetchone()
+                if not row:
+                    raise ValueError("训练不存在")
+                if row["finished_at"]:
+                    return self._drill_dict(conn, row)
+                items = self._drill_items(conn, session_id)
+                if not items:
+                    raise ValueError("还没有记录任何题，不能结束")
+                try:
+                    attempted = int(attempted)
+                    correct = int(correct)
+                    abandoned = int(abandoned)
+                    overtime = int(overtime)
+                    minutes = int(minutes)
+                except (TypeError, ValueError):
+                    raise ValueError("训练统计必须是整数")
+                if not 0 <= correct <= attempted:
+                    raise ValueError("做对数应在 0–作答数之间")
+                if not 0 <= abandoned <= 10 or not 0 <= overtime <= attempted:
+                    raise ValueError("放弃/超时数不合法")
+                if not 0 <= minutes <= 600:
+                    raise ValueError("训练用时应在 0–600 分钟")
+                category = str(category or "mixed").upper()
+                if category == "MIXED":
+                    category = "mixed"
+                if category not in PLAN_CATEGORIES:
+                    raise ValueError("未知类别：%s" % category)
+                stamp = now_iso()
+                day = row["day"]
+                clean_note = _clean_note(note) or ""
+                with conn:
+                    ledger_id = None
+                    if ledger:
+                        ledger_row = conn.execute(
+                            "INSERT INTO practice_sessions"
+                            " (day, source, category, attempted, correct,"
+                            "  abandoned, overtime, minutes, note,"
+                            "  drill_session_id, created_at)"
+                            " VALUES (?, 'drill', ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                            (day, category, attempted, correct, abandoned,
+                             overtime, minutes, clean_note, session_id, stamp),
+                        )
+                        ledger_id = ledger_row.lastrowid
+                    conn.execute(
+                        "UPDATE drill_sessions SET finished_at = ?,"
+                        " ledger_session_id = ? WHERE id = ?",
+                        (stamp, ledger_id, session_id),
+                    )
+                updated = conn.execute(
+                    "SELECT * FROM drill_sessions WHERE id = ?", (session_id,)
+                ).fetchone()
+                return self._drill_dict(conn, updated)
             finally:
                 conn.close()
 
@@ -2033,11 +2405,12 @@ class Store:
                              item["result"], item["overtime"],
                              item["process_status"]),
                         )
-                    ledger_note = note or ("2025 基线·%s"
-                                           % ("上午卷" if half == "A" else "下午卷"))
+                    ledger_key = "%d-%s" % (year, half)
+                    ledger_note = note or ("%d 案例整卷·%s"
+                                           % (year, "上午卷" if half == "A" else "下午卷"))
                     ledger = conn.execute(
                         "SELECT id FROM practice_sessions WHERE baseline_half = ?",
-                        (half,),
+                        (ledger_key,),
                     ).fetchone()
                     if ledger:
                         conn.execute(
@@ -2056,7 +2429,7 @@ class Store:
                             "  created_at)"
                             " VALUES (?, 'real_exam', 'mixed', ?, ?, ?, ?, ?, ?, ?, ?)",
                             (day, answered, correct, skipped, overtime, minutes,
-                             ledger_note, half, stamp),
+                             ledger_note, ledger_key, stamp),
                         )
                 row = conn.execute(
                     "SELECT r.*, p.sha256 AS photo_sha FROM baseline_runs r"
@@ -2095,7 +2468,13 @@ class Store:
                     )
                     conn.execute(
                         "DELETE FROM practice_sessions WHERE baseline_half = ?",
-                        (half,),
+                        ("%d-%s" % (int(year), half),),
+                    )
+                    # A deleted half is going to be re-recorded; stale
+                    # no_time/no_idea labels must not survive into the redo.
+                    conn.execute(
+                        "DELETE FROM baseline_triage WHERE year = ? AND half = ?",
+                        (int(year), half),
                     )
                 return cur.rowcount > 0
             finally:
