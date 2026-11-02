@@ -272,16 +272,37 @@ def _progress_items(progress):
     return {key: value for key, value in progress.items()}
 
 
-def _task_list(phase, week_target, week_actual, prototypes, chapters, standards):
+def _recorded_halves(baseline):
+    """Normalize DB and legacy-markdown baseline shapes to {"A", "P"}."""
+    recorded = set()
+    for row in (baseline or {}).get("halves") or []:
+        if row.get("recorded") is False:
+            continue
+        if baseline.get("source") == "file" and not row.get("counts_line"):
+            continue
+        half = row.get("half")
+        if half not in ("A", "P"):
+            half = {"上午卷": "A", "下午卷": "P"}.get(row.get("label") or half)
+        if half in ("A", "P"):
+            recorded.add(half)
+    return recorded
+
+
+def _task_list(phase, week_target, week_actual, prototypes, chapters, standards,
+               baseline=None):
     tasks = []
     remaining = max(0, week_target - week_actual["attempted"])
     if phase["key"] == "baseline":
+        recorded = _recorded_halves(baseline)
         tasks.append({"key": "baseline:A", "label": "交 2025 案例上午基线",
-                      "detail": "限时 3 小时；四个数入系统"})
+                      "detail": "限时 3 小时；四个数在 App 里记",
+                      "done": "A" in recorded})
         tasks.append({"key": "baseline:P", "label": "交 2025 案例下午基线",
-                      "detail": "限时 3 小时；两半都做完再对答案"})
+                      "detail": "限时 3 小时；两半都做完再对答案",
+                      "done": "P" in recorded})
         tasks.append({"key": "standards:tags", "label": "贴七本核心规范书签/标签",
-                      "detail": "按章节目录贴，和 App 索引一致"})
+                      "detail": "按章节目录贴，和 App 索引一致",
+                      "done": False})
         return tasks
     if remaining:
         tasks.append({"key": "week:remaining", "label": "本周还差 %d 题" % remaining,
@@ -310,12 +331,21 @@ def _task_list(phase, week_target, week_actual, prototypes, chapters, standards)
     return tasks[:5]
 
 
-def _advice(week, phase, must_accuracy, review_due, phase_summary):
+def _advice(week, phase, must_accuracy, review_due, phase_summary, baseline=None):
     if phase["key"] == "baseline":
+        recorded = _recorded_halves(baseline)
+        if len(recorded) == 2:
+            score = baseline.get("score") or 0
+            return ["两半基线都已记录（合计 %d/100）；按分项正确率定基础期的优先级。"
+                    % score]
+        if recorded:
+            missing = "下午卷" if "A" in recorded else "上午卷"
+            return ["已完成%s；还差%s，3 小时做完后在同一页记四个数。"
+                    % ("上午卷" if "A" in recorded else "下午卷", missing)]
         if week["attempted"]:
             return ["基线已记录 %d 题；两半都做完再对答案，然后进入基础期。"
                     % week["attempted"]]
-        return ["本周先交 2025 上午/下午基线；两半各 3 小时，四个数入系统。"]
+        return ["本周先交 2025 上午/下午基线；两半各 3 小时，四个数在 App 里记。"]
     advice = []
     if week["attempted"] == 0:
         advice.append("本周还没有练习记录；做完一次先记四个数，否则计划无法判断。")
@@ -341,7 +371,7 @@ def _advice(week, phase, must_accuracy, review_due, phase_summary):
     return advice[:4]
 
 
-def overview(store, data_dir, settings=None, now=None):
+def overview(store, data_dir, settings=None, now=None, baseline=None):
     today = _today(now)
     config = load_config(data_dir)
     hours = config["weekly_hours"]
@@ -447,9 +477,11 @@ def overview(store, data_dir, settings=None, now=None):
     ]
     for row in targets:
         row["progress"] = round(min(1, row["done"] / row["total"]), 4) if row["total"] else 0
-    tasks = _task_list(phase, week_target, week, prototypes, chapters, standards)
+    tasks = _task_list(phase, week_target, week, prototypes, chapters, standards,
+                       baseline)
     return {
         "day": today.isoformat(),
+        "baseline": baseline or {"available": False},
         "config": {
             "weekly_hours": hours,
             "weekly_hours_default": DEFAULT_WEEKLY_HOURS,
@@ -464,7 +496,8 @@ def overview(store, data_dir, settings=None, now=None):
         "soil_chapters": chapters,
         "core_standards": standards,
         "tasks": tasks,
-        "advice": _advice(week, phase, must_accuracy, review_due, phase_sum),
+        "advice": _advice(week, phase, must_accuracy, review_due, phase_sum,
+                          baseline),
         "recent_sessions": store.list_practice_sessions(limit=8),
         "sources": PRACTICE_SOURCES,
     }

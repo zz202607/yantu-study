@@ -36,7 +36,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 import crop_question as CQ  # noqa: E402
 import recognize_qid as RQ  # noqa: E402
-from app import analytics, plan as study_plan, standards  # noqa: E402
+from app import analytics, baseline as baseline_app, plan as study_plan, standards  # noqa: E402
 from app.answer_ocr import analyze_crop  # noqa: E402
 from app.catalog import Catalog  # noqa: E402
 from app.curriculum import CASE_BY_KEY, category_key, load_exam_tags  # noqa: E402
@@ -63,7 +63,7 @@ CHAPTER_RE = re.compile(r"^([CZ])(\d{1,2})-(\d{1,3})$")
 EXAM_RE = re.compile(r"^[AK]\d{4}-[A-Z]-\d{1,3}$")
 MOCK_RE = re.compile(r"^M\d{1,2}-\d{1,3}$")
 
-app = FastAPI(title="岩土错题本 M5")
+app = FastAPI(title="岩土错题本 M7")
 
 
 def _warm_ocr():
@@ -268,7 +268,7 @@ def home():
         settings=conf,
         lookup=lookup(),
         exam_tags=exam_tags(),
-        baseline=analytics.read_baseline(BASELINE_REPORT),
+        baseline=baseline_view(),
     )
     overview = store.review_overview()
     data["review"] = {
@@ -277,7 +277,7 @@ def home():
         "reasons": overview["reasons"],
         "session": _session_view(store.session()),
     }
-    plan_view = study_plan.overview(store, DATA, conf)
+    plan_view = study_plan.overview(store, DATA, conf, baseline=baseline_view())
     data["plan"] = {
         "phase": plan_view["phase"],
         "week": plan_view["week"],
@@ -299,7 +299,7 @@ def stats(days: int = 30):
         settings=conf,
         lookup=lookup(),
         exam_tags=exam_tags(),
-        baseline=analytics.read_baseline(BASELINE_REPORT),
+        baseline=baseline_view(),
         chapters=catalog.chapters,
         days=days,
     )
@@ -307,7 +307,8 @@ def stats(days: int = 30):
 
 @app.get("/api/plan")
 def get_plan():
-    return study_plan.overview(store, DATA, settings_store.load())
+    view = baseline_view()
+    return study_plan.overview(store, DATA, settings_store.load(), baseline=view)
 
 
 @app.patch("/api/plan")
@@ -316,7 +317,75 @@ def patch_plan(payload: dict = Body(...)):
         study_plan.save_config(DATA, payload.get("weekly_hours"))
     except ValueError as exc:
         raise HTTPException(400, str(exc))
-    return study_plan.overview(store, DATA, settings_store.load())
+    view = baseline_view()
+    return study_plan.overview(store, DATA, settings_store.load(), baseline=view)
+
+
+@app.get("/api/baseline")
+def get_baseline():
+    return baseline_payload()
+
+
+@app.put("/api/baseline/{half}")
+def put_baseline(half: str, payload: dict = Body(...)):
+    try:
+        result = baseline_app.save(store, half, payload, exam_tags())
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    view = baseline_payload()
+    return {
+        "baseline": view,
+        "plan": study_plan.overview(store, DATA, settings_store.load(),
+                                    baseline=view),
+    }
+
+
+@app.delete("/api/baseline/{half}")
+def delete_baseline(half: str):
+    key = (half or "").strip().upper()
+    if key not in ("A", "P"):
+        raise HTTPException(404, "基线只有上午卷 A 或下午卷 P")
+    if not store.delete_baseline(key, baseline_app.YEAR):
+        raise HTTPException(404, "这一半还没有基线记录")
+    view = baseline_payload()
+    return {
+        "deleted": True,
+        "baseline": view,
+        "plan": study_plan.overview(store, DATA, settings_store.load(),
+                                    baseline=view),
+    }
+
+
+@app.post("/api/baseline/{half}/wrongs")
+def import_baseline_wrongs(half: str):
+    """Put the half's wrong questions into the review queue, idempotently."""
+    key = (half or "").strip().upper()
+    if key not in ("A", "P"):
+        raise HTTPException(404, "基线只有上午卷 A 或下午卷 P")
+    qids = baseline_app.wrong_qids(store, key)
+    if not qids:
+        return {"added": 0, "updated": 0, "skipped": 0, "errors": [],
+                "qids": []}
+    rows = [
+        {
+            "qid": qid,
+            "family": qid[0],
+            "tags": None,
+            "note": "2025 基线",
+            "source": "batch",
+        }
+        for qid in qids
+    ]
+    result = store.add_attempts(rows, skip_existing=True)
+    for item in result["created"] + result["updated"]:
+        item.update(_describe(item))
+    return {
+        "added": len(result["created"]),
+        "updated": len(result["updated"]),
+        "skipped": len(result["skipped"]),
+        "errors": result["errors"],
+        "qids": qids,
+    }
 
 
 @app.get("/api/plan/sessions")
@@ -343,17 +412,26 @@ def create_plan_session(payload: dict = Body(...)):
         )
     except ValueError as exc:
         raise HTTPException(400, str(exc))
+    view = baseline_view()
     return {
         "session": session,
-        "plan": study_plan.overview(store, DATA, settings_store.load()),
+        "plan": study_plan.overview(store, DATA, settings_store.load(),
+                                    baseline=view),
     }
 
 
 @app.delete("/api/plan/sessions/{session_id}")
 def delete_plan_session(session_id: int):
-    if not store.delete_practice_session(session_id):
+    try:
+        deleted = store.delete_practice_session(session_id)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    if not deleted:
         raise HTTPException(404, "练习记录不存在")
-    return {"deleted": True, "plan": study_plan.overview(store, DATA, settings_store.load())}
+    view = baseline_view()
+    return {"deleted": True, "plan": study_plan.overview(store, DATA,
+                                                         settings_store.load(),
+                                                         baseline=view)}
 
 
 @app.patch("/api/plan/progress/{key:path}")
@@ -369,7 +447,10 @@ def patch_plan_progress(key: str, payload: dict = Body(...)):
         )
     except ValueError as exc:
         raise HTTPException(400, str(exc))
-    return {"progress": row, "plan": study_plan.overview(store, DATA, settings_store.load())}
+    view = baseline_view()
+    return {"progress": row, "plan": study_plan.overview(store, DATA,
+                                                         settings_store.load(),
+                                                         baseline=view)}
 
 
 @app.get("/api/settings")
@@ -611,6 +692,29 @@ async def recognize_image(family: str = Form("C"), file: UploadFile = File(...))
 
 def exam_tags():
     return load_exam_tags(INDEX)
+
+
+def baseline_view():
+    """DB baseline first; the legacy markdown report is a read-only fallback."""
+    data = baseline_app.summary(store, exam_tags())
+    if data.get("available"):
+        return data
+    legacy = analytics.read_baseline(BASELINE_REPORT)
+    if legacy.get("available"):
+        legacy["source"] = "file"
+        legacy["complete"] = len(legacy.get("halves") or []) >= 2
+        legacy["passed"] = bool(legacy.get("complete")
+                                and (legacy.get("score") or 0) >= 60)
+        return legacy
+    return data
+
+
+def baseline_payload():
+    data = baseline_view()
+    data["questions"] = baseline_app.paper_questions(exam_tags())
+    data.setdefault("year", baseline_app.YEAR)
+    data.setdefault("pass_line", baseline_app.PASS_SCORE)
+    return data
 
 
 def _describe(item):
@@ -1184,5 +1288,5 @@ if __name__ == "__main__":
     import uvicorn
 
     port = int(os.environ.get("PORT", "8000"))
-    print("岩土错题本 M5  ->  http://%s:%d" % (lan_ip(), port), flush=True)
+    print("岩土错题本 M7  ->  http://%s:%d" % (lan_ip(), port), flush=True)
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="warning")

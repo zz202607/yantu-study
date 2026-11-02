@@ -1,4 +1,9 @@
-"""Record one 2025 case half from the four manual numbers.
+"""Manual fallback for recording one 2025 case half from four numbers.
+
+The app is the primary entry point: 计划 → 2025 案例基线 saves the same four
+numbers in `data/` and feeds the dashboard directly.  This CLI remains for
+backfill and for a desktop-only workflow; it appends a markdown report that
+the dashboard reads only when the database has no baseline record.
 
 Case questions are **subjective**: a correct final number without the written
 process scores zero, and the process itself has to be judged by a human.  This
@@ -18,44 +23,19 @@ Usage:
 import argparse
 import datetime
 import os
+import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT)
+
+from app.baseline import (  # noqa: E402
+    PER_QUESTION,
+    TOTAL_QUESTIONS,
+    validate_counts,
+)
+
 REPORT = os.path.join(ROOT, "docs", "coach", "baseline-2025.md")
 HALF_NAMES = {"A": "上午卷", "P": "下午卷"}
-PER_QUESTION = 2  # 案例 25 题 × 2 分 = 50 分/半场
-TOTAL_QUESTIONS = 25
-
-
-def validate_counts(answered, correct, skipped=None, overtime=0):
-    """Validate the four numbers; return a normalized dict."""
-    try:
-        answered = int(answered)
-        correct = int(correct)
-        overtime = int(overtime or 0)
-        skipped = TOTAL_QUESTIONS - answered if skipped is None else int(skipped)
-    except (TypeError, ValueError):
-        raise ValueError("四个数都必须是整数")
-    if not 0 <= answered <= TOTAL_QUESTIONS:
-        raise ValueError("作答题数应在 0–%d 之间" % TOTAL_QUESTIONS)
-    if not 0 <= correct <= answered:
-        raise ValueError("做对数应在 0–作答题数之间")
-    if not 0 <= skipped <= TOTAL_QUESTIONS:
-        raise ValueError("放弃题数应在 0–%d 之间" % TOTAL_QUESTIONS)
-    if answered + skipped != TOTAL_QUESTIONS:
-        raise ValueError(
-            "作答题数 %d + 放弃题数 %d 应等于 %d"
-            % (answered, skipped, TOTAL_QUESTIONS)
-        )
-    if not 0 <= overtime <= answered:
-        raise ValueError("超时题数应在 0–作答题数之间")
-    return {
-        "answered": answered,
-        "correct": correct,
-        "skipped": skipped,
-        "overtime": overtime,
-        "score": correct * PER_QUESTION,
-        "max_score": TOTAL_QUESTIONS * PER_QUESTION,
-    }
 
 
 def format_report(half, counts, day):

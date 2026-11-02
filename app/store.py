@@ -146,6 +146,7 @@ CREATE TABLE IF NOT EXISTS practice_sessions (
     overtime INTEGER NOT NULL DEFAULT 0,
     minutes INTEGER NOT NULL DEFAULT 0,
     note TEXT NOT NULL DEFAULT '',
+    baseline_half TEXT,
     created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_practice_day ON practice_sessions(day, id DESC);
@@ -155,6 +156,33 @@ CREATE TABLE IF NOT EXISTS plan_progress (
     accuracy REAL,
     note TEXT NOT NULL DEFAULT '',
     updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS baseline_runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    year INTEGER NOT NULL,
+    half TEXT NOT NULL,
+    day TEXT NOT NULL,
+    minutes INTEGER NOT NULL DEFAULT 180,
+    answered INTEGER NOT NULL,
+    correct INTEGER NOT NULL,
+    skipped INTEGER NOT NULL DEFAULT 0,
+    overtime INTEGER NOT NULL DEFAULT 0,
+    items_done INTEGER NOT NULL DEFAULT 0,
+    note TEXT NOT NULL DEFAULT '',
+    photo_id INTEGER REFERENCES photos(id) ON DELETE SET NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    UNIQUE (year, half)
+);
+CREATE TABLE IF NOT EXISTS baseline_items (
+    run_id INTEGER NOT NULL REFERENCES baseline_runs(id) ON DELETE CASCADE,
+    qid TEXT NOT NULL,
+    seq INTEGER NOT NULL,
+    category TEXT NOT NULL DEFAULT '',
+    result TEXT NOT NULL,
+    overtime INTEGER NOT NULL DEFAULT 0,
+    process_status TEXT,
+    PRIMARY KEY (run_id, qid)
 );
 CREATE TABLE IF NOT EXISTS review_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -337,8 +365,23 @@ class Store:
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_attempts_next ON attempts(next_at)"
         )
+        practice_columns = {
+            row["name"]
+            for row in conn.execute("PRAGMA table_info(practice_sessions)")
+        }
+        if "baseline_half" not in practice_columns:
+            conn.execute(
+                "ALTER TABLE practice_sessions ADD COLUMN baseline_half TEXT"
+            )
+        # One baseline half owns at most one ledger row, so editing a score
+        # updates the same week entry instead of inflating the plan.
         conn.execute(
-            "UPDATE meta SET value = '4' WHERE key = 'schema_version'"
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_practice_baseline"
+            " ON practice_sessions(baseline_half)"
+            " WHERE baseline_half IS NOT NULL"
+        )
+        conn.execute(
+            "UPDATE meta SET value = '5' WHERE key = 'schema_version'"
         )
 
     # -- photos -----------------------------------------------------------
@@ -455,6 +498,7 @@ class Store:
         "       WHERE process_photo_before IS NOT NULL"
         " UNION SELECT process_photo_after FROM review_log"
         "       WHERE process_photo_after IS NOT NULL"
+        " UNION SELECT photo_id FROM baseline_runs WHERE photo_id IS NOT NULL"
     )
 
     @staticmethod
@@ -1615,6 +1659,7 @@ class Store:
             "overtime": row["overtime"],
             "minutes": row["minutes"],
             "note": row["note"],
+            "baseline_half": row["baseline_half"],
             "created_at": row["created_at"],
         }
 
@@ -1706,6 +1751,12 @@ class Store:
         with self._lock:
             conn = self._connect()
             try:
+                row = conn.execute(
+                    "SELECT baseline_half FROM practice_sessions WHERE id = ?",
+                    (session_id,),
+                ).fetchone()
+                if row and row["baseline_half"]:
+                    raise ValueError("基线记录请在基线页修改或删除")
                 with conn:
                     cur = conn.execute(
                         "DELETE FROM practice_sessions WHERE id = ?", (session_id,)
@@ -1768,6 +1819,230 @@ class Store:
                     "note": row["note"],
                     "updated_at": row["updated_at"],
                 }
+            finally:
+                conn.close()
+
+    # -- 2025 case baseline ------------------------------------------------
+
+    @staticmethod
+    def _photo_urls(sha):
+        if not sha:
+            return None
+        return {
+            "sha": sha,
+            "thumb": "/api/photos/%s?size=thumb" % sha,
+            "orig": "/api/photos/%s?size=orig" % sha,
+        }
+
+    def baseline_runs(self, year=None):
+        """Recorded baseline halves with their answer-sheet photo, if any."""
+        conn = self._connect()
+        try:
+            sql = (
+                "SELECT r.*, p.sha256 AS photo_sha FROM baseline_runs r"
+                " LEFT JOIN photos p ON p.id = r.photo_id"
+            )
+            params = ()
+            if year is not None:
+                sql += " WHERE r.year = ?"
+                params = (int(year),)
+            sql += " ORDER BY r.half"
+            rows = conn.execute(sql, params).fetchall()
+            return [
+                {
+                    "id": row["id"],
+                    "year": row["year"],
+                    "half": row["half"],
+                    "day": row["day"],
+                    "minutes": row["minutes"],
+                    "answered": row["answered"],
+                    "correct": row["correct"],
+                    "skipped": row["skipped"],
+                    "overtime": row["overtime"],
+                    "items_done": row["items_done"],
+                    "note": row["note"],
+                    "photo": self._photo_urls(row["photo_sha"]),
+                    "created_at": row["created_at"],
+                    "updated_at": row["updated_at"],
+                }
+                for row in rows
+            ]
+        finally:
+            conn.close()
+
+    def baseline_items(self, run_id):
+        conn = self._connect()
+        try:
+            return [
+                {
+                    "qid": row["qid"],
+                    "seq": row["seq"],
+                    "category": row["category"],
+                    "result": row["result"],
+                    "overtime": row["overtime"],
+                    "process_status": row["process_status"],
+                }
+                for row in conn.execute(
+                    "SELECT * FROM baseline_items WHERE run_id = ?"
+                    " ORDER BY seq, qid",
+                    (run_id,),
+                )
+            ]
+        finally:
+            conn.close()
+
+    def save_baseline(self, half, year, day, minutes, answered, correct,
+                      skipped, overtime, items, note="", photo_sha=None):
+        """Upsert one half and its ledger row in one transaction.
+
+        The four numbers are the scored record; items are optional detail.
+        Re-saving a half updates the same `practice_sessions` row so the
+        weekly plan never double-counts a corrected entry.
+        """
+        half = str(half or "").upper()
+        if half not in ("A", "P"):
+            raise ValueError("基线只有上午卷 A 或下午卷 P")
+        try:
+            year = int(year)
+            minutes = int(minutes)
+            answered = int(answered)
+            correct = int(correct)
+            skipped = int(skipped)
+            overtime = int(overtime)
+        except (TypeError, ValueError):
+            raise ValueError("年份、题数和用时必须是整数")
+        normalized = []
+        for item in items or []:
+            result = str(item.get("result") or "").lower()
+            if result not in ("correct", "wrong", "skipped"):
+                raise ValueError("逐题状态不合法：%s" % result)
+            normalized.append({
+                "qid": str(item.get("qid") or "").strip().upper(),
+                "seq": int(item.get("seq") or 0),
+                "category": str(item.get("category") or ""),
+                "result": result,
+                "overtime": 1 if item.get("overtime") else 0,
+                "process_status": item.get("process_status") or None,
+            })
+        note = _clean_note(note) or ""
+        stamp = now_iso()
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    photo_id = None
+                    if photo_sha:
+                        found = conn.execute(
+                            "SELECT id FROM photos WHERE sha256 = ?",
+                            (str(photo_sha),),
+                        ).fetchone()
+                        if not found:
+                            raise ValueError("照片不存在：%s" % photo_sha)
+                        photo_id = found["id"]
+                    existing = conn.execute(
+                        "SELECT id FROM baseline_runs WHERE year = ? AND half = ?",
+                        (year, half),
+                    ).fetchone()
+                    if existing:
+                        run_id = existing["id"]
+                        conn.execute(
+                            "UPDATE baseline_runs SET day = ?, minutes = ?,"
+                            " answered = ?, correct = ?, skipped = ?, overtime = ?,"
+                            " items_done = ?, note = ?, photo_id = ?, updated_at = ?"
+                            " WHERE id = ?",
+                            (day, minutes, answered, correct, skipped, overtime,
+                             len(normalized), note, photo_id, stamp, run_id),
+                        )
+                    else:
+                        cur = conn.execute(
+                            "INSERT INTO baseline_runs"
+                            " (year, half, day, minutes, answered, correct,"
+                            "  skipped, overtime, items_done, note, photo_id,"
+                            "  created_at, updated_at)"
+                            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                            (year, half, day, minutes, answered, correct,
+                             skipped, overtime, len(normalized), note, photo_id,
+                             stamp, stamp),
+                        )
+                        run_id = cur.lastrowid
+                    conn.execute(
+                        "DELETE FROM baseline_items WHERE run_id = ?", (run_id,)
+                    )
+                    for item in normalized:
+                        conn.execute(
+                            "INSERT INTO baseline_items"
+                            " (run_id, qid, seq, category, result, overtime,"
+                            "  process_status)"
+                            " VALUES (?, ?, ?, ?, ?, ?, ?)",
+                            (run_id, item["qid"], item["seq"], item["category"],
+                             item["result"], item["overtime"],
+                             item["process_status"]),
+                        )
+                    ledger_note = note or ("2025 基线·%s"
+                                           % ("上午卷" if half == "A" else "下午卷"))
+                    ledger = conn.execute(
+                        "SELECT id FROM practice_sessions WHERE baseline_half = ?",
+                        (half,),
+                    ).fetchone()
+                    if ledger:
+                        conn.execute(
+                            "UPDATE practice_sessions SET day = ?,"
+                            " source = 'real_exam', category = 'mixed',"
+                            " attempted = ?, correct = ?, abandoned = ?,"
+                            " overtime = ?, minutes = ?, note = ? WHERE id = ?",
+                            (day, answered, correct, skipped, overtime, minutes,
+                             ledger_note, ledger["id"]),
+                        )
+                    else:
+                        conn.execute(
+                            "INSERT INTO practice_sessions"
+                            " (day, source, category, attempted, correct,"
+                            "  abandoned, overtime, minutes, note, baseline_half,"
+                            "  created_at)"
+                            " VALUES (?, 'real_exam', 'mixed', ?, ?, ?, ?, ?, ?, ?, ?)",
+                            (day, answered, correct, skipped, overtime, minutes,
+                             ledger_note, half, stamp),
+                        )
+                row = conn.execute(
+                    "SELECT r.*, p.sha256 AS photo_sha FROM baseline_runs r"
+                    " LEFT JOIN photos p ON p.id = r.photo_id WHERE r.id = ?",
+                    (run_id,),
+                ).fetchone()
+                return {
+                    "id": row["id"],
+                    "year": row["year"],
+                    "half": row["half"],
+                    "day": row["day"],
+                    "minutes": row["minutes"],
+                    "answered": row["answered"],
+                    "correct": row["correct"],
+                    "skipped": row["skipped"],
+                    "overtime": row["overtime"],
+                    "items_done": row["items_done"],
+                    "note": row["note"],
+                    "photo": self._photo_urls(row["photo_sha"]),
+                    "created_at": row["created_at"],
+                    "updated_at": row["updated_at"],
+                }
+            finally:
+                conn.close()
+
+    def delete_baseline(self, half, year):
+        """Remove one half and its ledger row; returns whether it existed."""
+        half = str(half or "").upper()
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    cur = conn.execute(
+                        "DELETE FROM baseline_runs WHERE year = ? AND half = ?",
+                        (int(year), half),
+                    )
+                    conn.execute(
+                        "DELETE FROM practice_sessions WHERE baseline_half = ?",
+                        (half,),
+                    )
+                return cur.rowcount > 0
             finally:
                 conn.close()
 

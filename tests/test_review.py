@@ -302,7 +302,7 @@ def test_existing_m2_database_migrates_in_place(tmp_path):
         version = check.execute(
             "SELECT value FROM meta WHERE key = 'schema_version'"
         ).fetchone()[0]
-    assert version == "4"
+    assert version == "5"
 
 
 def test_remark_wrong_resets_a_mastered_question(tmp_path):
