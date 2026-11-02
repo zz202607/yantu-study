@@ -38,6 +38,23 @@ TAG_KEYS = tuple(TAGS)
 STATUSES = ("active", "mastered")
 SOURCES = ("batch", "single", "import")
 
+# Case questions (C/A/M) are subjective and scored on the written process.
+# These statuses are chosen by the user, never inferred from an option letter.
+# Knowledge questions (Z/K) remain objective and use plain correct/wrong.
+PROCESS_LABELS = {
+    "process_right_result_right": "过程对 · 结果对",
+    "process_right_result_wrong": "过程对 · 结果错",
+    "process_wrong": "过程错",
+    "no_idea": "没思路",
+}
+PROCESS_RESULT = {
+    "process_right_result_right": "correct",
+    "process_right_result_wrong": "wrong",
+    "process_wrong": "wrong",
+    "no_idea": "wrong",
+}
+PROCESS_STATUSES = tuple(PROCESS_RESULT)
+
 # M3 scheduling.  A wrong answer comes back in a day (three when it was a
 # relapse after a long gap); correct answers climb a short ladder.  Mastery
 # needs two correct reviews at least seven days apart, so a single lucky pass
@@ -84,7 +101,9 @@ CREATE TABLE IF NOT EXISTS attempts (
     streak INTEGER NOT NULL DEFAULT 0,
     reviews INTEGER NOT NULL DEFAULT 0,
     last_review_at TEXT,
-    last_result TEXT
+    last_result TEXT,
+    process_photo_id INTEGER REFERENCES photos(id) ON DELETE SET NULL,
+    last_process_status TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_attempts_last ON attempts(last_at DESC);
 CREATE INDEX IF NOT EXISTS idx_attempts_family ON attempts(family);
@@ -127,9 +146,13 @@ CREATE TABLE IF NOT EXISTS review_log (
     last_result_after TEXT,
     tags_before TEXT,
     tags_after TEXT,
+    process_status_before TEXT,
+    process_status_after TEXT,
+    process_photo_before INTEGER,
+    process_photo_after INTEGER,
     UNIQUE (session_id, qid)
 );
-INSERT OR IGNORE INTO meta(key, value) VALUES ('schema_version', '2');
+INSERT OR IGNORE INTO meta(key, value) VALUES ('schema_version', '3');
 """
 
 
@@ -241,7 +264,7 @@ class Store:
 
     @staticmethod
     def _migrate(conn):
-        """Bring an M2 database up to the M3 schedule columns in place."""
+        """Bring older databases up to the schedule + case-process columns."""
         columns = {row["name"] for row in conn.execute("PRAGMA table_info(attempts)")}
         additions = {
             "interval_days": "INTEGER NOT NULL DEFAULT 1",
@@ -250,6 +273,8 @@ class Store:
             "reviews": "INTEGER NOT NULL DEFAULT 0",
             "last_review_at": "TEXT",
             "last_result": "TEXT",
+            "process_photo_id": "INTEGER REFERENCES photos(id) ON DELETE SET NULL",
+            "last_process_status": "TEXT",
         }
         added_next = False
         for name, decl in additions.items():
@@ -260,11 +285,25 @@ class Store:
             # M2 rows carry no schedule: treat the record time as the due date,
             # so yesterday's errors are waiting today.
             conn.execute("UPDATE attempts SET next_at = last_at WHERE next_at IS NULL")
+        log_columns = {
+            row["name"] for row in conn.execute("PRAGMA table_info(review_log)")
+        }
+        log_additions = {
+            "process_status_before": "TEXT",
+            "process_status_after": "TEXT",
+            "process_photo_before": "INTEGER",
+            "process_photo_after": "INTEGER",
+        }
+        for name, decl in log_additions.items():
+            if name not in log_columns:
+                conn.execute(
+                    "ALTER TABLE review_log ADD COLUMN %s %s" % (name, decl)
+                )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_attempts_next ON attempts(next_at)"
         )
         conn.execute(
-            "UPDATE meta SET value = '2' WHERE key = 'schema_version'"
+            "UPDATE meta SET value = '3' WHERE key = 'schema_version'"
         )
 
     # -- photos -----------------------------------------------------------
@@ -373,20 +412,28 @@ class Store:
                 taken_at = None
         return self.save_photo(data, taken_at=taken_at)
 
+    _PHOTO_REFS = (
+        "SELECT photo_id FROM attempts WHERE photo_id IS NOT NULL"
+        " UNION SELECT process_photo_id FROM attempts"
+        "       WHERE process_photo_id IS NOT NULL"
+        " UNION SELECT process_photo_before FROM review_log"
+        "       WHERE process_photo_before IS NOT NULL"
+        " UNION SELECT process_photo_after FROM review_log"
+        "       WHERE process_photo_after IS NOT NULL"
+    )
+
     def prune_orphan_photos(self):
-        """Drop preview-only photos that never landed in an attempt."""
+        """Drop preview-only photos that never landed in an attempt or review."""
         with self._lock:
             conn = self._connect()
             try:
                 rows = conn.execute(
-                    "SELECT * FROM photos WHERE id NOT IN"
-                    " (SELECT photo_id FROM attempts WHERE photo_id IS NOT NULL)"
+                    "SELECT * FROM photos WHERE id NOT IN (%s)" % self._PHOTO_REFS
                 ).fetchall()
                 if not rows:
                     return 0
                 conn.execute(
-                    "DELETE FROM photos WHERE id NOT IN"
-                    " (SELECT photo_id FROM attempts WHERE photo_id IS NOT NULL)"
+                    "DELETE FROM photos WHERE id NOT IN (%s)" % self._PHOTO_REFS
                 )
                 conn.commit()
             finally:
@@ -538,6 +585,8 @@ class Store:
         ):
             tags.setdefault(row["attempt_id"], []).append(row["tag"])
         photo_ids = [r["photo_id"] for r in rows if r["photo_id"]]
+        photo_ids += [r["process_photo_id"] for r in rows if r["process_photo_id"]]
+        photo_ids = list(dict.fromkeys(photo_ids))
         if photo_ids:
             pmarks = ",".join("?" for _ in photo_ids)
             for row in conn.execute(
@@ -566,6 +615,8 @@ class Store:
                     "stuck": row["times"] >= STUCK_TIMES and row["status"] != "mastered",
                     "tags": sorted(tags.get(row["id"], []), key=TAG_KEYS.index),
                     "photo": photos.get(row["photo_id"]),
+                    "process_status": row["last_process_status"],
+                    "process_photo": photos.get(row["process_photo_id"]),
                 }
             )
         return sorted(items, key=lambda item: order.get(item["id"], 0))
@@ -679,6 +730,37 @@ class Store:
         conn = self._connect()
         try:
             return self._stats(conn, now)
+        finally:
+            conn.close()
+
+    def learning_snapshot(self):
+        """Read-only rows for the dashboard.
+
+        The analytics layer needs attempts, tags and the review log together;
+        handing it a snapshot keeps SQL in one place and leaves the write API
+        untouched.  Nothing here mutates the database.
+        """
+        conn = self._connect()
+        try:
+            attempts = [dict(row) for row in conn.execute(
+                "SELECT * FROM attempts ORDER BY id"
+            )]
+            tags = {}
+            for row in conn.execute(
+                "SELECT attempt_id, tag FROM attempt_tags ORDER BY attempt_id, tag"
+            ):
+                tags.setdefault(row["attempt_id"], []).append(row["tag"])
+            logs = [dict(row) for row in conn.execute(
+                "SELECT qid, at, result, status_before, status_after,"
+                "       last_result_before"
+                "       FROM review_log ORDER BY id"
+            )]
+            sessions = [dict(row) for row in conn.execute(
+                "SELECT id, day, cursor, queue, started_at, finished_at"
+                " FROM review_sessions ORDER BY id"
+            )]
+            return {"attempts": attempts, "tags": tags, "logs": logs,
+                    "sessions": sessions}
         finally:
             conn.close()
 
@@ -895,12 +977,28 @@ class Store:
             raise ValueError("这轮复习已经结束")
         return row, json.loads(row["queue"])
 
-    def grade(self, session_id, qid, result, tags=None, now=None):
-        """Apply one review verdict and advance the session cursor."""
+    def grade(self, session_id, qid, result, tags=None, now=None,
+              process_status=None, process_photo_sha=None):
+        """Apply one review verdict and advance the session cursor.
+
+        Case questions can carry a manual process status and a handwritten
+        process photo.  The status is chosen by the user; the option letter in
+        the printed source book is never used to judge a case answer.
+        """
+        qid = (qid or "").strip().upper()
+        if process_status:
+            process_status = str(process_status).strip()
+            if process_status not in PROCESS_RESULT:
+                raise ValueError("未知过程状态：%s" % process_status)
+            if qid[0] not in "CAM":
+                raise ValueError("过程状态只用于案例题")
+            expected = PROCESS_RESULT[process_status]
+            if result and str(result).strip().lower() != expected:
+                raise ValueError("过程状态与判分不一致")
+            result = expected
         result = (result or "").strip().lower()
         if result not in ("correct", "wrong"):
             raise ValueError("评分只能是 correct / wrong")
-        qid = (qid or "").strip().upper()
         clean_tags = _normalize_tags(tags) if tags else None
         stamp = now_iso(now)
         with self._lock:
@@ -916,6 +1014,21 @@ class Store:
                     ).fetchone()
                     if not attempt:
                         raise ValueError("题 %s 已经被删除" % qid)
+                    process_status_before = attempt["last_process_status"]
+                    process_photo_before = attempt["process_photo_id"]
+                    process_photo_after = process_photo_before
+                    if process_photo_sha:
+                        photo = conn.execute(
+                            "SELECT id FROM photos WHERE sha256 = ?",
+                            (str(process_photo_sha),),
+                        ).fetchone()
+                        if not photo:
+                            raise ValueError("过程照片不存在")
+                        process_photo_after = photo["id"]
+                    process_status_after = (
+                        process_status if process_status is not None
+                        else process_status_before
+                    )
                     duplicate = conn.execute(
                         "SELECT id FROM review_log WHERE session_id = ? AND qid = ?",
                         (session_id, qid),
@@ -966,7 +1079,8 @@ class Store:
                     conn.execute(
                         "UPDATE attempts SET status = ?, times = ?,"
                         " interval_days = ?, next_at = ?, streak = ?, reviews = ?,"
-                        " last_review_at = ?, last_result = ?, last_at = ?"
+                        " last_review_at = ?, last_result = ?, last_at = ?,"
+                        " last_process_status = ?, process_photo_id = ?"
                         " WHERE id = ?",
                         (
                             status_after,
@@ -978,6 +1092,8 @@ class Store:
                             stamp,
                             result,
                             last_at_after,
+                            process_status_after,
+                            process_photo_after,
                             attempt["id"],
                         ),
                     )
@@ -992,9 +1108,11 @@ class Store:
                         "  status_before, status_after, times_before, times_after,"
                         "  next_before, next_after, last_at_before, last_at_after,"
                         "  last_review_before, last_review_after,"
-                        "  last_result_before, last_result_after, tags_before, tags_after)"
+                        "  last_result_before, last_result_after, tags_before, tags_after,"
+                        "  process_status_before, process_status_after,"
+                        "  process_photo_before, process_photo_after)"
                         " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
-                        "         ?, ?, ?, ?, ?, ?)",
+                        "         ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                         (
                             session_id,
                             attempt["id"],
@@ -1019,6 +1137,10 @@ class Store:
                             result,
                             json.dumps(tags_before, ensure_ascii=False),
                             json.dumps(tags_after, ensure_ascii=False),
+                            process_status_before,
+                            process_status_after,
+                            process_photo_before,
+                            process_photo_after,
                         ),
                     )
                     cursor = max(session["cursor"], index + 1)
@@ -1084,7 +1206,8 @@ class Store:
                         conn.execute(
                             "UPDATE attempts SET status = ?, times = ?,"
                             " interval_days = ?, next_at = ?, streak = ?,"
-                            " last_review_at = ?, last_result = ?, last_at = ?"
+                            " last_review_at = ?, last_result = ?, last_at = ?,"
+                            " last_process_status = ?, process_photo_id = ?"
                             " WHERE id = ?",
                             (
                                 log["status_before"],
@@ -1095,6 +1218,8 @@ class Store:
                                 log["last_review_before"],
                                 log["last_result_before"],
                                 log["last_at_before"],
+                                log["process_status_before"],
+                                log["process_photo_before"],
                                 log["attempt_id"],
                             ),
                         )
@@ -1243,9 +1368,12 @@ class Store:
             conn.close()
         return items[0] if items else None
 
-    def update_attempt(self, attempt_id, tags=None, note=None, status=None):
+    def update_attempt(self, attempt_id, tags=None, note=None, status=None,
+                       process_status=None, process_photo_sha=None):
         if status is not None and status not in STATUSES:
             raise ValueError("未知状态：%s" % status)
+        if process_status is not None and process_status not in PROCESS_STATUSES:
+            raise ValueError("未知过程状态：%s" % process_status)
         clean_tags = _normalize_tags(tags) if tags is not None else None
         clean_note = _clean_note(note) if note is not None else None
         with self._lock:
@@ -1279,6 +1407,22 @@ class Store:
                             )
                     if clean_tags is not None:
                         self._set_tags(conn, attempt_id, clean_tags)
+                    if process_status is not None:
+                        conn.execute(
+                            "UPDATE attempts SET last_process_status = ? WHERE id = ?",
+                            (process_status, attempt_id),
+                        )
+                    if process_photo_sha:
+                        photo = conn.execute(
+                            "SELECT id FROM photos WHERE sha256 = ?",
+                            (str(process_photo_sha),),
+                        ).fetchone()
+                        if not photo:
+                            raise ValueError("过程照片不存在")
+                        conn.execute(
+                            "UPDATE attempts SET process_photo_id = ? WHERE id = ?",
+                            (photo["id"], attempt_id),
+                        )
             finally:
                 conn.close()
         return self.get_attempt(attempt_id)
@@ -1319,6 +1463,9 @@ class Store:
             originals = list((self.root / "attachments" / "orig").rglob("*.jpg"))
             with zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED) as zf:
                 zf.write(snap, "wrongbook.db")
+                settings = self.root / "settings.json"
+                if settings.exists():
+                    zf.write(settings, "settings.json")
                 for kind in ("orig", "thumb"):
                     folder = self.root / "attachments" / kind
                     if not folder.exists():
@@ -1392,6 +1539,8 @@ class Store:
                 except OSError:
                     pass
             shutil.copy2(db, data_dir / "wrongbook.db")
+            if (tmp / "settings.json").exists():
+                shutil.copy2(tmp / "settings.json", data_dir / "settings.json")
             attach = data_dir / "attachments"
             if attach.exists():
                 shutil.rmtree(attach)

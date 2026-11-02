@@ -81,7 +81,9 @@ def main():
             print("  ! %(qid)s: %(detail)s" % error)
 
     print("\n做题规则：题面页在前、答案页在后。只打题面页，答案页封存到两半都做完。")
-    print("上午/下午各限时 3 小时。做完运行 tools/score_baseline.py 记四个数。")
+    print("上午/下午各限时 3 小时。案例按过程自评四个数，")
+    print("做完运行 tools/score_baseline.py --answered ... --correct ... --write。")
+    print("不要按资料书选项字母判案例分。")
 
 
 if __name__ == "__main__":
