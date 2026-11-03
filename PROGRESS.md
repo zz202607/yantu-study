@@ -193,6 +193,16 @@
   - **顺手修复**：规范页 `X-Standard` 响应头带中文（`GB 50021-2001(2009年版)`）
     触发 `UnicodeEncodeError` → 500；改用 ASCII 的 `code_key` + `header_safe()`，
     实测 200 / `x-standard: GB50021-2001`
+- **M13 手机接入完成（11-03）**：一次配置，扫码进 App
+  - `start.bat`：启动/复用后台服务 → 打开电脑浏览器 → 弹出二维码；`stop.bat` 精确停止
+  - `app/net.py` 选手机可达地址：`192.168` > `10` > `172`，排除 VPN TUN（`198.18/15`）、
+    link-local、Tailscale；`YANTU_HOST` 可覆盖；服务启动打印同一地址
+  - 开机自启：`py -3 tools/autostart.py --install` 写当前用户启动文件夹（无需管理员），
+    `--remove` 取消；快捷方式指向 `tools/serve_background.py`，先重定向 pythonw 的
+    `None` stdout 再启动（否则启动即崩）
+  - 依赖 `segno==1.6.6`；二维码 372×372，`--stop` 只杀监听该端口的进程
+  - **单测 262 条全绿**（新增 5 条）；启动/复用/停止/自启快捷方式四条链路实测通过
+  - 剩下手动一步：路由器 DHCP 保留 `192.168.1.3`
 - **下一步（基线后 6 周）**：
   1. 本周先把 16 道放弃题分流；5 道超时题走「限时拆解 · 会但慢」
   2. 每天 1 组认题卡（8 题 × 30 秒），优先弱项原型；错的原型回原型卡
@@ -384,7 +394,8 @@
 
 ## 待做
 
-- [ ] v1 构想确认：`docs/v1-concept.md`（4 类错因、零命名拍照、打印优先、零决策复习）
+- [x] v1 构想确认：`docs/v1-concept.md`（4 类错因、零命名拍照、打印优先、零决策复习；
+  11-03 复核：已全部落地，文件保留）
 - [x] M1 收尾：**拍整页多题勾选** + 批量查看器（11-01 晚；打包召回 17/18 不变）
 - [x] M2 错题本：SQLite + 批量勾错 + 4 类错因标签 + 笔记/手写照片 + 18 张旧照片一次性导入
   （11-01 完成，19 题入本；备份/恢复、过滤、详情见 `docs/journal/2026-11-01-m2-wrongbook.md`）
@@ -397,7 +408,8 @@
 - [x] 应用内 2025 基线记分（四个数 + 逐题状态/答案纸照片 → 总分/正确率，替代 CLI）
 - [x] M8 周报/月报：周/月一页，含计划达成、分项、对比上期、下一步；保存为 md+json（11-02）
 - [x] 题目 → 条文级推荐（11-03 M11：解析依据 > 原型重点 > 章节匹配，点击直达页图）
-- [ ] 条文反向索引：某条文 → 错题本里引用过它的题（「考前依据清单」入口）
+- [x] 条文反向索引：某条文 → 错题本里引用过它的题（M12「考前依据清单」，11-03）
+- [x] M13 手机接入：一键启动 + 二维码 + 固定地址 + 开机自启（11-03）
 - [ ] 补 5 类无伴读路线的条文推荐：盐渍土 / 冻土 / 基桩检测 / 压实·注浆 / 岩体分级
 - [ ] 官方考试日期公布后改设置默认值（当前 2027-11-01 为估算）
 - [ ] 14 个单册标签人工看原页核对（优先级低）
@@ -541,6 +553,11 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `app/static/manifest.webmanifest` | PWA 清单（名称/图标/快捷方式） |
 | `app/static/sw.js` | Service Worker（仅安全上下文注册；API 不走缓存） |
 | `app/static/icons/` | 192/512/maskable/apple-touch 图标 |
+| `app/net.py` | **M13 手机地址**：优先 192.168/10/172，排除 VPN TUN/link-local/Tailscale；`YANTU_HOST` 覆盖 |
+| `tools/launch.py` | **M13 一键启动**：复用/启动服务、打开浏览器、生成二维码 PNG；`--stop` 精确停止 |
+| `tools/serve_background.py` | **M13 后台包装**：pythonw 无 stdout，先重定向 `.cache/server.log` 再跑服务 |
+| `tools/autostart.py` | **M13 开机自启**：当前用户启动文件夹快捷方式 `--install/--status/--remove` |
+| `start.bat` / `stop.bat` | **M13 双击入口**：启动（扫码）/ 停止 |
 | `docs/SUMMARY.md` | **项目一页总结**（目标/架构/决策/指标/限制/下一步） |
 | `..\LESSONS.md` | **跨项目经验库**（根目录，新项目启动先读） |
 | `tools/eval_answer_ocr.py` | **M4 基准**：29 题抽条文/候选 + 计时（`--qids` 可指定） |
