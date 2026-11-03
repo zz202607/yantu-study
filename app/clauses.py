@@ -1,4 +1,4 @@
-"""Per-question clause hints (M11).
+"""Per-question clause hints (M11) and the reverse index (M12).
 
 The question detail already has a category-level "规范定位" button.  This
 module answers the narrower question: **where in which standard does this
@@ -13,6 +13,11 @@ and are labelled as such in the UI.  No OCR runs here: the suggestion panel
 warms the M4 cache, and this endpoint stays fast.  Every page comes from the
 local standards index; a citation that cannot be resolved is reported as
 `unresolved` instead of guessed.
+
+`reverse()` turns the same evidence around: clause -> wrong-book questions.
+Exact citations and suggestions stay in separate buckets, one row per
+standard section, so the pre-exam checklist never passes a prototype guess
+off as a citation.
 """
 
 import re
@@ -260,11 +265,17 @@ def _answer_rows(qid, cache_dir=None):
                         "clause": clause,
                     })
                 continue
+            stop_row = _stop_for_clause(
+                located.get("code") or lookup_code, clause
+            )
             rows.append({
                 "code": located.get("code") or code or title,
                 "title": located.get("title") or title,
                 "section": located.get("matched") or "",
-                "section_title": located.get("section_title") or "",
+                # The scan TOC sometimes carries English/OCR titles; the
+                # curated reading stop is the better label when both exist.
+                "section_title": (stop_row["stop"].get("title") if stop_row else "")
+                or located.get("section_title") or "",
                 "clauses": [clause],
                 "pdf_page": located.get("pdf_page"),
                 "printed_page": located.get("printed_page"),
@@ -375,6 +386,222 @@ def _dedupe(rows):
             if not existing.get("reason"):
                 existing["reason"] = row.get("reason") or ""
     return [merged[key] for key in order]
+
+
+def _row_tokens(row):
+    """Exact sections for one answer row: '5.2/5.3' -> ['5.2', '5.3'].
+
+    Only exact citations are split.  Prototype/keyword hints keep the curated
+    stop section (often a span such as '5.2/5.3') so the same question is not
+    counted under two section rows.
+    """
+    section = str(row.get("section") or "").strip()
+    parts = [part.strip() for part in section.split("/") if part.strip()]
+    return parts or [""]
+
+
+def _clauses_for_token(clauses, token):
+    if not token:
+        return list(clauses)
+    picked = [
+        clause for clause in clauses
+        if clause == token
+        or clause.startswith(token + ".")
+        or (token.startswith("附录") and clause.startswith(token))
+    ]
+    return picked or list(clauses)
+
+
+def _question_entry(item, hint):
+    return {
+        "id": item.get("id"),
+        "qid": str(item.get("qid") or "").upper(),
+        "status": item.get("status") or "active",
+        "times": int(item.get("times") or 0),
+        "source": hint.get("source") or "keyword",
+        "source_label": hint.get("source_label") or "",
+        "reason": hint.get("reason") or "",
+    }
+
+
+def _finish_row(group):
+    questions = list(group["questions"].values())
+    questions.sort(key=lambda q: (q["status"] == "mastered", q["qid"]))
+    counts = {"answer": 0, "prototype": 0, "keyword": 0}
+    for question in questions:
+        counts[question["source"]] = counts.get(question["source"], 0) + 1
+    strongest = min(
+        (question["source"] for question in questions),
+        key=lambda source: SOURCE_ORDER.get(source, 9),
+        default=group.get("source") or "keyword",
+    )
+    mastered = sum(1 for question in questions if question["status"] == "mastered")
+    return {
+        "code": group["code"],
+        "title": group["title"],
+        "code_key": group["code_key"],
+        "section": group["section"],
+        "section_title": group["section_title"],
+        "clauses": group["clauses"],
+        "pdf_page": group["pdf_page"],
+        "printed_page": group["printed_page"],
+        "page_count": group["page_count"],
+        "estimated": group["estimated"],
+        "source": strongest,
+        "source_label": {
+            "answer": "解析依据",
+            "prototype": "原型建议",
+            "keyword": "关键词建议",
+        }[strongest],
+        "sources": counts,
+        "questions": questions,
+        "active_count": len(questions) - mastered,
+        "mastered_count": mastered,
+    }
+
+
+def reverse(attempts, include_mastered=False, cache_dir=None):
+    """Clause -> wrong-book questions (M12).
+
+    Exact citations from the cached solution OCR form `exact`; prototype and
+    keyword suggestions form `suggested`.  A question with no hint at all is
+    listed in `unmatched` instead of being silently dropped, and citations
+    whose page cannot be resolved stay in `unresolved`.
+    """
+    attempts = list(attempts or [])
+    groups = {}
+    order = []
+    unmatched = []
+    unresolved = []
+    errors = []
+    included = 0
+    indexed = 0
+    question_sources = {"answer": 0, "prototype": 0, "keyword": 0}
+
+    for item in attempts:
+        status = item.get("status") or "active"
+        if status == "mastered" and not include_mastered:
+            continue
+        included += 1
+        qid = str(item.get("qid") or "").strip().upper()
+        try:
+            data = hints(qid, cache_dir=cache_dir)
+        except Exception as exc:  # noqa: BLE001 - one bad qid must not blank the list
+            errors.append({"qid": qid, "error": str(exc)})
+            unmatched.append({"id": item.get("id"), "qid": qid, "status": status})
+            continue
+        rows = data.get("hints") or []
+        for row in data.get("unresolved") or []:
+            unresolved.append(dict(row, qid=qid))
+        if not rows:
+            unmatched.append({"id": item.get("id"), "qid": qid, "status": status})
+            continue
+        exact_codes = {
+            standards.code_key(row.get("code")) or row.get("code")
+            for row in rows if row.get("source") == "answer"
+        }
+        used_sources = set()
+        for hint in rows:
+            code = hint.get("code") or ""
+            code_key = standards.code_key(code) or code
+            # A suggestion never repeats a standard that already has an exact
+            # citation for this question: exact evidence wins, suggestions
+            # only fill the standards that are still dark.
+            if hint.get("source") != "answer" and code_key in exact_codes:
+                continue
+            used_sources.add(hint.get("source"))
+            page = int(hint.get("pdf_page") or 0)
+            clauses = list(hint.get("clauses") or [])
+            tokens = _row_tokens(hint) if hint.get("source") == "answer" \
+                else [str(hint.get("section") or "").strip()]
+            for token in tokens:
+                # One row per standard section; an empty section groups by page.
+                key = (code_key, token, page if not token else 0)
+                group = groups.get(key)
+                if group is None:
+                    group = {
+                        "code": code,
+                        "title": hint.get("title") or "",
+                        "code_key": code_key,
+                        "section": token,
+                        "section_title": hint.get("section_title")
+                        if token and hint.get("section") == token else "",
+                        "clauses": [],
+                        "pdf_page": page,
+                        "printed_page": hint.get("printed_page"),
+                        "page_count": int(hint.get("page_count") or 0),
+                        "estimated": bool(hint.get("estimated")),
+                        "source": hint.get("source") or "keyword",
+                        "questions": {},
+                    }
+                    groups[key] = group
+                    order.append(key)
+                if not group["title"] and hint.get("title"):
+                    group["title"] = hint.get("title")
+                if page and not group["pdf_page"]:
+                    group["pdf_page"] = page
+                if not group["section_title"] and hint.get("section_title"):
+                    group["section_title"] = hint.get("section_title") or ""
+                page_count = int(hint.get("page_count") or 0)
+                if page_count > group["page_count"]:
+                    group["page_count"] = page_count
+                better = SOURCE_ORDER.get(hint.get("source"), 9) < \
+                    SOURCE_ORDER.get(group["source"], 9)
+                if better:
+                    group["source"] = hint.get("source") or group["source"]
+                    if page:
+                        group["pdf_page"] = page
+                    group["printed_page"] = hint.get("printed_page") or group["printed_page"]
+                    group["estimated"] = bool(hint.get("estimated"))
+                    if token and hint.get("section") == token:
+                        group["section_title"] = hint.get("section_title") \
+                            or group["section_title"]
+                for clause in _clauses_for_token(clauses, token):
+                    if clause not in group["clauses"]:
+                        group["clauses"].append(clause)
+                entry = _question_entry(item, hint)
+                current = group["questions"].get(qid)
+                if current is None or SOURCE_ORDER.get(entry["source"], 9) < \
+                        SOURCE_ORDER.get(current["source"], 9):
+                    group["questions"][qid] = entry
+                elif not current.get("reason") and entry.get("reason"):
+                    current["reason"] = entry["reason"]
+        if used_sources:
+            indexed += 1
+        for source in used_sources:
+            if source in question_sources:
+                question_sources[source] += 1
+
+    rows = [_finish_row(groups[key]) for key in order]
+    exact = [row for row in rows if row["source"] == "answer"]
+    suggested = [row for row in rows if row["source"] != "answer"]
+    for bucket in (exact, suggested):
+        bucket.sort(key=lambda row: (
+            -row["active_count"],
+            -len(row["questions"]),
+            SOURCE_ORDER.get(row["source"], 9),
+            row["code"],
+            row["pdf_page"],
+        ))
+    return {
+        "summary": {
+            "attempts": len(attempts),
+            "included": included,
+            "mastered_hidden": len(attempts) - included,
+            "indexed": indexed,
+            "unmatched": len(unmatched),
+            "exact_rows": len(exact),
+            "suggested_rows": len(suggested),
+            "clauses": len(exact) + len(suggested),
+            "questions_by_source": question_sources,
+            "unresolved": len(unresolved),
+        },
+        "exact": exact,
+        "suggested": suggested,
+        "unmatched": sorted(unmatched, key=lambda row: row["qid"]),
+        "unresolved": unresolved,
+        "errors": errors,
+    }
 
 
 def hints(qid, cache_dir=None):

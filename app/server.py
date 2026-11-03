@@ -63,7 +63,7 @@ CHAPTER_RE = re.compile(r"^([CZ])(\d{1,2})-(\d{1,3})$")
 EXAM_RE = re.compile(r"^[AK]\d{4}-[A-Z]-\d{1,3}$")
 MOCK_RE = re.compile(r"^M\d{1,2}-\d{1,3}$")
 
-app = FastAPI(title="岩土学习驾驶舱 M11")
+app = FastAPI(title="岩土学习驾驶舱 M12")
 
 
 def _warm_ocr():
@@ -1278,6 +1278,44 @@ def attempt_clauses(attempt_id: int):
         }
 
 
+def _all_attempts():
+    """Every wrong-book attempt, not just the first list page."""
+    items = []
+    offset = 0
+    while True:
+        page = store.list_attempts(limit=200, offset=offset)
+        items.extend(page["items"])
+        if not page.get("has_more") or not page["items"]:
+            break
+        offset += len(page["items"])
+    return items
+
+
+@app.get("/api/clause-index")
+def clause_index(include_mastered: int = 0):
+    """M12: clause -> wrong-book questions, exact evidence first.
+
+    Advisory like M11: any failure returns an `error` instead of a 500 so the
+    data page can still render the rest of the cockpit.
+    """
+    try:
+        result = clauses_app.reverse(
+            _all_attempts(), include_mastered=bool(include_mastered)
+        )
+        result["generated_at"] = time.strftime("%Y-%m-%dT%H:%M:%S")
+        return result
+    except Exception as exc:  # noqa: BLE001 - the page degrades, not breaks
+        return {
+            "error": "依据清单生成失败：%s" % exc,
+            "summary": {},
+            "exact": [],
+            "suggested": [],
+            "unmatched": [],
+            "unresolved": [],
+            "errors": [],
+        }
+
+
 @app.patch("/api/attempts/{attempt_id}")
 def patch_attempt(attempt_id: int, payload: dict = Body(...)):
     kwargs = {}
@@ -1628,5 +1666,5 @@ if __name__ == "__main__":
     import uvicorn
 
     port = int(os.environ.get("PORT", "8000"))
-    print("岩土学习驾驶舱 M11  ->  http://%s:%d" % (lan_ip(), port), flush=True)
+    print("岩土学习驾驶舱 M12  ->  http://%s:%d" % (lan_ip(), port), flush=True)
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="warning")
