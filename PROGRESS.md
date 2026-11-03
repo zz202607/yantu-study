@@ -152,6 +152,18 @@
     `GET /api/reading/{code}/{stop}/page`、`GET /api/reading/{code}/file`
   - **单测 242 条全绿**（新增 12 条：路线完整性 / 页码映射 / 进度推荐）；无头 Chrome
     伴读首页、5.2 阅读站（计时/页图/chips/笔记/状态按钮）逐屏验收
+- **M11 题目 → 条文级推荐完成（11-03）**：错题详情「规范定位」现在直接给出规范、条文和页码
+  - 三种来源按证据强度排序：**解析依据**（M4 缓存，精确）→ **原型重点**（题目原型 →
+    伴读站）→ **章节匹配**（章节名/2025 题干摘要 → 人工考点词表）；每行标来源
+  - 同一标准+节合并，条文取并集；解析引用解析不到页码时报「未收录」，不猜；
+    最多 5 条，全部可点开本机规范页图；底部保留「按大类看规范」
+  - 关键词只在本大类内匹配，跨类仅保留「特殊土 → 边坡·滑坡」「检测 → 勘察·载荷试验」；
+    无伴读路线的盐渍土/冻土/基桩检测等会明确显示没有条文，不硬凑
+  - 新模块 `app/clauses.py`；`answer_ocr.load_cached()` 只读缓存不触发 OCR；
+    API `GET /api/attempts/{id}/clauses`
+  - **单测 248 条全绿**（新增 6 条：原型/关键词/无路线/缓存合并/未解析/页码）；
+    无头 Chrome 390×844：C3-11 面板 2 条 → 点开 GB 50007 p30（5.2 承载力计算），
+    A2025-A-13 面板 2 条；0 JS 异常、无横向溢出
 - **下一步（基线后 6 周）**：
   1. 本周先把 16 道放弃题分流；5 道超时题走「限时拆解 · 会但慢」
   2. 每天 1 组认题卡（8 题 × 30 秒），优先弱项原型；错的原型回原型卡
@@ -355,7 +367,9 @@
 - [x] M5.1 案例/客观题边界修正：过程状态 + 过程照片，知识题独立客观判分（11-02，134 条测试）
 - [x] 应用内 2025 基线记分（四个数 + 逐题状态/答案纸照片 → 总分/正确率，替代 CLI）
 - [x] M8 周报/月报：周/月一页，含计划达成、分项、对比上期、下一步；保存为 md+json（11-02）
-- [ ] 题目 → 条文级推荐（现在只到大类；M4 已抽引用，可做按题推荐）
+- [x] 题目 → 条文级推荐（11-03 M11：解析依据 > 原型重点 > 章节匹配，点击直达页图）
+- [ ] 条文反向索引：某条文 → 错题本里引用过它的题（「考前依据清单」入口）
+- [ ] 补 5 类无伴读路线的条文推荐：盐渍土 / 冻土 / 基桩检测 / 压实·注浆 / 岩体分级
 - [ ] 官方考试日期公布后改设置默认值（当前 2027-11-01 为估算）
 - [ ] 14 个单册标签人工看原页核对（优先级低）
 - [x] 《工程地质手册》已接规范地图 + 全文检索 + 页图（M5，1,426 页 / 1,344 书签）
@@ -481,6 +495,7 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `app/standards.py` | **M5 规范/手册**：规范库扫描与编号匹配、安全取文件、手册全文索引/搜索/页图；**M6 章节索引/条文定位/规范页图** |
 | `app/reading.py` | **M10 规范伴读**：路线/进度/推荐、标注版页图、干净版回退 |
 | `app/reading_data.json` | **M10 阅读路线**：9 本核心规范、67 站（为什么考/先看什么/易错/自检/练习题号） |
+| `app/clauses.py` | **M11 条文推荐**：解析依据 / 原型重点 / 章节匹配 → 条文 + 页码；带来源与未解析报告 |
 | `tools/build_annotated_index.py` | **M10 标注版页索引**：页脚 OCR → 正文起点 → 锚点插值 → 站页校验 |
 | `index/annotated_index.json` | 标注版 PDF 文件、正文起点、页脚锚点、每站 PDF 页、估算标记 |
 | `docs/standards-reading.md` | **M10 说明**：路线、数据、页索引做法、API、边界 |
@@ -505,7 +520,7 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `tools/import_old_photos.py` | 旧照片导入 CLI（预览 / `--apply`） |
 | `tools/backup_wrongbook.py` | 备份 / 恢复 CLI（恢复需 `--yes`） |
 | `data/` | **用户数据唯一位置**：`wrongbook.db` + `attachments/` + `backups/` + `reports/` |
-| `tests/` | 单元测试 242 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
+| `tests/` | 单元测试 248 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
 | `.github/workflows/ci.yml` | GitHub Actions：最小依赖 → compileall → pytest（PR / push main） |
 | `requirements-ci.txt` | CI 最小依赖（不含 OCR/ONNX/FastAPI） |
 | `.cache/crops/` | 裁图缓存（可随时删，自动重建） |

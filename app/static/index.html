@@ -244,6 +244,20 @@
   .suggest .chip { background: #fff; font-size: 12.5px; padding: 5px 10px; }
   .suggest-evidence { font-size: 12px; color: var(--muted); line-height: 1.45; margin-top: 3px; }
   .suggest-note { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+  .clause-hints { margin-top: 8px; }
+  .clause-row {
+    display: block; width: 100%; text-align: left; margin-top: 6px;
+    border: 1px solid var(--line); border-radius: 10px; background: #fff;
+    padding: 8px 10px; font: inherit; color: inherit; cursor: pointer;
+  }
+  .clause-row:active { background: var(--paper); }
+  .clause-top { display: flex; align-items: baseline; gap: 6px; font-size: 12.5px; font-weight: 600; }
+  .clause-src {
+    flex: 0 0 auto; font-weight: 400; font-size: 10.5px; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px; padding: 1px 6px;
+  }
+  .clause-meta { display: block; font-size: 11.5px; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+  .clause-actions { display: flex; gap: 8px; margin-top: 8px; }
   .import-row { display: flex; gap: 10px; align-items: flex-start; padding: 10px 2px; border-bottom: 1px solid var(--line); }
   .import-row input { margin-top: 5px; width: 18px; height: 18px; flex: 0 0 auto; }
   .import-row .main { flex: 1; min-width: 0; font-size: 13.5px; }
@@ -841,7 +855,7 @@
 </head>
 <body>
 <header>
-  <h1>岩土学习驾驶舱 <span class="badge">M10</span></h1>
+  <h1>岩土学习驾驶舱 <span class="badge">M11</span></h1>
   <span id="examChip" class="exam-chip">D-—</span>
   <select id="family" aria-label="当前册别">
     <option value="C">案例 C</option>
@@ -1195,6 +1209,13 @@
       <button id="dDelete" class="ghost small danger">删除</button>
       <button id="dSave" class="primary">保存</button>
     </div>
+    <div class="suggest clause-hints hidden" id="dClauseHints">
+      <div class="suggest-head">
+        <span>这题的规范位置</span>
+        <span class="hint" id="dClauseState"></span>
+      </div>
+      <div id="dClauseBody"></div>
+    </div>
   </section>
 
   <!-- 6. legacy photo import -->
@@ -1534,6 +1555,7 @@ const state = {
   },
   detail: null,
   detailAnswer: 0,
+  detailClause: { token: 0, open: false },
   viewerInfo: null,
   importItems: [],
   meta: null,
@@ -2541,6 +2563,130 @@ const detailSuggest = suggestionUI(
   }
 );
 
+// --- per-question clause hints (M11) --------------------------------------
+
+function hideDetailClauses() {
+  state.detailClause.open = false;
+  state.detailClause.token += 1;
+  const box = $("dClauseHints");
+  if (!box) return;
+  box.classList.add("hidden");
+  $("dClauseBody").innerHTML = "";
+  $("dClauseState").textContent = "";
+}
+
+function clauseHintText(hint) {
+  const numbers = (hint.clauses || []).filter((x) => x && !x.startsWith("附录"));
+  const appendices = (hint.clauses || []).filter((x) => x && x.startsWith("附录"));
+  let text = "《" + (hint.title || "") + "》";
+  if (hint.code) text += " " + hint.code;
+  if (numbers.length) text += " 第" + numbers.slice(0, 5).join("、") + "条";
+  if (appendices.length) text += " " + appendices.join(" ");
+  return text;
+}
+
+function renderDetailClauses(data) {
+  const body = $("dClauseBody");
+  body.innerHTML = "";
+  const hints = data.hints || [];
+  if (!hints.length) {
+    const note = document.createElement("p");
+    note.className = "suggest-note";
+    note.textContent = "这题没有可定位的条文。";
+    if ((data.unresolved || []).length) {
+      note.textContent += " 解析里另有 " + data.unresolved.length + " 条依据未收录页码。";
+    }
+    body.appendChild(note);
+  } else {
+    $("dClauseState").textContent = hints.length + " 条 · 点一条打开原页";
+    for (const hint of hints) {
+      if (!hint.pdf_page) continue;
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = "clause-row";
+      const top = document.createElement("span");
+      top.className = "clause-top";
+      const label = document.createElement("span");
+      label.textContent = clauseHintText(hint);
+      const src = document.createElement("span");
+      src.className = "clause-src";
+      src.textContent = hint.source_label || "条文";
+      top.appendChild(label);
+      top.appendChild(src);
+      const meta = document.createElement("span");
+      meta.className = "clause-meta";
+      meta.textContent = [
+        hint.section ? hint.section + " " + (hint.section_title || "") : "",
+        "p" + hint.pdf_page + (hint.estimated ? "（估）" : ""),
+        hint.reason || "",
+      ].filter(Boolean).join(" · ");
+      row.appendChild(top);
+      row.appendChild(meta);
+      row.addEventListener("click", () => {
+        openStandardPage(
+          hint.code, hint.pdf_page,
+          (hint.section || "") + " " + (hint.section_title || ""),
+          hint.page_count
+        );
+      });
+      body.appendChild(row);
+    }
+    if ((data.unresolved || []).length) {
+      const note = document.createElement("p");
+      note.className = "suggest-note";
+      note.textContent = "另有 " + data.unresolved.length
+        + " 条解析依据未收录页码（"
+        + data.unresolved.map((row) => "《" + row.title + "》" + (row.clause || "")).join("、")
+        + "）。";
+      body.appendChild(note);
+    }
+  }
+  const actions = document.createElement("div");
+  actions.className = "clause-actions";
+  const category = state.detail && state.detail.category_key;
+  const fallback = document.createElement("button");
+  fallback.type = "button";
+  fallback.className = "ghost small";
+  fallback.textContent = "按大类看规范";
+  fallback.disabled = !category;
+  fallback.addEventListener("click", () => {
+    if (!category) return;
+    hideDetailClauses();
+    openData("standards", category);
+  });
+  actions.appendChild(fallback);
+  body.appendChild(actions);
+}
+
+async function toggleDetailClauses() {
+  const detail = state.detail;
+  if (!detail) return;
+  if (state.detailClause.open) {
+    hideDetailClauses();
+    return;
+  }
+  state.detailClause.open = true;
+  $("dClauseHints").classList.remove("hidden");
+  const token = ++state.detailClause.token;
+  $("dClauseBody").innerHTML = "";
+  $("dClauseState").textContent = "读取本机索引…";
+  try {
+    const res = await fetch("/api/attempts/" + detail.id + "/clauses");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    if (token !== state.detailClause.token) return;
+    if (!state.detail || state.detail.id !== detail.id) return;
+    if (data.error) throw new Error(data.error);
+    renderDetailClauses(data);
+    $("dClauseHints").scrollIntoView({ block: "nearest", behavior: "smooth" });
+  } catch (err) {
+    if (token !== state.detailClause.token) return;
+    $("dClauseState").textContent = "没读出来";
+    $("dClauseBody").innerHTML =
+      '<p class="suggest-note">' + escapeHtml(err.message) + "</p>";
+  }
+}
+
 async function openDetail(id) {
   try {
     const res = await fetch("/api/attempts/" + id);
@@ -2548,6 +2694,7 @@ async function openDetail(id) {
     if (!res.ok) throw new Error(data.detail || res.statusText);
     state.detail = data;
     state.detailAnswer = 0;
+    hideDetailClauses();
     renderDetail();
     show("detail");
     loadSuggest(detailSuggest, data.id, () => state.detail && state.detail.id === data.id);
@@ -2612,7 +2759,7 @@ function renderDetail() {
   $("dNote").value = d.note || "";
   $("dMaster").textContent = d.status === "mastered" ? "恢复未掌握" : "标记已掌握";
   $("dMaster").dataset.next = d.status === "mastered" ? "active" : "mastered";
-  $("dSpec").disabled = !d.category_key;
+  $("dSpec").disabled = false;
   detailSuggest.refresh();
 }
 
@@ -2625,15 +2772,7 @@ $("dTabA").addEventListener("click", () => {
   if (state.detail) renderDetail();
 });
 
-$("dSpec").addEventListener("click", () => {
-  const d = state.detail;
-  if (!d) return;
-  if (!d.category_key) {
-    toast("这题没有归到九大类，先看手册检索");
-    return;
-  }
-  openData("standards", d.category_key);
-});
+$("dSpec").addEventListener("click", () => toggleDetailClauses());
 
 $("dHandbook").addEventListener("click", () => {
   const d = state.detail;

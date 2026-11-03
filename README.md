@@ -20,6 +20,8 @@
   半卷 50 分、两半合计 100 / 通过线 60；九大类分项；错题一键入本。
 - **规范 / 手册联动**：九大类 → 核心规范 → 章节目录 → App 内页图；条文号定位；
   《工程地质手册》全文检索 + 页图查看。
+- **题目 → 条文级推荐**：错题详情「规范定位」按「解析依据 / 原型重点 / 章节匹配」
+  三种来源给出规范、条文和页码，点击直达页图；解析引用没有页码时明确标「未收录」。
 - **规范伴读**：9 本核心规范、67 站，按案例权重排路线；每站 6–18 分钟，
   看标注版原页，配「为什么考 / 先看什么 / 最容易错 / 30 秒自检 / 条文 / 同类题」；
   已读/需回看进度落库，首页直达下一站。
@@ -71,7 +73,7 @@ py -3 app/server.py
 PYTHONIOENCODING=utf-8 py -3 -m pytest -q
 ```
 
-- **242 条**单测全绿；GitHub Actions 在 PR / push `main` 时运行 compileall + pytest。
+- **248 条**单测全绿；GitHub Actions 在 PR / push `main` 时运行 compileall + pytest。
 - CI 只装 `requirements-ci.txt`（pytest / pymupdf / pillow / numpy），
   不含 OCR / ONNX / FastAPI 重依赖。
 
@@ -88,13 +90,14 @@ app/
   curriculum.py      十篇 / 九大类 / 权重 / 核心规范
   standards.py       规范库与手册：索引、条文定位、页图、全文检索
   reading.py         规范伴读：路线、进度、推荐、标注版页图/干净版回退
+  clauses.py         题目 → 条文推荐：解析依据 / 原型 / 章节关键词 → 规范页
   objective.py       知识题客观判分（案例不走这里）
   print_export.py    A4 题面/答案/手写区/封面/回填格
   static/            移动优先前端 + PWA manifest/Service Worker
 
 tools/              索引提取、题号识别、裁题、打印、基准与备份 CLI
 index/              lookup.json（8,826 题）、书目/章节/题号框/2025 分类/规范索引/标注版页索引
-tests/              242 条单测
+tests/              248 条单测
 docs/               备考策略、陪练规则、架构总结与 journal
 data/               用户数据（本地，不入库；含 reports/ 周报快照）
 compressed/         扫描题库（本地，不入库）
