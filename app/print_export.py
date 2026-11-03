@@ -27,6 +27,23 @@ CROP_DPI = 300
 CASE_FAMILIES = set("CAM")
 CASE_WRITE = MPS.WRITE["question_case"]
 KNOW_WRITE = MPS.WRITE["question_know"]
+QID_RE = re.compile(
+    r"^(?:[CZ]\d{1,2}-\d{1,3}|[AK]\d{4}-[A-Z]-\d{1,3}|M\d{1,2}-\d{1,3})$"
+)
+
+
+def parse_qid_list(text):
+    """Split a hand-picked qid list into full keys, keeping first-seen order.
+
+    Only full keys are accepted: a bare "3-11" exists in both the case and the
+    knowledge book, so the caller has to resolve the family before printing.
+    """
+    out = []
+    for part in re.split(r"[,;，；、\s]+", text or ""):
+        candidate = part.strip().upper()
+        if QID_RE.match(candidate):
+            out.append(candidate)
+    return list(dict.fromkeys(out))
 
 
 def _short(book):

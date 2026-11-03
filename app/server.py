@@ -41,7 +41,7 @@ from app.answer_ocr import analyze_crop  # noqa: E402
 from app.catalog import Catalog  # noqa: E402
 from app.curriculum import CASE_BY_KEY, category_key, load_exam_tags  # noqa: E402
 from app.photo_import import import_photos, scan_photos  # noqa: E402
-from app.print_export import MAX_QUESTIONS, export_pdf  # noqa: E402
+from app.print_export import MAX_QUESTIONS, export_pdf, parse_qid_list  # noqa: E402
 from app.settings import Settings  # noqa: E402
 from app.store import PRACTICE_SOURCES, PROCESS_LABELS, Store, TAGS  # noqa: E402
 
@@ -63,7 +63,7 @@ CHAPTER_RE = re.compile(r"^([CZ])(\d{1,2})-(\d{1,3})$")
 EXAM_RE = re.compile(r"^[AK]\d{4}-[A-Z]-\d{1,3}$")
 MOCK_RE = re.compile(r"^M\d{1,2}-\d{1,3}$")
 
-app = FastAPI(title="岩土学习驾驶舱 M12")
+app = FastAPI(title="岩土学习驾驶舱 M12.1")
 
 
 def _warm_ocr():
@@ -767,7 +767,8 @@ def standards_page(code: str, p: int, dpi: int = 110):
         headers={
             "Cache-Control": "max-age=86400",
             "X-Page-Count": str(page_count),
-            "X-Standard": standard.get("code", ""),
+            "X-Standard": standards.header_safe(
+                standard.get("code_key") or standard.get("code")),
         },
     )
 
@@ -1523,6 +1524,8 @@ def prune_storage(payload: dict = Body(...)):
 @app.get("/api/print")
 def print_questions(
     scope: str = "filter",
+    qids: str = None,
+    title: str = None,
     session_id: int = None,
     family: str = None,
     tag: str = None,
@@ -1539,7 +1542,21 @@ def print_questions(
     """One-click A4 sheet: question pages first, answers on their own pages."""
     scope = (scope or "filter").lower()
     cover_data = None
-    if scope == "plan":
+    if scope == "qids":
+        # A hand-picked set from the viewer, a wrong-book detail or a drill
+        # session.  Only full keys ("C3-11", "A2025-A-13") are accepted: a bare
+        # "3-11" is ambiguous between families and must be resolved upstream.
+        qids = [qid for qid in parse_qid_list(qids) if qid_exists(qid)]
+        if not qids:
+            raise HTTPException(400, "没有可打印的题（题号无效或不在题库）")
+        title = re.sub(r"\s+", " ", (title or "").strip())[:60] or "自选题目卷"
+        if cover:
+            cover_data = {
+                "title": title,
+                "subtitle": "自选 %d 题" % len(qids),
+                "qids": qids,
+            }
+    elif scope == "plan":
         selection = study_plan.week_drill(
             store, DATA, settings_store.load(),
             per_prototype=per_prototype, limit=MAX_QUESTIONS,
@@ -1618,6 +1635,8 @@ def print_questions(
             )
     except HTTPException:
         raise
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
     except Exception as exc:  # noqa: BLE001 - one bad crop must not 500 the page
         raise HTTPException(500, "生成打印卷失败：%s" % exc)
     response = FileResponse(out, media_type="application/pdf", filename=out.name)
@@ -1666,5 +1685,5 @@ if __name__ == "__main__":
     import uvicorn
 
     port = int(os.environ.get("PORT", "8000"))
-    print("岩土学习驾驶舱 M12  ->  http://%s:%d" % (lan_ip(), port), flush=True)
+    print("岩土学习驾驶舱 M12.1  ->  http://%s:%d" % (lan_ip(), port), flush=True)
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="warning")

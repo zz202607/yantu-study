@@ -432,6 +432,22 @@
   }
   .quick svg { width: 19px; height: 19px; flex: 0 0 auto; color: var(--accent); }
   .quick small { display: block; color: var(--muted); font-size: 10.5px; margin-top: 1px; }
+  .print-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .print-card {
+    display: flex; align-items: center; gap: 9px; text-align: left;
+    background: var(--card); border: 1px solid var(--line); border-radius: 13px;
+    padding: 12px; font-family: inherit; font-size: 13.5px; color: var(--ink);
+  }
+  .print-card:active { background: var(--paper); }
+  .print-card:disabled { opacity: .55; }
+  .print-card svg { width: 19px; height: 19px; flex: 0 0 auto; color: var(--accent); }
+  .print-card small { display: block; color: var(--muted); font-size: 10.5px; margin-top: 1px; }
+  header .head-print {
+    flex: 0 0 auto; border: 1px solid rgba(255,255,255,.35);
+    background: rgba(255,255,255,.12); color: #fff; border-radius: 8px;
+    padding: 6px 10px; font-family: inherit; font-size: 13px;
+  }
+  header .head-print:active { background: rgba(255,255,255,.24); }
   .cat-mini { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 2px 13px; }
   .cat-row {
     display: flex; align-items: center; gap: 8px;
@@ -868,8 +884,9 @@
 </head>
 <body>
 <header>
-  <h1>岩土学习驾驶舱 <span class="badge">M12</span></h1>
+  <h1>岩土学习驾驶舱 <span class="badge">M12.1</span></h1>
   <span id="examChip" class="exam-chip">D-—</span>
+  <button id="headerPrint" class="head-print" type="button" aria-label="打印">打印</button>
   <select id="family" aria-label="当前册别">
     <option value="C">案例 C</option>
     <option value="Z">知识 Z</option>
@@ -929,6 +946,29 @@
       <span id="dashReviewTitle">今日复习</span>
       <small id="dashReviewHint">正在统计…</small>
     </button>
+
+    <div class="section-head">
+      <h2>打印出来做</h2>
+      <span class="hint">题面在前 · 答案在后</span>
+    </div>
+    <div class="print-grid">
+      <button class="print-card" type="button" id="dashPrintReview">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg>
+        <span>今日复习卷<small id="dashPrintReviewHint">—</small></span>
+      </button>
+      <button class="print-card" type="button" id="dashPrintWeek">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg>
+        <span>本周任务卷<small>按未完成原型 · 30 题</small></span>
+      </button>
+      <button class="print-card" type="button" id="dashPrintWrong">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg>
+        <span>错题卷<small id="dashPrintWrongHint">未掌握</small></span>
+      </button>
+      <button class="print-card" type="button" id="dashPrintMore">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg>
+        <span>更多打印选项<small>手写区 / 封面 / 范围</small></span>
+      </button>
+    </div>
 
     <div class="encourage-card">
       <h3>今天扎实的一点</h3>
@@ -1042,6 +1082,7 @@
       <button id="next" class="ghost hidden">下一题 ›</button>
       <span class="grow"></span>
       <button id="viewerSpec" class="ghost hidden">规范</button>
+      <button id="viewerPrint" class="ghost">打印这题</button>
       <button id="markOne" class="ghost">记错</button>
       <button id="zoom" class="ghost">放大</button>
       <button id="back" class="ghost">回候选</button>
@@ -1095,6 +1136,7 @@
       <button id="rUndo" class="ghost small">撤销上一题</button>
       <button id="rSkip" class="ghost small">跳过</button>
       <span class="grow"></span>
+      <button id="rPrint" class="ghost small">打印这卷</button>
       <button id="rExit" class="ghost small">退出</button>
     </div>
   </section>
@@ -1220,6 +1262,7 @@
     <div class="toolbar wrap">
       <button id="dSpec" class="ghost small">规范定位</button>
       <button id="dHandbook" class="ghost small">手册查这题</button>
+      <button id="dPrint" class="ghost small">打印这题</button>
       <span class="grow"></span>
       <button id="dMaster" class="ghost small">标记已掌握</button>
       <button id="dDelete" class="ghost small danger">删除</button>
@@ -2027,6 +2070,8 @@ async function showViewerAt(index, note) {
     $("prev").classList.toggle("hidden", !batch);
     $("next").classList.toggle("hidden", !batch);
     $("again").classList.toggle("hidden", batch);
+    $("viewerPrint").textContent = batch
+      ? "打印 " + state.order.length + " 题" : "打印这题";
     $("viewerSpec").classList.toggle("hidden", !info.category_key);
     $("prev").disabled = index <= 0;
     $("next").disabled = index >= state.order.length - 1;
@@ -2977,6 +3022,11 @@ function renderHome(d) {
   $("dashEncourage").textContent = encourage.text || "";
   $("dashEvidence").textContent = encourage.evidence || "";
   renderDashReview(d.review || { count: 0 });
+  const reviewCount = (d.review && d.review.count) || 0;
+  $("dashPrintReviewHint").textContent = reviewCount
+    ? reviewCount + " 题" : "今天没有到期题";
+  $("dashPrintWrongHint").textContent = totals.active != null
+    ? "未掌握 " + totals.active + " 题" : "未掌握";
   renderPlanMini(d.plan);
   renderDashReading(d.reading);
   renderDashActions(d.next_actions || []);
@@ -4038,6 +4088,7 @@ function renderTimedQuestion(qid) {
     + '<div class="drill-tools">'
     + '<button type="button" class="ghost small" id="drillAnswerToggle">'
     + (state.drill.answer ? "收起答案" : "对答案") + "</button>"
+    + '<button type="button" class="ghost small" id="drillPrint">打印本组</button>'
     + '<span class="hint">先自己判，再看解析；本题计时不会重置。</span></div>';
   $("drillStep").addEventListener("input", (event) => {
     state.drill.firstStep[qid] = event.target.value;
@@ -4049,6 +4100,7 @@ function renderTimedQuestion(qid) {
     state.drill.answer = !state.drill.answer;
     renderDrill();
   });
+  $("drillPrint").addEventListener("click", (event) => drillPrintSet(event.currentTarget));
   if (!expired) {
     startDrillCountdown(total, () => {
       toast("时间到：只能记超时或放弃");
@@ -4136,9 +4188,12 @@ function renderRecognitionQuestion(qid) {
     + '<div class="drill-actions" style="grid-template-columns:1fr">'
     + '<button type="button" class="primary" id="drillRecogSubmit">提交（30 秒内）</button>'
     + "</div>"
-    + '<div class="drill-tools"><span class="hint">'
+    + '<div class="drill-tools">'
+    + '<button type="button" class="ghost small" id="drillPrint">打印这组认题卡</button>'
+    + '<span class="hint">'
     + "主规范按原型定；冻土/滑坡/泥石流这类不唯一时只判原型。</span></div>";
   $("drillRecogSubmit").addEventListener("click", () => submitRecognition(false));
+  $("drillPrint").addEventListener("click", (event) => drillPrintSet(event.currentTarget));
   startDrillCountdown(30, () => {
     toast("30 秒到，按当前选择提交");
     submitRecognition(true);
@@ -4271,12 +4326,14 @@ function renderDrillSummary() {
     }
     html.push("</div>");
   }
-  html.push('<div class="drill-actions" style="grid-template-columns:1fr 1fr">'
+  html.push('<div class="drill-actions" style="grid-template-columns:1fr 1fr 1fr">'
     + '<button type="button" class="ghost" id="drillSummaryClose">回计划</button>'
+    + '<button type="button" class="ghost" id="drillSummaryPrint">打印本组</button>'
     + '<button type="button" class="primary" id="drillSummaryAgain">再来一组</button>'
     + "</div></div>");
   $("drillBody").innerHTML = html.join("");
   $("drillSummaryClose").addEventListener("click", closeDrill);
+  $("drillSummaryPrint").addEventListener("click", (event) => drillPrintSet(event.currentTarget));
   $("drillSummaryAgain").addEventListener("click", repeatDrill);
 }
 
@@ -7017,9 +7074,113 @@ $("review").addEventListener("touchend", (e) => {
 
 // --- print ----------------------------------------------------------------
 
+let printBusy = false;
+
+function printDownloadName(scope, title) {
+  if (scope === "plan") return "本周任务卷.pdf";
+  if (scope === "review") return "今日复习卷.pdf";
+  if (scope === "recent") return "最近7天错题卷.pdf";
+  if (scope === "qids") return (title || "自选题目卷") + ".pdf";
+  return "错题打印卷.pdf";
+}
+
+function printSheetQuery(scope) {
+  const q = new URLSearchParams({ scope });
+  q.set("writing_scale", $("printWriting").value || "1");
+  q.set("result_boxes", $("printBoxes").checked ? "1" : "0");
+  q.set("cover", $("printCover").checked ? "1" : "0");
+  if (scope === "filter") {
+    const f = state.book.filters;
+    if (f.family) q.set("family", f.family);
+    if (f.tag) q.set("tag", f.tag);
+    if (f.chapter) q.set("chapter", f.chapter);
+    q.set("status", f.status || "");
+    if (f.days) q.set("days", String(f.days));
+  }
+  if (scope === "review") {
+    const sid = (state.review.summary && state.review.summary.session_id)
+      || (state.review.session && state.review.session.id);
+    if (sid) q.set("session_id", String(sid));
+  }
+  return q;
+}
+
+async function runPrint(query, filename, button) {
+  if (printBusy) {
+    toast("正在生成另一份打印卷，稍等一下");
+    return false;
+  }
+  printBusy = true;
+  const saved = button ? button.innerHTML : "";
+  if (button) {
+    button.disabled = true;
+    button.textContent = "生成中…";
+  }
+  toast("正在生成打印卷，题目多时需要几十秒…");
+  try {
+    const res = await fetch("/api/print?" + query.toString());
+    if (!res.ok) {
+      let detail = res.statusText;
+      try { detail = (await res.json()).detail || detail; } catch (err) { /* pdf error */ }
+      throw new Error(detail);
+    }
+    const blob = await res.blob();
+    let stats = {};
+    try { stats = JSON.parse(res.headers.get("X-Print-Stats") || "{}"); } catch (err) { /* header is a nicety */ }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    toast(stats.pages
+      ? "已生成 " + stats.pages + " 页（题面 " + stats.question_pages
+        + " + 答案 " + stats.answer_pages
+        + (stats.cover_pages ? " + 封面 1" : "") + "）"
+      : "已生成打印卷");
+    return true;
+  } catch (err) {
+    toast("生成失败：" + err.message);
+    return false;
+  } finally {
+    printBusy = false;
+    if (button) {
+      button.disabled = false;
+      button.innerHTML = saved;
+    }
+  }
+}
+
+async function printScope(scope, button, filename) {
+  return runPrint(printSheetQuery(scope),
+                  filename || printDownloadName(scope), button);
+}
+
+async function printQids(qids, title, button, opts) {
+  const list = [...new Set((qids || []).filter(Boolean))].slice(0, 30);
+  if (!list.length) {
+    toast("没有可打印的题");
+    return false;
+  }
+  const q = new URLSearchParams({ scope: "qids", qids: list.join(",") });
+  q.set("title", title || "自选题目卷");
+  q.set("writing_scale", (opts && opts.scale) || $("printWriting").value || "1");
+  q.set("result_boxes", opts && opts.boxes ? "1" : "0");
+  q.set("cover", opts && opts.cover ? "1" : "0");
+  return runPrint(
+    q,
+    (opts && opts.filename) || (title || "自选题目卷") + ".pdf",
+    button);
+}
+
 function openPrintSheet() {
+  const active = state.home && state.home.totals
+    ? state.home.totals.active : null;
   $("printFilterCount").textContent = state.book.total
-    ? state.book.total + " 题（最多 30）" : "—";
+    ? state.book.total + " 题（最多 30）"
+    : (active != null ? active + " 题（全部未掌握）" : "—");
   const overview = state.review.overview;
   $("printReviewCount").textContent = overview
     ? (overview.count ? overview.count + " 题" : "今天没有到期题")
@@ -7041,51 +7202,13 @@ function closePrintSheet() {
 }
 
 async function downloadPrint(scope) {
-  const q = new URLSearchParams({ scope });
-  q.set("writing_scale", $("printWriting").value || "1");
-  q.set("result_boxes", $("printBoxes").checked ? "1" : "0");
-  q.set("cover", $("printCover").checked ? "1" : "0");
-  if (scope === "filter") {
-    const f = state.book.filters;
-    if (f.family) q.set("family", f.family);
-    if (f.tag) q.set("tag", f.tag);
-    if (f.chapter) q.set("chapter", f.chapter);
-    q.set("status", f.status || "");
-    if (f.days) q.set("days", String(f.days));
-  }
-  if (scope === "review" && state.review.summary) {
-    q.set("session_id", String(state.review.summary.session_id));
-  }
+  const q = printSheetQuery(scope);
   const status = $("printStatus");
   const buttons = [...$("printSheet").querySelectorAll(".print-opt")];
   status.classList.remove("hidden");
   for (const b of buttons) b.disabled = true;
   try {
-    const res = await fetch("/api/print?" + q.toString());
-    if (!res.ok) {
-      let detail = res.statusText;
-      try { detail = (await res.json()).detail || detail; } catch (err) { /* pdf error */ }
-      throw new Error(detail);
-    }
-    const blob = await res.blob();
-    let stats = {};
-    try { stats = JSON.parse(res.headers.get("X-Print-Stats") || "{}"); } catch (err) { /* header is a nicety */ }
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = scope === "plan" ? "本周任务卷.pdf" : "错题打印卷.pdf";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 4000);
-    toast(stats.pages
-      ? "已生成 " + stats.pages + " 页（题面 " + stats.question_pages
-        + " + 答案 " + stats.answer_pages
-        + (stats.cover_pages ? " + 封面 1" : "") + "）"
-      : "已生成打印卷");
-    closePrintSheet();
-  } catch (err) {
-    toast("生成失败：" + err.message);
+    if (await runPrint(q, printDownloadName(scope), null)) closePrintSheet();
   } finally {
     status.classList.add("hidden");
     for (const b of buttons) b.disabled = false;
@@ -7093,12 +7216,69 @@ async function downloadPrint(scope) {
 }
 
 $("openPrint").addEventListener("click", openPrintSheet);
+$("headerPrint").addEventListener("click", openPrintSheet);
 $("printCancel").addEventListener("click", closePrintSheet);
 $("printSheet").addEventListener("click", (e) => {
   if (e.target === $("printSheet")) closePrintSheet();
 });
 for (const button of $("printSheet").querySelectorAll(".print-opt")) {
   button.addEventListener("click", () => downloadPrint(button.dataset.scope));
+}
+
+// Every screen that shows questions gets its own print key: home (today's
+// review / this week's tasks / wrong book), review, viewer, detail, drill.
+$("dashPrintReview").addEventListener("click", (event) => {
+  printScope("review", event.currentTarget, "今日复习卷.pdf");
+});
+$("dashPrintWeek").addEventListener("click", (event) => {
+  printScope("plan", event.currentTarget, "本周任务卷.pdf");
+});
+$("dashPrintWrong").addEventListener("click", (event) => {
+  // The home card prints every active question, not the last book filter.
+  const q = new URLSearchParams({ scope: "filter", status: "active" });
+  q.set("writing_scale", $("printWriting").value || "1");
+  q.set("result_boxes", $("printBoxes").checked ? "1" : "0");
+  q.set("cover", $("printCover").checked ? "1" : "0");
+  runPrint(q, "错题卷.pdf", event.currentTarget);
+});
+$("dashPrintMore").addEventListener("click", openPrintSheet);
+
+$("rPrint").addEventListener("click", (event) => {
+  const session = state.review.session;
+  const qids = (session && session.queue) || [];
+  if (qids.length) {
+    printQids(qids, "今日复习卷", event.currentTarget, { boxes: true });
+  } else {
+    printScope("review", event.currentTarget, "今日复习卷.pdf");
+  }
+});
+
+$("viewerPrint").addEventListener("click", (event) => {
+  const qids = state.order && state.order.length ? state.order : [state.qid];
+  printQids(qids, qids.length > 1 ? "选题卷" : "单题卷", event.currentTarget, {
+    filename: qids.length > 1 ? "选题卷.pdf" : qids[0] + ".pdf",
+  });
+});
+
+$("dPrint").addEventListener("click", (event) => {
+  if (!state.detail || !state.detail.qid) {
+    toast("没有打开的题");
+    return;
+  }
+  printQids([state.detail.qid], "单题卷", event.currentTarget, {
+    filename: state.detail.qid + ".pdf",
+  });
+});
+
+function drillPrintSet(button) {
+  const data = state.drill.session;
+  const queue = (data && data.session && data.session.queue) || [];
+  if (!queue.length) {
+    toast("这组题还没生成");
+    return;
+  }
+  const title = ((data.labels && data.labels.mode) || "训练") + "卷";
+  printQids(queue, title, button, { boxes: true, cover: true });
 }
 
 // --- legacy photo import --------------------------------------------------

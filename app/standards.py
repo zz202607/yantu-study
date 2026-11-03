@@ -59,6 +59,15 @@ _CODE_KEY_RE = re.compile(r"[^A-Z0-9/-]")
 
 # ---------------------------------------------------------------- library
 
+def header_safe(value):
+    """HTTP header values are latin-1; custom headers must stay ASCII.
+
+    Standards codes can carry Chinese, e.g. ``GB 50021-2001(2009年版)``;
+    Starlette encodes header values as latin-1 and raises on those names.
+    """
+    return str(value or "").encode("ascii", "ignore").decode("ascii")
+
+
 def code_key(code):
     """Normalise GB 50007-2011, GB/T 50942-2014 and JGJT 87-2012 variants."""
     text = (code or "").upper()
