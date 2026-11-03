@@ -2,7 +2,7 @@
 
 **一句话核心目标：把 11 本扫描题库变成「拍题号 → 秒出解析 → 自动归类错因」的本地错题本，服务一年后的注册岩土专业考试。**
 
-## 当前状态（2026-11-02）
+## 当前状态（2026-11-03）
 
 - **M0 数据底座完成**：索引（8,826 题）、书目表、章节表、压缩（5.2 GB → 1.5 GB）、
   真题/模拟题号框（1,600 页）、裁题（100/100 抽检通过，0.76 s/题）、打印样张、2025 真题分类
@@ -138,6 +138,20 @@
   - **台账按年隔离**：`baseline_half` 由 `A/P` 改为 `2025-A/2024-A`（schema 8 迁移），
     2024 复测不会覆盖 2025 基线台账；删除半卷/复测一起回滚练习行与旧分流
   - 新工具 `tools/print_exam.py`；**230 条测试全绿**；CDP 复测卡片/弹层/保存/预填 0 JS 异常
+- **M10 规范伴读完成（11-03）**：9 本核心规范、67 站，按案例权重带读标注版原页
+  - 路线：`app/reading_data.json`；每站 6–18 分钟，含「为什么考 / 先看什么 /
+    最容易错 / 30 秒自检 / 条文 chips / 同类题入口」；顺序按抗震 → 特殊土 →
+    地基处理 → 浅基础 → 基坑 → 边坡 → 勘察 → 深基础的答题策略排
+  - **标注版页索引**：`tools/build_annotated_index.py` 对 2-up 扫描件做页脚 OCR →
+    正文起点识别（避开目录页重复页码）→ 单调锚点插值 → 站页校验；
+    输出 `index/annotated_index.json`；OCR 校不上时保留插值并标「估」
+  - **进度**：`reading_progress` + `reading_log`（schema 9）；已读/需回看两种状态；
+    推荐继续最近读的规范，回看优先；首页新增「规范伴读」卡，数据页新增「伴读」
+  - 页图走标注版；标注版不在线时回退干净版；两边都不在线只显示路线文字
+  - API：`/api/reading`、`/api/reading/{code}`、`POST /api/reading/{code}/{stop}`、
+    `GET /api/reading/{code}/{stop}/page`、`GET /api/reading/{code}/file`
+  - **单测 242 条全绿**（新增 12 条：路线完整性 / 页码映射 / 进度推荐）；无头 Chrome
+    伴读首页、5.2 阅读站（计时/页图/chips/笔记/状态按钮）逐屏验收
 - **下一步（基线后 6 周）**：
   1. 本周先把 16 道放弃题分流；5 道超时题走「限时拆解 · 会但慢」
   2. 每天 1 组认题卡（8 题 × 30 秒），优先弱项原型；错的原型回原型卡
@@ -465,6 +479,11 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `app/settings.py` | **M5 设置**：考试日期/名称/每日目标/基线日 → `data/settings.json`（原子写、校验） |
 | `app/analytics.py` | **M5 统计**：倒计时、连续天数、九大类/70 节、错因、活动、里程碑、证据型鼓励、基线解析 |
 | `app/standards.py` | **M5 规范/手册**：规范库扫描与编号匹配、安全取文件、手册全文索引/搜索/页图；**M6 章节索引/条文定位/规范页图** |
+| `app/reading.py` | **M10 规范伴读**：路线/进度/推荐、标注版页图、干净版回退 |
+| `app/reading_data.json` | **M10 阅读路线**：9 本核心规范、67 站（为什么考/先看什么/易错/自检/练习题号） |
+| `tools/build_annotated_index.py` | **M10 标注版页索引**：页脚 OCR → 正文起点 → 锚点插值 → 站页校验 |
+| `index/annotated_index.json` | 标注版 PDF 文件、正文起点、页脚锚点、每站 PDF 页、估算标记 |
+| `docs/standards-reading.md` | **M10 说明**：路线、数据、页索引做法、API、边界 |
 | `app/plan.py` | **M6 计划**：阶段/周题量、练习记录统计、阶段目标、纠偏规则、任务生成、打印选题 |
 | `app/baseline.py` | **M7 基线**：2025 两半 25 题清单、四个数校验、逐题状态、分项/合计、错题清单 |
 | `app/report.py` | **M8 周报/月报**：自然周/月区间、练习/复习/基线/计划聚合、对比上期、下一步、Markdown 冻结与保存 |
@@ -486,7 +505,7 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `tools/import_old_photos.py` | 旧照片导入 CLI（预览 / `--apply`） |
 | `tools/backup_wrongbook.py` | 备份 / 恢复 CLI（恢复需 `--yes`） |
 | `data/` | **用户数据唯一位置**：`wrongbook.db` + `attachments/` + `backups/` + `reports/` |
-| `tests/` | 单元测试 202 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
+| `tests/` | 单元测试 242 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
 | `.github/workflows/ci.yml` | GitHub Actions：最小依赖 → compileall → pytest（PR / push main） |
 | `requirements-ci.txt` | CI 最小依赖（不含 OCR/ONNX/FastAPI） |
 | `.cache/crops/` | 裁图缓存（可随时删，自动重建） |

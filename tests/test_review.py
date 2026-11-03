@@ -310,9 +310,14 @@ def test_existing_m2_database_migrates_in_place(tmp_path):
             "SELECT name FROM sqlite_master WHERE type = 'table'"
             " AND name = 'drill_sessions'"
         ).fetchone()
-    assert version == "8"
+        reading = check.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table'"
+            " AND name = 'reading_progress'"
+        ).fetchone()
+    assert version == "9"
     assert triage == ("baseline_triage",)
     assert drill == ("drill_sessions",)
+    assert reading == ("reading_progress",)
 
 
 def test_remark_wrong_resets_a_mastered_question(tmp_path):
