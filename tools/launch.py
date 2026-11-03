@@ -138,6 +138,7 @@ def main():
         phone = "http://%s:%d" % (lan, port)
         print("手机：%s" % phone)
         show_qr(phone, open_image=not args.no_open)
+    print("换网络后重新运行 start.bat 即可生成新二维码。")
 
     if not args.no_open:
         webbrowser.open(local)
