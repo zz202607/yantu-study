@@ -177,6 +177,22 @@
   - 精确行节标题优先用手工伴读站名（避免 TOC 的 `General Requirements` 上屏）
   - **单测 254 条全绿**（新增 6 条：分桶/区间不拆/同标准不重复/未命中/
     未解析/可打开页码）；无头 Edge 390×844 与 320 宽 0 溢出、0 JS 异常
+- **M12.1 打印键补齐（11-03）**：所有做题入口都有打印键，不再藏在错题本
+  - 顶部常驻「打印」；首页新增「打印出来做」四格：**今日复习卷 / 本周任务卷 /
+    错题卷（全部未掌握）/ 更多打印选项**
+  - 复习页「打印这卷」打印冻结队列（不是只打剩余题）；查题查看器「打印这题 /
+    打印 N 题」；错题详情「打印这题」；限时拆解/认题卡「打印本组」
+  - `GET /api/print?scope=qids&qids=C3-11,Z1-10&title=…`：调用方直接传题号，
+    只收完整题号（裸 `3-11` 跨册有歧义，**400 拒绝不猜**）；最多 30 题；
+    封面可选；plan/filter/recent/review 四个旧 scope 不变
+  - `app/print_export.parse_qid_list()` 支持中英文逗号/分号/顿号/空白，去重保序；
+    非法题号返回 400（不再 500）；2 题实测 7.4 s → 4 页 / 20 MB / 0 错误
+  - **单测 257 条全绿**（打印新增 2 条 + 规范页响应头 1 条）；无头 Chrome 390×844：
+    首页四格、顶部键、打印面板、复习卷 20 题、查看器单题、详情 `A2025-P-24`、
+    训练组 5 题，抓到的 `/api/print` URL 全对，0 JS 异常、0 横向溢出
+  - **顺手修复**：规范页 `X-Standard` 响应头带中文（`GB 50021-2001(2009年版)`）
+    触发 `UnicodeEncodeError` → 500；改用 ASCII 的 `code_key` + `header_safe()`，
+    实测 200 / `x-standard: GB50021-2001`
 - **下一步（基线后 6 周）**：
   1. 本周先把 16 道放弃题分流；5 道超时题走「限时拆解 · 会但慢」
   2. 每天 1 组认题卡（8 题 × 30 秒），优先弱项原型；错的原型回原型卡
@@ -405,6 +421,9 @@
 - 多进程并行 OCR 无效：单次推理已吃满 ~4 核（cpu/wall ≈ 4.0）
 - **整页勾选要扛住两阶段**：head 结果常漏一题、full 才补上，所以勾选状态按 qid 跨阶段保留，
   并对新出现的 `start` 自动补勾；用户明确取消过的题号必须钉住（`off` 集合），否则会被补回来
+- **自定义响应头不能用中文**：Starlette 按 latin-1 编码 header，规范号
+  `GB 50021-2001(2009年版)` 会让 `/api/standards/page` 直接 500；自定义头一律用
+  ASCII 的 `code_key`（`app/standards.header_safe()`）
 
 ## 怎么继续
 
@@ -452,7 +471,9 @@ PYTHONIOENCODING=utf-8 py -3 tools/score_objective.py --key key.json --answers a
 - 基线：计划页两半卡 → 记分抽屉；可逐题「对/错/弃 + 超时」或只填四个数；
   录满 25 题自动算；保存后错题可一键入本；每半 50 分、合计 100 / 通过线 60
 - 计划：练习后记四个数；每周看计划 vs 实际；按未完成原型打印本周任务卷
-- 打印：本周任务卷/错题卷/筛选卷/复习卷；封面任务单 + 每题回填格 + 手写区缩放
+- 打印：首页「打印出来做」四格或顶部「打印」；复习页「打印这卷」；查题「打印这题/
+  N 题」；错题详情「打印这题」；训练「打印本组」；错题本/计划页原有入口保留。
+  本周任务卷/错题卷/筛选卷/复习卷/自选题号；封面任务单 + 每题回填格 + 手写区缩放
 - 手机「添加到主屏幕」可当 App 打开；局域网 HTTP 不触发自动安装（PWA manifest 已就绪）
 - 设置：考试日期/名称/每日目标/基线日 → `data/settings.json`；改完首页立即刷新
 - 深链：`/?tab=data&view=stats`、`/?tab=data&view=standards&cat=C3`、
@@ -533,7 +554,7 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `tools/import_old_photos.py` | 旧照片导入 CLI（预览 / `--apply`） |
 | `tools/backup_wrongbook.py` | 备份 / 恢复 CLI（恢复需 `--yes`） |
 | `data/` | **用户数据唯一位置**：`wrongbook.db` + `attachments/` + `backups/` + `reports/` |
-| `tests/` | 单元测试 254 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
+| `tests/` | 单元测试 257 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
 | `.github/workflows/ci.yml` | GitHub Actions：最小依赖 → compileall → pytest（PR / push main） |
 | `requirements-ci.txt` | CI 最小依赖（不含 OCR/ONNX/FastAPI） |
 | `.cache/crops/` | 裁图缓存（可随时删，自动重建） |

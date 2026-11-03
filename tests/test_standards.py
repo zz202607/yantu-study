@@ -68,6 +68,16 @@ class LibraryTest(unittest.TestCase):
         self.assertEqual(standards.code_key("GB 50021-2001(2009年版)"), "GB50021-2001")
         self.assertEqual(standards.code_key("JGJT 87-2012"), "JGJT87-2012")
 
+    def test_header_safe_drops_chinese_from_custom_headers(self):
+        # Starlette encodes header values as latin-1; a Chinese code used to
+        # raise UnicodeEncodeError and 500 the standards page.
+        self.assertEqual(
+            standards.header_safe("GB 50021-2001(2009年版)"),
+            "GB 50021-2001(2009)",
+        )
+        self.assertEqual(standards.header_safe(None), "")
+        self.assertEqual(standards.header_safe("GB50007-2011"), "GB50007-2011")
+
     def test_match_by_code_beats_title(self):
         files = standards.load_library(self.tmp)["files"]
         match = standards.match_standard("岩土工程勘察规范", "GB 50021-2001", files)
