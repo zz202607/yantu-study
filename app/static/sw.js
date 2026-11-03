@@ -4,7 +4,7 @@
  * question or a stale review queue.  The shell itself is network-first with a
  * cache fallback so a flaky Wi-Fi hop does not blank the page.
  */
-const CACHE = "yantu-shell-v5";
+const CACHE = "yantu-shell-v6";
 const SHELL = [
   "/",
   "/manifest.webmanifest",

@@ -164,6 +164,19 @@
   - **单测 248 条全绿**（新增 6 条：原型/关键词/无路线/缓存合并/未解析/页码）；
     无头 Chrome 390×844：C3-11 面板 2 条 → 点开 GB 50007 p30（5.2 承载力计算），
     A2025-A-13 面板 2 条；0 JS 异常、无横向溢出
+- **M12 考前依据清单（11-03）**：数据页新增「依据」——把错题本反过来按规范条文看
+  - 两桶不混：**解析明确引用**（M4 缓存，精确）→ **原型/关键词建议**；
+    每行给规范 + 节 + 条文 + 页码 + 题号 chips + 来源计数
+  - 节级归并：精确按解析节号，建议保留伴读站区间（`5.2/5.3` 不拆）；同一标准
+    已有精确依据时不再出同标准建议；单节建议并入同节精确行，避免同节两行
+  - 已掌握默认隐藏（可切「含已掌握」）；未定位题与未收录页码的引用显式列出；
+    点条文开本机规范原页，点题号回错题详情；入口：数据页「依据」/
+    错题本「依据清单」/ M11 面板底部
+  - API `GET /api/clause-index`；`reverse()` 在 `app/clauses.py`；不触发 OCR，
+    34 题 **0.05 s**；真实数据 31 道定位、3 道未定位、20–22 行
+  - 精确行节标题优先用手工伴读站名（避免 TOC 的 `General Requirements` 上屏）
+  - **单测 254 条全绿**（新增 6 条：分桶/区间不拆/同标准不重复/未命中/
+    未解析/可打开页码）；无头 Edge 390×844 与 320 宽 0 溢出、0 JS 异常
 - **下一步（基线后 6 周）**：
   1. 本周先把 16 道放弃题分流；5 道超时题走「限时拆解 · 会但慢」
   2. 每天 1 组认题卡（8 题 × 30 秒），优先弱项原型；错的原型回原型卡
@@ -495,7 +508,7 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `app/standards.py` | **M5 规范/手册**：规范库扫描与编号匹配、安全取文件、手册全文索引/搜索/页图；**M6 章节索引/条文定位/规范页图** |
 | `app/reading.py` | **M10 规范伴读**：路线/进度/推荐、标注版页图、干净版回退 |
 | `app/reading_data.json` | **M10 阅读路线**：9 本核心规范、67 站（为什么考/先看什么/易错/自检/练习题号） |
-| `app/clauses.py` | **M11 条文推荐**：解析依据 / 原型重点 / 章节匹配 → 条文 + 页码；带来源与未解析报告 |
+| `app/clauses.py` | **M11/M12 条文**：题目 → 条文推荐（解析依据/原型/关键词）；反向 `reverse()` 生成考前依据清单 |
 | `tools/build_annotated_index.py` | **M10 标注版页索引**：页脚 OCR → 正文起点 → 锚点插值 → 站页校验 |
 | `index/annotated_index.json` | 标注版 PDF 文件、正文起点、页脚锚点、每站 PDF 页、估算标记 |
 | `docs/standards-reading.md` | **M10 说明**：路线、数据、页索引做法、API、边界 |
@@ -520,7 +533,7 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `tools/import_old_photos.py` | 旧照片导入 CLI（预览 / `--apply`） |
 | `tools/backup_wrongbook.py` | 备份 / 恢复 CLI（恢复需 `--yes`） |
 | `data/` | **用户数据唯一位置**：`wrongbook.db` + `attachments/` + `backups/` + `reports/` |
-| `tests/` | 单元测试 248 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
+| `tests/` | 单元测试 254 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
 | `.github/workflows/ci.yml` | GitHub Actions：最小依赖 → compileall → pytest（PR / push main） |
 | `requirements-ci.txt` | CI 最小依赖（不含 OCR/ONNX/FastAPI） |
 | `.cache/crops/` | 裁图缓存（可随时删，自动重建） |
