@@ -36,7 +36,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 import crop_question as CQ  # noqa: E402
 import recognize_qid as RQ  # noqa: E402
-from app import analytics, baseline as baseline_app, drill as drill_app, plan as study_plan, reading as reading_app, report as report_app, standards  # noqa: E402
+from app import analytics, baseline as baseline_app, clauses as clauses_app, drill as drill_app, plan as study_plan, reading as reading_app, report as report_app, standards  # noqa: E402
 from app.answer_ocr import analyze_crop  # noqa: E402
 from app.catalog import Catalog  # noqa: E402
 from app.curriculum import CASE_BY_KEY, category_key, load_exam_tags  # noqa: E402
@@ -63,7 +63,7 @@ CHAPTER_RE = re.compile(r"^([CZ])(\d{1,2})-(\d{1,3})$")
 EXAM_RE = re.compile(r"^[AK]\d{4}-[A-Z]-\d{1,3}$")
 MOCK_RE = re.compile(r"^M\d{1,2}-\d{1,3}$")
 
-app = FastAPI(title="岩土学习驾驶舱 M10")
+app = FastAPI(title="岩土学习驾驶舱 M11")
 
 
 def _warm_ocr():
@@ -1256,6 +1256,28 @@ def suggest_attempt(attempt_id: int):
     return result
 
 
+@app.get("/api/attempts/{attempt_id}/clauses")
+def attempt_clauses(attempt_id: int):
+    """M11: clause-level hints for one wrong-book question.
+
+    Never blocks the detail page: missing OCR cache, missing category or an
+    unreadable index all degrade to fewer hints or an `error` string.
+    """
+    item = store.get_attempt(attempt_id)
+    if not item:
+        raise HTTPException(404, "错题记录不存在")
+    try:
+        return clauses_app.hints(item["qid"])
+    except Exception as exc:  # noqa: BLE001 - hints are advisory
+        return {
+            "qid": item["qid"],
+            "hints": [],
+            "unresolved": [],
+            "coverage": {},
+            "error": "条文推荐读取失败：%s" % exc,
+        }
+
+
 @app.patch("/api/attempts/{attempt_id}")
 def patch_attempt(attempt_id: int, payload: dict = Body(...)):
     kwargs = {}
@@ -1606,5 +1628,5 @@ if __name__ == "__main__":
     import uvicorn
 
     port = int(os.environ.get("PORT", "8000"))
-    print("岩土学习驾驶舱 M10  ->  http://%s:%d" % (lan_ip(), port), flush=True)
+    print("岩土学习驾驶舱 M11  ->  http://%s:%d" % (lan_ip(), port), flush=True)
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="warning")

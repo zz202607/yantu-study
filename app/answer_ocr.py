@@ -282,6 +282,24 @@ def cache_file(cache_dir, qid):
     return os.path.join(str(cache_dir), safe + ".json")
 
 
+def load_cached(qid, cache_dir):
+    """Read a cached analysis without touching the OCR engine.
+
+    Only a version match is checked here: callers that have the crop path go
+    through `analyze_crop` and get the full signature check.
+    """
+    path = cache_file(cache_dir, qid)
+    try:
+        with open(path, encoding="utf-8") as fh:
+            payload = json.load(fh)
+    except (OSError, ValueError):
+        return None
+    if payload.get("version") != CACHE_VERSION:
+        return None
+    result = payload.get("result")
+    return result if isinstance(result, dict) else None
+
+
 def analyze_crop(qid, path, cache_dir, engine=None):
     """OCR one crop, using `.cache/answer_ocr/<qid>.json` when still fresh.
 
