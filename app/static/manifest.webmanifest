@@ -1,7 +1,7 @@
 {
   "name": "岩土学习驾驶舱",
   "short_name": "岩土备考",
-  "description": "拍照查题、错题复习、九大类统计、规范与工程地质手册联动。",
+  "description": "拍照查题、错题复习、九大类统计、规范伴读与工程地质手册联动。",
   "lang": "zh-CN",
   "start_url": "/",
   "scope": "/",
@@ -41,6 +41,12 @@
       "name": "拍题查答案",
       "short_name": "拍题",
       "url": "/?tab=lookup",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "规范伴读",
+      "short_name": "伴读",
+      "url": "/?tab=data&view=reading",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]

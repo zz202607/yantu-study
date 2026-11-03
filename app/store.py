@@ -230,6 +230,24 @@ CREATE TABLE IF NOT EXISTS baseline_triage (
     updated_at TEXT NOT NULL,
     PRIMARY KEY (year, half, qid)
 );
+CREATE TABLE IF NOT EXISTS reading_progress (
+    standard_code TEXT NOT NULL,
+    stop_id TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'done',
+    seconds INTEGER NOT NULL DEFAULT 0,
+    note TEXT NOT NULL DEFAULT '',
+    first_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY (standard_code, stop_id)
+);
+CREATE TABLE IF NOT EXISTS reading_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    standard_code TEXT NOT NULL,
+    stop_id TEXT NOT NULL,
+    at TEXT NOT NULL,
+    seconds INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS review_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     session_id INTEGER NOT NULL REFERENCES review_sessions(id) ON DELETE CASCADE,
@@ -446,7 +464,7 @@ class Store:
             " WHERE baseline_half IN ('A', 'P')"
         )
         conn.execute(
-            "UPDATE meta SET value = '8' WHERE key = 'schema_version'"
+            "UPDATE meta SET value = '9' WHERE key = 'schema_version'"
         )
 
     # -- photos -----------------------------------------------------------
@@ -1128,6 +1146,114 @@ class Store:
             "reasons": reasons,
             "stats": stats,
         }
+
+    # -- guided standards reading -----------------------------------------
+
+    def reading_progress(self):
+        """Per-stop reading state, keyed by (standard_code, stop_id)."""
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                "SELECT * FROM reading_progress ORDER BY updated_at DESC"
+            ).fetchall()
+        finally:
+            conn.close()
+        return {
+            (row["standard_code"], row["stop_id"]): {
+                "status": row["status"],
+                "seconds": row["seconds"],
+                "note": row["note"],
+                "first_at": row["first_at"],
+                "updated_at": row["updated_at"],
+            }
+            for row in rows
+        }
+
+    def set_reading_progress(self, standard_code, stop_id, status,
+                             seconds=0, note=""):
+        """Upsert one stop and append a visit to the reading log.
+
+        `seconds` is the time spent in this visit and is added to the stop's
+        total.  A repeat click records another visit but never inflates the
+        stop count.
+        """
+        standard_code = str(standard_code or "").strip()
+        stop_id = str(stop_id or "").strip()
+        if not standard_code or not stop_id:
+            raise ValueError("规范或站点为空")
+        if status not in ("done", "review"):
+            raise ValueError("状态只能是 done / review")
+        try:
+            seconds = int(seconds or 0)
+        except (TypeError, ValueError):
+            raise ValueError("用时必须是整数秒")
+        seconds = max(0, min(seconds, 7200))
+        note = str(note or "").strip()[:500]
+        stamp = now_iso()
+        conn = self._connect()
+        try:
+            conn.execute(
+                "INSERT INTO reading_progress"
+                " (standard_code, stop_id, status, seconds, note, first_at,"
+                "  updated_at)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?)"
+                " ON CONFLICT(standard_code, stop_id) DO UPDATE SET"
+                " status = excluded.status,"
+                " seconds = reading_progress.seconds + excluded.seconds,"
+                " note = excluded.note,"
+                " updated_at = excluded.updated_at",
+                (standard_code, stop_id, status, seconds, note, stamp, stamp),
+            )
+            conn.execute(
+                "INSERT INTO reading_log"
+                " (standard_code, stop_id, at, seconds, status)"
+                " VALUES (?, ?, ?, ?, ?)",
+                (standard_code, stop_id, stamp, seconds, status),
+            )
+            conn.commit()
+            row = conn.execute(
+                "SELECT * FROM reading_progress"
+                " WHERE standard_code = ? AND stop_id = ?",
+                (standard_code, stop_id),
+            ).fetchone()
+        finally:
+            conn.close()
+        return {
+            "standard_code": row["standard_code"],
+            "stop_id": row["stop_id"],
+            "status": row["status"],
+            "seconds": row["seconds"],
+            "note": row["note"],
+            "first_at": row["first_at"],
+            "updated_at": row["updated_at"],
+        }
+
+    def reading_log(self, since=None, limit=500):
+        conn = self._connect()
+        try:
+            if since:
+                rows = conn.execute(
+                    "SELECT * FROM reading_log WHERE at >= ?"
+                    " ORDER BY at DESC LIMIT ?",
+                    (since, int(limit)),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM reading_log ORDER BY at DESC LIMIT ?",
+                    (int(limit),),
+                ).fetchall()
+        finally:
+            conn.close()
+        return [
+            {
+                "standard_code": row["standard_code"],
+                "stop_id": row["stop_id"],
+                "at": row["at"],
+                "seconds": row["seconds"],
+                "status": row["status"],
+            }
+            for row in rows
+        ]
 
     def _session_row(self, conn, session_id=None, day=None):
         if session_id is not None:

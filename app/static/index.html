@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
 <meta name="theme-color" content="#0f2a3f">
-<meta name="description" content="岩土备考驾驶舱：考试倒计时、九大类统计、错题复习、规范与工程地质手册联动。">
+<meta name="description" content="岩土备考驾驶舱：考试倒计时、九大类统计、错题复习、规范伴读与工程地质手册联动。">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="岩土备考">
@@ -740,6 +740,87 @@
     padding: 10px; border: 1px solid var(--line); border-radius: 10px;
     font-family: inherit; color: var(--ink); background: #fff;
   }
+
+  /* guided standards reading */
+  .read-mini { border-color: rgba(22,103,217,.28); background: linear-gradient(180deg,#fff,#f7fbff); }
+  .read-hero {
+    border: 1px solid rgba(22,103,217,.22); border-radius: 14px;
+    background: linear-gradient(135deg, #f7fbff, #eef6ff);
+    padding: 14px 16px; margin-bottom: 12px;
+  }
+  .read-hero h3 { margin: 0 0 4px; font-size: 16px; }
+  .read-hero p { margin: 0; font-size: 12.5px; color: var(--muted); line-height: 1.55; }
+  .read-stats { display: flex; gap: 12px; flex-wrap: wrap; margin: 10px 0 0; font-size: 12px; color: var(--muted); }
+  .read-stats b { color: var(--ink); font-size: 16px; font-variant-numeric: tabular-nums; margin-right: 2px; }
+  .read-cta {
+    display: block; width: 100%; text-align: left; cursor: pointer;
+    border: 0; border-radius: 12px; padding: 13px 15px; margin-top: 11px;
+    background: linear-gradient(135deg, #0f2a3f, #1667d9); color: #fff;
+    font-family: inherit;
+  }
+  .read-cta b { display: block; font-size: 16px; }
+  .read-cta small { display: block; margin-top: 3px; font-size: 12px; opacity: .82; }
+  .read-list { display: grid; gap: 8px; min-width: 0; }
+  .read-hero, .read-card, .read-stats { min-width: 0; }
+  .read-card {
+    display: block; width: 100%; min-width: 0; text-align: left; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 12px; background: #fff;
+    padding: 12px 13px; font-family: inherit; color: var(--ink);
+  }
+  .read-card:active { background: var(--paper); }
+  .read-card .top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .read-card .top b { font-size: 14.5px; flex: 1; min-width: 0; }
+  .read-card .top span { flex: 0 0 auto; font-size: 11.5px; color: var(--muted); }
+  .read-card p { margin: 4px 0 8px; font-size: 12px; color: var(--muted); line-height: 1.5; overflow-wrap: anywhere; }
+  .read-card .meta { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 11.5px; color: var(--muted); margin-top: 6px; }
+  .read-card .meta span { min-width: 0; overflow-wrap: anywhere; }
+  .read-hero p, .read-cta b, .read-cta small { overflow-wrap: anywhere; }
+  .read-track { display: block; height: 6px; background: var(--paper); border-radius: 999px; overflow: hidden; }
+  .read-track span { display: block; height: 100%; width: 0; background: linear-gradient(90deg,#1667d9,#4aa3d9); border-radius: 999px; }
+  .read-done .read-track span { background: linear-gradient(90deg,#1d7a4f,#5ab98a); }
+  .read-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .read-head h2 { flex: 1; min-width: 0; margin: 0; font-size: 17px; }
+  .read-stop-list { display: grid; gap: 6px; }
+  .read-stop-row {
+    display: flex; align-items: flex-start; gap: 9px; width: 100%; text-align: left;
+    border: 1px solid var(--line); border-radius: 11px; background: #fff;
+    padding: 10px 11px; font-family: inherit; color: var(--ink); cursor: pointer;
+  }
+  .read-stop-row .no {
+    flex: 0 0 24px; height: 24px; border-radius: 50%; background: var(--paper);
+    color: var(--muted); font-size: 11.5px; line-height: 24px; text-align: center;
+  }
+  .read-stop-row.done .no { background: rgba(29,122,79,.12); color: var(--good); }
+  .read-stop-row.review .no { background: rgba(163,90,0,.12); color: var(--warn); }
+  .read-stop-row .body { flex: 1; min-width: 0; }
+  .read-stop-row .body b { display: block; font-size: 13px; }
+  .read-stop-row .body span { display: block; margin-top: 2px; font-size: 11.5px; color: var(--muted); }
+  .read-stop-row .side { flex: 0 0 auto; font-size: 11px; color: var(--muted); text-align: right; }
+  .read-reader .page-wrap {
+    border: 1px solid var(--line); border-radius: 12px; background: #eef1f3;
+    overflow: auto; max-height: 56vh; margin: 8px 0 12px;
+  }
+  .read-reader .page-wrap img { display: block; width: 100%; height: auto; cursor: zoom-in; }
+  .read-reader .page-wrap.zoom { max-height: 72vh; }
+  .read-reader .page-wrap.zoom img { width: 190%; max-width: none; cursor: zoom-out; }
+  .read-reader .page-tools { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .read-page-row { display: flex; align-items: center; gap: 7px; margin: -2px 0 9px; }
+  .read-page-row .hint { flex: 1; text-align: center; font-variant-numeric: tabular-nums; }
+  .read-why { font-size: 13px; line-height: 1.65; margin: 0 0 10px; }
+  .read-block { border-top: 1px solid var(--line); padding-top: 9px; margin-top: 9px; }
+  .read-block h3 { margin: 0 0 5px; font-size: 12.5px; color: var(--muted); font-weight: 600; }
+  .read-block ul { margin: 0; padding-left: 18px; font-size: 12.5px; line-height: 1.65; }
+  .read-block li { margin-bottom: 2px; }
+  .read-pit { background: rgba(163,90,0,.06); border: 1px solid rgba(163,90,0,.18); border-radius: 10px; padding: 9px 11px; font-size: 12.5px; line-height: 1.6; }
+  .read-check { background: var(--paper); border-radius: 10px; padding: 9px 11px; font-size: 12.5px; line-height: 1.6; }
+  .read-clauses { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+  .read-clauses button { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 4px 8px; font-family: inherit; font-size: 11px; color: var(--accent); }
+  .read-note { margin-top: 10px; }
+  .read-note textarea { min-height: 54px; font-size: 13px; }
+  .read-actions { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 12px; }
+  .read-actions .primary { flex: 1 1 150px; }
+  .read-timer { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; }
+
   @media (max-width: 520px) {
     .hero-days b { font-size: 56px; }
     .stat-grid b { font-size: 17px; }
@@ -760,7 +841,7 @@
 </head>
 <body>
 <header>
-  <h1>岩土学习驾驶舱 <span class="badge">M5</span></h1>
+  <h1>岩土学习驾驶舱 <span class="badge">M10</span></h1>
   <span id="examChip" class="exam-chip">D-—</span>
   <select id="family" aria-label="当前册别">
     <option value="C">案例 C</option>
@@ -808,6 +889,15 @@
       <span id="dashPlanHint" class="hint">—</span>
     </button>
 
+    <button id="dashReading" type="button" class="plan-mini read-mini">
+      <span class="plan-mini-top">
+        <span id="dashReadPhase">规范伴读</span>
+        <b id="dashReadNum">—</b>
+      </span>
+      <span class="plan-mini-track"><span id="dashReadFill"></span></span>
+      <span class="hint" id="dashReadHint">正在读取阅读路线…</span>
+    </button>
+
     <button id="dashReview" type="button" class="review-cta">
       <span id="dashReviewTitle">今日复习</span>
       <small id="dashReviewHint">正在统计…</small>
@@ -840,6 +930,10 @@
       <button class="quick" type="button" id="quickManual">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h10M4 18h7"/><path d="M17 15l3 3-3 3"/></svg>
         <span>手输题号<small>不想拍就输</small></span>
+      </button>
+      <button class="quick" type="button" data-open-data="reading">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M8 8h8M8 11h6"/></svg>
+        <span>规范伴读<small>按考点带读原页</small></span>
       </button>
       <button class="quick" type="button" data-open-data="standards">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h9l5 5v11H5z"/><path d="M14 4v5h5"/><path d="M8 13h8M8 16h6"/></svg>
@@ -1015,12 +1109,14 @@
       <button type="button" data-view="stats" class="on">统计</button>
       <button type="button" data-view="plan">计划</button>
       <button type="button" data-view="report">周报</button>
+      <button type="button" data-view="reading">伴读</button>
       <button type="button" data-view="standards">规范</button>
       <button type="button" data-view="handbook">手册</button>
     </div>
     <div id="dataStats"></div>
     <div id="dataPlan" class="hidden"></div>
     <div id="dataReport" class="hidden"></div>
+    <div id="dataReading" class="hidden"></div>
     <div id="dataStandards" class="hidden"></div>
     <div id="dataHandbook" class="hidden"></div>
   </section>
@@ -1462,6 +1558,17 @@ const state = {
     handbookResults: null,
     loaded: { standards: false, handbook: false },
   },
+  reading: {
+    overview: null,
+    standard: null,
+    stop: null,
+    startedAt: 0,
+    timer: null,
+    busy: false,
+    pending: null,
+    page: 0,
+    pageCount: 0,
+  },
   baseline: {
     data: null,      // /api/baseline payload
     half: null,      // "A" or "P" while the score sheet is open
@@ -1600,7 +1707,14 @@ $("quickManual").addEventListener("click", () => {
   $("manual").focus();
 });
 for (const button of document.querySelectorAll("[data-open-data]")) {
-  button.addEventListener("click", () => openData(button.dataset.openData));
+  button.addEventListener("click", () => {
+    if (button.dataset.openData === "reading") {
+      state.reading.standard = null;
+      state.reading.stop = null;
+      state.reading.pending = null;
+    }
+    openData(button.dataset.openData);
+  });
 }
 $("installBtn").addEventListener("click", async () => {
   const prompt = state.installPrompt;
@@ -2699,6 +2813,7 @@ function renderHome(d) {
   $("dashEvidence").textContent = encourage.evidence || "";
   renderDashReview(d.review || { count: 0 });
   renderPlanMini(d.plan);
+  renderDashReading(d.reading);
   renderDashActions(d.next_actions || []);
   renderDashCategories(d.categories || []);
   $("installCard").classList.toggle("hidden", !state.installPrompt);
@@ -2783,7 +2898,7 @@ function openData(view, category) {
 }
 
 function setDataView(view) {
-  if (!["stats", "plan", "report", "standards", "handbook"].includes(view)) view = "stats";
+  if (!["stats", "plan", "report", "reading", "standards", "handbook"].includes(view)) view = "stats";
   state.data.view = view;
   for (const button of $("dataTabs").querySelectorAll("button")) {
     button.classList.toggle("on", button.dataset.view === view);
@@ -2791,11 +2906,13 @@ function setDataView(view) {
   $("dataStats").classList.toggle("hidden", view !== "stats");
   $("dataPlan").classList.toggle("hidden", view !== "plan");
   $("dataReport").classList.toggle("hidden", view !== "report");
+  $("dataReading").classList.toggle("hidden", view !== "reading");
   $("dataStandards").classList.toggle("hidden", view !== "standards");
   $("dataHandbook").classList.toggle("hidden", view !== "handbook");
   if (view === "stats") loadStats();
   else if (view === "plan") loadPlan();
   else if (view === "report") loadReport();
+  else if (view === "reading") loadReading();
   else if (view === "standards") loadStandards();
   else loadHandbook();
 }
@@ -3250,6 +3367,32 @@ function renderPlanMini(plan) {
   $("dashPlanHint").textContent = "正确率 " + pct(week.accuracy)
     + " · " + advice;
 }
+
+function renderDashReading(reading) {
+  const stats = (reading && reading.stats) || {};
+  const rec = reading && reading.recommendation;
+  const total = stats.stops_total || 0;
+  const done = stats.stops_done || 0;
+  $("dashReadNum").textContent = total ? done + " / " + total + " 站" : "—";
+  $("dashReadFill").style.width = (total
+    ? Math.min(100, Math.round(done / total * 100)) : 0) + "%";
+  if (!rec) {
+    $("dashReadPhase").textContent = "规范伴读";
+    $("dashReadHint").textContent = total && done >= total
+      ? "路线已读完 · 可重读任意一站" : "点开看阅读路线";
+    return;
+  }
+  $("dashReadPhase").textContent = "规范伴读 · " + (rec.short || rec.name || "");
+  $("dashReadHint").textContent = (rec.section ? rec.section + " " : "")
+    + (rec.title || "") + " · " + (rec.minutes || 0) + " 分钟 · 本周已读 "
+    + (stats.week_minutes || 0) + " 分钟";
+}
+
+$("dashReading").addEventListener("click", () => {
+  const rec = state.home && state.home.reading && state.home.reading.recommendation;
+  if (rec) state.reading.pending = { code: rec.code_key, stop: rec.stop_id };
+  openData("reading");
+});
 
 $("sessionCancel").addEventListener("click", () => $("sessionSheet").classList.add("hidden"));
 $("sessionSave").addEventListener("click", saveSession);
@@ -4342,6 +4485,390 @@ async function deleteSavedReport(key) {
   }
 }
 
+// --- guided standards reading --------------------------------------------
+
+function readingCodeKey(codeKey) {
+  return encodeURIComponent(codeKey || "");
+}
+
+function readingPageUrl(data, stop, page) {
+  return "/api/reading/" + readingCodeKey(data.code_key) + "/"
+    + readingCodeKey(stop.id) + "/page?dpi=140"
+    + (page ? "&p=" + Number(page) : "");
+}
+
+function formatClock(seconds) {
+  const total = Math.max(0, Math.floor(seconds || 0));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+}
+
+function stopReadingTimer() {
+  clearInterval(state.reading.timer);
+  state.reading.timer = null;
+}
+
+function startReadingTimer() {
+  stopReadingTimer();
+  const tick = () => {
+    const el = $("readTimer");
+    if (!el) { stopReadingTimer(); return; }
+    el.textContent = formatClock((Date.now() - state.reading.startedAt) / 1000);
+  };
+  tick();
+  state.reading.timer = setInterval(tick, 1000);
+}
+
+async function loadReading() {
+  const box = $("dataReading");
+  if (!state.reading.overview) {
+    box.innerHTML = '<div class="status"><span class="spinner"></span>读取伴读路线…</div>';
+    try {
+      const res = await fetch("/api/reading");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || res.statusText);
+      state.reading.overview = data;
+    } catch (err) {
+      box.innerHTML = '<div class="empty">伴读数据读取失败：' + escapeHtml(err.message) + "</div>";
+      return;
+    }
+  }
+  const pending = state.reading.pending;
+  state.reading.pending = null;
+  renderReading();
+  if (pending) {
+    await openReadingStandard(pending.code, true);
+    if (pending.stop) openReadingStop(pending.stop);
+  }
+}
+
+function renderReading() {
+  const box = $("dataReading");
+  if (!box) return;
+  if (state.reading.stop && state.reading.standard) {
+    renderReadingStop();
+  } else if (state.reading.standard) {
+    renderReadingStandard();
+  } else {
+    renderReadingHome();
+  }
+}
+
+function renderReadingHome() {
+  const box = $("dataReading");
+  const data = state.reading.overview || {};
+  const stats = data.stats || {};
+  const rec = data.recommendation;
+  const standards = data.standards || [];
+  const note = data.note || "";
+  const cta = rec
+    ? '<button type="button" class="read-cta" data-read-open="' + escapeHtml(rec.code_key)
+      + '" data-read-open-stop="' + escapeHtml(rec.stop_id) + '">'
+      + "<b>继续：" + escapeHtml(rec.short || rec.name) + " · "
+      + escapeHtml(rec.section || "") + " " + escapeHtml(rec.title || "") + "</b>"
+      + "<small>" + escapeHtml(rec.reason || "") + " · 规划 "
+      + (rec.minutes || 0) + " 分钟 · " + escapeHtml(rec.code) + "</small></button>"
+    : '<div class="read-check">所有路线都读完了。点一本规范可以重读任意一站。</div>';
+  const rows = standards.map((row) => {
+    const summary = row.summary || {};
+    const pct = Math.round((summary.percent || 0) * 100);
+    const next = row.next_stop;
+    const done = summary.total && summary.done >= summary.total;
+    return '<button type="button" class="read-card' + (done ? " read-done" : "")
+      + '" data-read-open="' + escapeHtml(row.code_key) + '">'
+      + '<span class="top"><b>' + escapeHtml(row.name) + "</b><span>"
+      + escapeHtml(row.category || "") + " · 案例 " + (row.weight || 0) + " 题</span></span>"
+      + "<p>" + escapeHtml(row.tagline || "") + "</p>"
+      + '<span class="read-track"><span style="width:' + pct + '%"></span></span>'
+      + '<span class="meta"><span>' + (summary.done || 0) + "/" + (summary.total || 0)
+      + " 站 · " + (summary.minutes_done || 0) + "/" + (summary.minutes_total || 0) + " 分钟</span>"
+      + "<span>" + (next ? "下一站 " + escapeHtml(next.section || "") + " "
+        + escapeHtml(next.title || "") : "已读完") + "</span></span></button>";
+  }).join("");
+  box.innerHTML =
+    '<div class="read-hero"><h3>' + escapeHtml(data.title || "规范伴读") + "</h3>"
+    + "<p>" + escapeHtml(note) + "</p>"
+    + '<div class="read-stats">'
+    + "<span><b>" + (stats.stops_done || 0) + "</b>/" + (stats.stops_total || 0) + " 站</span>"
+    + "<span><b>" + (stats.week_minutes || 0) + "</b> 分钟/本周</span>"
+    + "<span><b>" + (stats.today_minutes || 0) + "</b> 分钟/今天</span>"
+    + "<span><b>" + (stats.stops_review || 0) + "</b> 站待回看</span>"
+    + "</div>" + cta + "</div>"
+    + '<div class="section-head"><h2>按考试顺序读</h2><span class="hint">'
+    + (data.annotated_available ? "标注版原页" : "标注版不在线 · 退回干净版") + "</span></div>"
+    + '<div class="read-list">' + rows + "</div>";
+  box.querySelectorAll("[data-read-open]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const code = button.dataset.readOpen;
+      const stop = button.dataset.readOpenStop || "";
+      openReadingStandard(code).then(() => {
+        if (stop) openReadingStop(stop);
+      });
+    });
+  });
+}
+
+async function openReadingStandard(codeKey, force) {
+  if (!codeKey) return;
+  if (!force && state.reading.standard
+      && state.reading.standard.code_key === codeKey) {
+    state.reading.stop = null;
+    renderReading();
+    return;
+  }
+  const box = $("dataReading");
+  box.innerHTML = '<div class="status"><span class="spinner"></span>读取这本规范…</div>';
+  try {
+    const res = await fetch("/api/reading/" + readingCodeKey(codeKey));
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    state.reading.standard = data;
+    state.reading.stop = null;
+    stopReadingTimer();
+    renderReading();
+  } catch (err) {
+    box.innerHTML = '<div class="empty">读取失败：' + escapeHtml(err.message) + "</div>";
+  }
+}
+
+function renderReadingStandard() {
+  const box = $("dataReading");
+  const data = state.reading.standard;
+  const summary = data.summary || {};
+  const stops = data.stops || [];
+  const next = stops.find((stop) => !stop.status) || stops.find((stop) => stop.status === "review");
+  const rows = stops.map((stop, index) => {
+    const status = stop.status === "done" ? "done" : (stop.status === "review" ? "review" : "");
+    const label = stop.status === "done" ? "已读" : (stop.status === "review" ? "回看" : "未读");
+    return '<button type="button" class="read-stop-row ' + status
+      + '" data-read-stop="' + escapeHtml(stop.id) + '">'
+      + '<span class="no">' + (index + 1) + "</span>"
+      + '<span class="body"><b>' + escapeHtml(stop.section || "") + " "
+      + escapeHtml(stop.title || "") + "</b><span>p" + (stop.page || "—")
+      + " · " + (stop.minutes || 0) + " 分钟"
+      + (stop.annotated_page ? " · 标注版 p" + stop.annotated_page
+        + (stop.annotated_estimated ? "（估）" : "") : "") + "</span></span>"
+      + '<span class="side">' + label + "</span></button>";
+  }).join("");
+  box.innerHTML =
+    '<div class="read-head"><button type="button" class="ghost small" data-read-home>‹ 全部</button>'
+    + "<h2>" + escapeHtml(data.name) + "</h2></div>"
+    + '<p class="hint">' + escapeHtml(data.code) + " · " + escapeHtml(data.category || "")
+    + " · 案例 " + (data.weight || 0) + " 题 · " + (summary.done || 0) + "/"
+    + (summary.total || 0) + " 站 · " + (summary.minutes_done || 0) + "/"
+    + (summary.minutes_total || 0) + " 分钟</p>"
+    + '<p class="read-why">' + escapeHtml(data.why_read || "") + "</p>"
+    + '<p class="hint">' + escapeHtml(data.exam_evidence || "") + "</p>"
+    + (next ? '<button type="button" class="read-cta" data-read-stop="' + escapeHtml(next.id)
+      + '"><b>继续：' + escapeHtml(next.section || "") + " " + escapeHtml(next.title || "")
+      + "</b><small>规划 " + (next.minutes || 0) + " 分钟 · 第 "
+      + (stops.indexOf(next) + 1) + "/" + stops.length + " 站</small></button>"
+      : '<div class="read-check">这本已经读完，可以点任意一站重读。</div>')
+    + '<div class="section-head"><h2>阅读路线</h2><span class="hint">'
+    + (data.annotated && data.annotated.available ? "标注版 p" + (data.annotated.coverage || 0)
+      + "/" + (data.annotated.total || summary.total || 0) + " 站有页" : "干净版回退") + "</span></div>"
+    + '<div class="read-stop-list">' + rows + "</div>";
+  box.querySelector("[data-read-home]").addEventListener("click", () => {
+    state.reading.standard = null;
+    state.reading.stop = null;
+    loadReading();
+  });
+  box.querySelectorAll("[data-read-stop]").forEach((button) => {
+    button.addEventListener("click", () => openReadingStop(button.dataset.readStop));
+  });
+}
+
+function openReadingStop(stopId) {
+  const data = state.reading.standard;
+  if (!data) return;
+  const stop = (data.stops || []).find((row) => row.id === stopId);
+  if (!stop) {
+    toast("找不到这一站");
+    return;
+  }
+  state.reading.stop = stop;
+  state.reading.page = Number(stop.annotated_page) || 0;
+  state.reading.pageCount = Number((data.annotated || {}).page_count) || 0;
+  state.reading.startedAt = Date.now();
+  renderReadingStop();
+  startReadingTimer();
+}
+
+function renderReadingStop() {
+  const box = $("dataReading");
+  const data = state.reading.standard;
+  const stop = state.reading.stop;
+  if (!data || !stop) return;
+  const stops = data.stops || [];
+  const index = stops.findIndex((row) => row.id === stop.id);
+  const prev = index > 0 ? stops[index - 1] : null;
+  const next = index >= 0 && index < stops.length - 1 ? stops[index + 1] : null;
+  const currentPage = Number(state.reading.page) || Number(stop.annotated_page) || 0;
+  const pageCount = Number(state.reading.pageCount) || 0;
+  const pageUrl = readingPageUrl(data, stop, currentPage);
+  const look = (stop.look_for || []).map((line) => "<li>" + escapeHtml(line) + "</li>").join("");
+  const clauses = (stop.clauses || []).map((clause) =>
+    '<button type="button" data-read-clause="' + escapeHtml(clause) + '">'
+    + escapeHtml(clause) + "</button>").join("");
+  const practice = stop.practice
+    ? '<div class="read-block"><h3>停下来练一题</h3><button type="button" class="ghost small" '
+      + 'data-read-practice="' + escapeHtml(stop.practice.qid) + '">'
+      + escapeHtml(stop.practice.label || ("从 " + stop.practice.qid + " 开始"))
+      + "</button></div>"
+    : "";
+  box.innerHTML =
+    '<div class="read-reader">'
+    + '<div class="read-head"><button type="button" class="ghost small" data-read-standard>‹ '
+    + escapeHtml(data.short || data.name) + "</button><h2>" + escapeHtml(stop.section || "")
+    + " " + escapeHtml(stop.title || "") + '</h2><span class="read-timer" id="readTimer">00:00</span></div>'
+    + '<p class="hint">第 ' + (index + 1) + "/" + stops.length + " 站 · 规划 "
+    + (stop.minutes || 0) + " 分钟 · 印刷 p" + (stop.page || "—")
+    + (stop.annotated_page ? " · 标注版 p" + stop.annotated_page
+      + (stop.annotated_estimated ? "（估）" : "") : "") + "</p>"
+    + '<div class="page-wrap" id="readPageWrap"><img id="readPageImg" src="' + pageUrl
+    + '" alt="' + escapeHtml(stop.title || "规范原页") + '"></div>'
+    + (pageCount ? '<div class="read-page-row">'
+      + '<button type="button" class="ghost small" id="readPagePrev">‹ 上一页</button>'
+      + '<span class="hint" id="readPageInfo">标注版 p' + currentPage + " / " + pageCount
+      + "</span>"
+      + '<button type="button" class="ghost small" id="readPageNext">下一页 ›</button>'
+      + "</div>" : "")
+    + '<div class="page-tools"><button type="button" class="ghost small" id="readZoom">放大</button>'
+    + '<button type="button" class="ghost small" id="readFull">全屏看</button>'
+    + (data.annotated && data.annotated.available
+      ? '<button type="button" class="ghost small" id="readFile">原 PDF</button>' : "")
+    + '<span class="grow"></span>'
+    + (prev ? '<button type="button" class="ghost small" id="readPrev">‹ 上一站</button>' : "")
+    + (next ? '<button type="button" class="ghost small" id="readNext">下一站 ›</button>' : "")
+    + "</div>"
+    + '<p class="read-why"><b>为什么读：</b>' + escapeHtml(stop.why || "") + "</p>"
+    + '<div class="read-block"><h3>先看这些</h3><ul>' + look + "</ul>"
+    + (clauses ? '<div class="read-clauses">' + clauses + "</div>" : "") + "</div>"
+    + '<div class="read-block"><h3>最容易错</h3><div class="read-pit">'
+    + escapeHtml(stop.pitfall || "") + "</div></div>"
+    + '<div class="read-block"><h3>合上页面自检</h3><div class="read-check">'
+    + escapeHtml(stop.check || "") + "</div></div>"
+    + practice
+    + '<div class="read-note"><textarea id="readNote" rows="2" placeholder="一句话笔记（可不填）">'
+    + escapeHtml(stop.note || "") + "</textarea></div>"
+    + '<div class="read-actions"><button type="button" class="ghost" data-read-status="review">需回看</button>'
+    + '<button type="button" class="primary" data-read-status="done">看完了 · 下一站</button></div>'
+    + "</div>";
+
+  $("readPageImg").addEventListener("error", () => {
+    const wrap = $("readPageWrap");
+    if (wrap) wrap.innerHTML = '<div class="empty" style="padding:18px">这一页没有渲染出来：标注版可能不在线，换“原 PDF”或稍后重试。</div>';
+  });
+  $("readZoom").addEventListener("click", () => {
+    const wrap = $("readPageWrap");
+    wrap.classList.toggle("zoom");
+    $("readZoom").textContent = wrap.classList.contains("zoom") ? "适应" : "放大";
+  });
+  $("readFull").addEventListener("click", () => {
+    openPageViewer({
+      kind: "url", url: readingPageUrl(data, stop, state.reading.page),
+      title: data.code + " · " + (stop.section || "") + " " + (stop.title || ""),
+      count: 1, page: 1,
+    });
+  });
+  const changePage = (delta) => {
+    const max = Number(state.reading.pageCount) || 0;
+    if (!max) return;
+    const next = Math.max(1, Math.min(max, (Number(state.reading.page) || 1) + delta));
+    if (next === Number(state.reading.page)) return;
+    state.reading.page = next;
+    $("readPageImg").src = readingPageUrl(data, stop, next);
+    $("readPageInfo").textContent = "标注版 p" + next + " / " + max;
+    $("readPagePrev").disabled = next <= 1;
+    $("readPageNext").disabled = next >= max;
+  };
+  if (pageCount) {
+    $("readPagePrev").disabled = currentPage <= 1;
+    $("readPageNext").disabled = currentPage >= pageCount;
+    $("readPagePrev").addEventListener("click", () => changePage(-1));
+    $("readPageNext").addEventListener("click", () => changePage(1));
+  }
+  const readFile = $("readFile");
+  if (readFile) {
+    readFile.addEventListener("click", () => {
+      window.open("/api/reading/" + readingCodeKey(data.code_key) + "/file", "_blank", "noopener");
+    });
+  }
+  if (prev) $("readPrev").addEventListener("click", () => openReadingStop(prev.id));
+  if (next) $("readNext").addEventListener("click", () => openReadingStop(next.id));
+  box.querySelector("[data-read-standard]").addEventListener("click", () => {
+    stopReadingTimer();
+    state.reading.stop = null;
+    renderReading();
+  });
+  box.querySelectorAll("[data-read-clause]").forEach((button) => {
+    button.addEventListener("click", () => openStandardClause(data.code, button.dataset.readClause));
+  });
+  const practiceButton = box.querySelector("[data-read-practice]");
+  if (practiceButton) {
+    practiceButton.addEventListener("click", () => openViewer(practiceButton.dataset.readPractice, true));
+  }
+  box.querySelectorAll("[data-read-status]").forEach((button) => {
+    button.addEventListener("click", () => recordReading(button.dataset.readStatus));
+  });
+  startReadingTimer();
+}
+
+async function recordReading(status) {
+  if (state.reading.busy) return;
+  const data = state.reading.standard;
+  const stop = state.reading.stop;
+  if (!data || !stop) return;
+  const seconds = Math.max(0, Math.min(
+    7200, Math.round((Date.now() - state.reading.startedAt) / 1000)
+  ));
+  const note = $("readNote") ? $("readNote").value : "";
+  state.reading.busy = true;
+  try {
+    const res = await fetch("/api/reading/" + readingCodeKey(data.code_key) + "/"
+      + readingCodeKey(stop.id), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status, seconds, note }),
+    });
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.detail || res.statusText);
+    state.reading.overview = payload.overview;
+    state.reading.standard = payload.detail;
+    stopReadingTimer();
+    if (status === "done") {
+      const stops = payload.detail.stops || [];
+      const index = stops.findIndex((row) => row.id === stop.id);
+      const next = index >= 0 ? stops[index + 1] : null;
+      if (next) {
+        state.reading.stop = next;
+        state.reading.page = Number(next.annotated_page) || 0;
+        state.reading.pageCount = Number(
+          (payload.detail.annotated || {}).page_count
+        ) || 0;
+        state.reading.startedAt = Date.now();
+        renderReadingStop();
+        startReadingTimer();
+        toast("记下了 · 下一站 " + (next.section || "") + " " + (next.title || ""));
+      } else {
+        state.reading.stop = null;
+        renderReading();
+        toast("这本规范读完了，回看时再点任意一站");
+      }
+    } else {
+      state.reading.stop = null;
+      renderReading();
+      toast("已标记需回看，下次会优先排到这一站");
+    }
+    if (state.home) loadHome();
+  } catch (err) {
+    toast("保存失败：" + err.message);
+  } finally {
+    state.reading.busy = false;
+  }
+}
+
 // --- standards map --------------------------------------------------------
 
 async function loadStandards() {
@@ -4783,6 +5310,25 @@ function renderHandbookResults(data) {
 }
 
 function openPageViewer(options) {
+  if (options.url) {
+    state.page = {
+      kind: "url", url: options.url, code: "", file: "",
+      title: options.title || "规范原页", n: 1, count: 1,
+    };
+    $("pageTitle").textContent = state.page.title;
+    $("pageMeta").textContent = "标注版原页 · 可放大查看";
+    $("pageInput").value = 1;
+    $("pageInput").max = 1;
+    $("pagePrev").disabled = true;
+    $("pageNext").disabled = true;
+    $("pagePdf").classList.add("hidden");
+    const readWrap = $("pageImg").closest(".paper-wrap");
+    readWrap.classList.remove("zoom");
+    $("pageZoom").textContent = "放大";
+    $("pageImg").src = options.url;
+    $("pageSheet").classList.remove("hidden");
+    return;
+  }
   const count = Number(options.count) || 0;
   const number = Math.max(1, Math.min(Number(options.page) || 1, count || 1));
   state.page = {
@@ -4812,6 +5358,7 @@ function openPageViewer(options) {
 }
 
 function loadPageViewer(page) {
+  if (state.page.kind === "url") return;
   if (!state.page.count) return;
   const number = Math.max(1, Math.min(Number(page) || 1, state.page.count));
   openPageViewer({ ...state.page, page: number });
@@ -6357,7 +6904,12 @@ if (deep) {
 } else if (tab === "book") {
   openBook();
 } else if (tab === "data") {
-  openData(params.get("view") || "stats", params.get("cat"));
+  const view = params.get("view") || "stats";
+  const code = params.get("code");
+  if (view === "reading" && code) {
+    state.reading.pending = { code: code, stop: params.get("stop") || "" };
+  }
+  openData(view, params.get("cat"));
   const query = params.get("q");
   if (query) searchHandbook(query);
   const half = (params.get("baseline") || "").toUpperCase();

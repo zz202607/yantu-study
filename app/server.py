@@ -36,7 +36,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 import crop_question as CQ  # noqa: E402
 import recognize_qid as RQ  # noqa: E402
-from app import analytics, baseline as baseline_app, drill as drill_app, plan as study_plan, report as report_app, standards  # noqa: E402
+from app import analytics, baseline as baseline_app, drill as drill_app, plan as study_plan, reading as reading_app, report as report_app, standards  # noqa: E402
 from app.answer_ocr import analyze_crop  # noqa: E402
 from app.catalog import Catalog  # noqa: E402
 from app.curriculum import CASE_BY_KEY, category_key, load_exam_tags  # noqa: E402
@@ -63,7 +63,7 @@ CHAPTER_RE = re.compile(r"^([CZ])(\d{1,2})-(\d{1,3})$")
 EXAM_RE = re.compile(r"^[AK]\d{4}-[A-Z]-\d{1,3}$")
 MOCK_RE = re.compile(r"^M\d{1,2}-\d{1,3}$")
 
-app = FastAPI(title="岩土学习驾驶舱 M9.3")
+app = FastAPI(title="岩土学习驾驶舱 M10")
 
 
 def _warm_ocr():
@@ -284,6 +284,14 @@ def home():
         "targets": plan_view["targets"],
         "advice": plan_view["advice"][:1],
     }
+    try:
+        read_view = reading_app.overview(store)
+        data["reading"] = {
+            "stats": read_view["stats"],
+            "recommendation": read_view["recommendation"],
+        }
+    except Exception:  # noqa: BLE001 - reading is a bonus, home must load
+        data["reading"] = None
     return data
 
 
@@ -772,6 +780,86 @@ def standards_file(name: str):
     media = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
     return FileResponse(
         path, media_type=media, headers={"Cache-Control": "max-age=3600"}
+    )
+
+
+@app.get("/api/reading")
+def reading_overview():
+    """Exam-driven standards reading: routes, progress and what to read next."""
+    try:
+        return reading_app.overview(store)
+    except Exception as exc:  # noqa: BLE001 - a missing E: drive must not 500
+        raise HTTPException(500, "伴读数据读取失败：%s" % exc)
+
+
+@app.get("/api/reading/{code_key}")
+def reading_detail(code_key: str):
+    data = reading_app.detail(code_key, store.reading_progress())
+    if not data:
+        raise HTTPException(404, "没有这本规范的伴读路线：%s" % code_key)
+    return data
+
+
+@app.post("/api/reading/{code_key}/{stop_id}")
+def reading_record(code_key: str, stop_id: str, payload: dict = Body(...)):
+    try:
+        saved = reading_app.record(
+            store, code_key, stop_id,
+            payload.get("status") or "done",
+            seconds=payload.get("seconds") or 0,
+            note=payload.get("note") or "",
+        )
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    return {
+        "ok": True,
+        "progress": saved,
+        "overview": reading_app.overview(store),
+        "detail": reading_app.detail(code_key, store.reading_progress()),
+    }
+
+
+@app.get("/api/reading/{code_key}/{stop_id}/page")
+def reading_page(code_key: str, stop_id: str, dpi: int = 140, p: int = 0):
+    """Annotated page image; `p` flips within the scanned standard."""
+    try:
+        dpi = max(80, min(int(dpi), 200))
+    except (TypeError, ValueError):
+        dpi = 140
+    if p:
+        rendered = reading_app.annotated_page_at(code_key, p, dpi=dpi)
+    else:
+        rendered = reading_app.annotated_page(code_key, stop_id, dpi=dpi)
+    source = "annotated"
+    if rendered is None:
+        fallback = reading_app.fallback_for(code_key, stop_id)
+        if fallback is None:
+            raise HTTPException(404, "这一站没有可用的规范页")
+        rendered = reading_app.fallback_page(fallback[0], fallback[1], dpi=dpi)
+        source = "clean"
+    if rendered is None:
+        raise HTTPException(404, "规范页渲染失败（E: 盘可能不在线）")
+    path, page, count = rendered
+    return FileResponse(
+        path,
+        media_type="image/png",
+        headers={
+            "Cache-Control": "max-age=86400",
+            "X-Page-Count": str(count),
+            "X-Page": str(page),
+            "X-Source": source,
+        },
+    )
+
+
+@app.get("/api/reading/{code_key}/file")
+def reading_file(code_key: str):
+    path = reading_app.annotated_file(code_key)
+    if not path:
+        raise HTTPException(404, "标注版规范不在本机")
+    return FileResponse(
+        path, media_type="application/pdf",
+        headers={"Cache-Control": "max-age=3600"},
     )
 
 
@@ -1518,5 +1606,5 @@ if __name__ == "__main__":
     import uvicorn
 
     port = int(os.environ.get("PORT", "8000"))
-    print("岩土学习驾驶舱 M9.3  ->  http://%s:%d" % (lan_ip(), port), flush=True)
+    print("岩土学习驾驶舱 M10  ->  http://%s:%d" % (lan_ip(), port), flush=True)
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="warning")
