@@ -18,7 +18,6 @@ import json
 import mimetypes
 import os
 import re
-import socket
 import sys
 import tempfile
 import threading
@@ -38,6 +37,7 @@ import crop_question as CQ  # noqa: E402
 import recognize_qid as RQ  # noqa: E402
 from app import analytics, baseline as baseline_app, clauses as clauses_app, drill as drill_app, plan as study_plan, reading as reading_app, report as report_app, standards  # noqa: E402
 from app.answer_ocr import analyze_crop  # noqa: E402
+from app.net import lan_ip  # noqa: E402
 from app.catalog import Catalog  # noqa: E402
 from app.curriculum import CASE_BY_KEY, category_key, load_exam_tags  # noqa: E402
 from app.photo_import import import_photos, scan_photos  # noqa: E402
@@ -1668,17 +1668,6 @@ def crop(qid: str, family: str = "C", answer: int = 0, mask: int = 0):
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(500, "裁图失败：%s" % exc)
     return FileResponse(path, media_type="image/png")
-
-
-def lan_ip():
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        sock.connect(("223.5.5.5", 80))
-        return sock.getsockname()[0]
-    except Exception:  # noqa: BLE001 - offline is fine
-        return "127.0.0.1"
-    finally:
-        sock.close()
 
 
 if __name__ == "__main__":
