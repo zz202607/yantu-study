@@ -424,6 +424,13 @@
   .action b { display: block; font-size: 14px; font-weight: 600; }
   .action span { display: block; margin-top: 2px; font-size: 11.5px; color: var(--muted); line-height: 1.4; }
   .action .go { flex: 0 0 auto; color: var(--accent); font-size: 18px; }
+  .head-links { display: flex; gap: 10px; }
+  .sheet-panel.brief-panel { max-height: 92vh; overflow: auto; }
+  .brief-task.done { opacity: .66; }
+  .brief-task.done .icon { background: rgba(29,122,79,.12); color: var(--good); }
+  .brief-task .prog { flex: 0 0 auto; color: var(--muted); font-size: 12px; }
+  .brief-steps h4, #manualBody h4 { margin: 12px 0 4px; font-size: 12.5px; }
+  .brief-steps ol, #manualBody ol { margin: 0 0 6px; padding-left: 18px; font-size: 12.5px; color: var(--muted); line-height: 1.55; }
   .quick-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .quick {
     display: flex; align-items: center; gap: 9px; text-align: left;
@@ -884,8 +891,9 @@
 </head>
 <body>
 <header>
-  <h1>岩土学习驾驶舱 <span class="badge">M12.1</span></h1>
+  <h1>岩土学习驾驶舱 <span class="badge">M14</span></h1>
   <span id="examChip" class="exam-chip">D-—</span>
+  <button id="headerBriefing" class="head-print" type="button" aria-label="今日任务">今日</button>
   <button id="headerPrint" class="head-print" type="button" aria-label="打印">打印</button>
   <select id="family" aria-label="当前册别">
     <option value="C">案例 C</option>
@@ -978,7 +986,10 @@
 
     <div class="section-head">
       <h2>下一步</h2>
-      <button id="dashSettings" type="button">设置</button>
+      <span class="head-links">
+        <button id="dashBriefing" type="button">今日任务单</button>
+        <button id="dashSettings" type="button">设置</button>
+      </span>
     </div>
     <div id="dashActions"></div>
 
@@ -1319,7 +1330,7 @@
       <h3 id="printTitle">打印 A4 卷</h3>
       <span class="hint">题面与答案分开</span>
     </div>
-    <p class="hint">默认按原尺寸排版，每题留手写区，答案单独成页。最多 30 题。</p>
+    <p class="hint">默认按原尺寸排版，每题留手写区，答案单独成页。单卷最多 30 题；未来周包最多 100 题。</p>
     <div class="print-options">
       <button type="button" class="print-opt" data-scope="plan">
         <b>本周任务卷</b><span id="printPlanCount">按当前原型</span>
@@ -1333,7 +1344,17 @@
       <button type="button" class="print-opt" data-scope="review">
         <b>今日复习</b><span id="printReviewCount">—</span>
       </button>
+      <button type="button" class="print-opt" data-scope="week">
+        <b>未来 N 天复习包</b><span>出差一次打一周 · 每天一页</span>
+      </button>
     </div>
+    <label class="settings-field">周包天数
+      <select id="printWeekDays">
+        <option value="7" selected>7 天</option>
+        <option value="5">5 天</option>
+        <option value="3">3 天</option>
+      </select>
+    </label>
     <label class="check"><input type="checkbox" id="printCover" checked> 封面任务单 + 结果回填格</label>
     <label class="check"><input type="checkbox" id="printBoxes" checked> 每题打印对/错/放弃/超时格</label>
     <label class="settings-field">手写区
@@ -1348,6 +1369,38 @@
     </div>
     <div class="sheet-actions">
       <button id="printCancel" class="ghost">取消</button>
+    </div>
+  </div>
+</div>
+
+<div id="briefSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="briefTitle">
+  <div class="sheet-panel brief-panel">
+    <div class="sheet-head">
+      <h3 id="briefTitle">今日任务单</h3>
+      <span id="briefDate" class="hint"></span>
+    </div>
+    <p class="hint" id="briefLead">正在读取今天的学习记录…</p>
+    <div id="briefTasks"></div>
+    <div class="section-head">
+      <h2>每天怎么用</h2>
+      <button id="briefManual" type="button">完整说明</button>
+    </div>
+    <div class="brief-steps" id="briefSteps"></div>
+    <div class="sheet-actions">
+      <button id="briefClose" class="primary">知道了</button>
+    </div>
+  </div>
+</div>
+
+<div id="manualSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="manualTitle">
+  <div class="sheet-panel brief-panel">
+    <div class="sheet-head">
+      <h3 id="manualTitle">使用说明</h3>
+      <span class="hint">每天照做即可</span>
+    </div>
+    <div id="manualBody"></div>
+    <div class="sheet-actions">
+      <button id="manualClose" class="primary">关闭</button>
     </div>
   </div>
 </div>
@@ -1619,6 +1672,7 @@ const state = {
   importItems: [],
   meta: null,
   home: null,
+  briefing: null,
   settings: null,
   installPrompt: null,
   page: { n: null, count: null },
@@ -7072,14 +7126,141 @@ $("review").addEventListener("touchend", (e) => {
   gradeReview(dx > 0 ? "correct" : "wrong");
 }, { passive: true });
 
+// --- daily briefing -------------------------------------------------------
+
+const BRIEF_ICONS = { review: "复", drill: "练", reading: "读", practice: "记" };
+
+function renderBriefTasks(tasks) {
+  const box = $("briefTasks");
+  box.innerHTML = "";
+  for (const task of tasks) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "action brief-task" + (task.done ? " done" : "");
+    button.innerHTML =
+      '<span class="icon">' + (task.done ? "✓" : escapeHtml(BRIEF_ICONS[task.key] || "做")) + "</span>"
+      + '<span class="txt"><b>' + escapeHtml(task.title || "") + "</b>"
+      + "<span>" + escapeHtml(task.detail || "") + "</span></span>"
+      + (task.progress
+        ? '<span class="prog">' + escapeHtml(task.progress) + "</span>"
+        : '<span class="go">›</span>');
+    button.addEventListener("click", () => openBriefTask(task));
+    box.appendChild(button);
+  }
+  if (!tasks.length) {
+    box.innerHTML = '<div class="empty">今天没有任务。</div>';
+  }
+}
+
+function renderBriefing(data) {
+  const c = data.countdown || {};
+  $("briefDate").textContent = (data.day || "") + " " + (data.weekday || "")
+    + (c.days_left != null ? " · D-" + Math.max(0, c.days_left) : "");
+  $("briefLead").textContent = data.lead || "";
+  renderBriefTasks(data.tasks || []);
+  const first = (data.manual || [])[0];
+  $("briefSteps").innerHTML = first
+    ? "<h4>" + escapeHtml(first.title || "") + "</h4><ol>"
+      + (first.steps || []).map((s) => "<li>" + escapeHtml(s) + "</li>").join("")
+      + "</ol>"
+    : "";
+  $("briefManual").classList.toggle("hidden", !(data.manual || []).length);
+}
+
+function renderManual(manual) {
+  const box = $("manualBody");
+  box.innerHTML = "";
+  for (const group of manual || []) {
+    const title = document.createElement("h4");
+    title.textContent = group.title || "";
+    const list = document.createElement("ol");
+    for (const step of group.steps || []) {
+      const li = document.createElement("li");
+      li.textContent = step;
+      list.appendChild(li);
+    }
+    box.appendChild(title);
+    box.appendChild(list);
+  }
+}
+
+function closeBriefing() {
+  $("briefSheet").classList.add("hidden");
+  if (state.briefing && state.briefing.day) {
+    localStorage.setItem("briefingSeen", state.briefing.day);
+  }
+}
+
+function openBriefing() {
+  $("briefLead").textContent = "正在读取今天的学习记录…";
+  $("briefSheet").classList.remove("hidden");
+  return fetch("/api/briefing")
+    .then((res) => res.json().then((data) => {
+      if (!res.ok) throw new Error(data.detail || res.statusText);
+      return data;
+    }))
+    .then((data) => {
+      state.briefing = data;
+      renderBriefing(data);
+    })
+    .catch((err) => {
+      $("briefLead").textContent = "读取失败：" + err.message;
+    });
+}
+
+function openManual() {
+  renderManual((state.briefing && state.briefing.manual) || []);
+  $("manualSheet").classList.remove("hidden");
+}
+
+function openBriefTask(task) {
+  closeBriefing();
+  if (task.route === "review") return startReview();
+  if (task.route === "drill") return openTraining();
+  if (task.route === "reading") {
+    if (task.code_key) {
+      state.reading.pending = { code: task.code_key, stop: task.stop_id || "" };
+    }
+    return openData("reading");
+  }
+  if (task.route === "plan") return openData("plan");
+  show("dash");
+}
+
+async function autoBriefing() {
+  // A deep link (?qid= / ?tab=) is an explicit destination; do not cover it.
+  if (location.search) return;
+  try {
+    const res = await fetch("/api/briefing");
+    if (!res.ok) return;
+    const data = await res.json();
+    state.briefing = data;
+    if (localStorage.getItem("briefingSeen") === data.day) return;
+    renderBriefing(data);
+    $("briefSheet").classList.remove("hidden");
+  } catch (err) { /* the cockpit still works without the popup */ }
+}
+
+$("headerBriefing").addEventListener("click", openBriefing);
+$("dashBriefing").addEventListener("click", openBriefing);
+$("briefClose").addEventListener("click", closeBriefing);
+$("briefManual").addEventListener("click", openManual);
+$("manualClose").addEventListener("click", () => $("manualSheet").classList.add("hidden"));
+$("manualSheet").addEventListener("click", (event) => {
+  if (event.target === $("manualSheet")) $("manualSheet").classList.add("hidden");
+});
+
 // --- print ----------------------------------------------------------------
 
 let printBusy = false;
 
 function printDownloadName(scope, title) {
+  // Fallbacks only: the server returns the real, timestamped name in
+  // X-Print-Stats / X-Print-Filename and runPrint prefers it.
   if (scope === "plan") return "本周任务卷.pdf";
   if (scope === "review") return "今日复习卷.pdf";
   if (scope === "recent") return "最近7天错题卷.pdf";
+  if (scope === "week") return "未来7天复习包.pdf";
   if (scope === "qids") return (title || "自选题目卷") + ".pdf";
   return "错题打印卷.pdf";
 }
@@ -7102,10 +7283,14 @@ function printSheetQuery(scope) {
       || (state.review.session && state.review.session.id);
     if (sid) q.set("session_id", String(sid));
   }
+  if (scope === "week") {
+    const days = $("printWeekDays");
+    q.set("days", (days && days.value) || "7");
+  }
   return q;
 }
 
-async function runPrint(query, filename, button) {
+async function runPrint(query, filename, button, message) {
   if (printBusy) {
     toast("正在生成另一份打印卷，稍等一下");
     return false;
@@ -7116,7 +7301,7 @@ async function runPrint(query, filename, button) {
     button.disabled = true;
     button.textContent = "生成中…";
   }
-  toast("正在生成打印卷，题目多时需要几十秒…");
+  toast(message || "正在生成打印卷，题目多时需要几十秒…");
   try {
     const res = await fetch("/api/print?" + query.toString());
     if (!res.ok) {
@@ -7127,6 +7312,12 @@ async function runPrint(query, filename, button) {
     const blob = await res.blob();
     let stats = {};
     try { stats = JSON.parse(res.headers.get("X-Print-Stats") || "{}"); } catch (err) { /* header is a nicety */ }
+    // The server names the file <岩土-title-timestamp>.pdf so two prints never
+    // collide in the download folder; only fall back to the caller's label.
+    if (stats.filename) filename = stats.filename;
+    else if (res.headers.get("X-Print-Filename")) {
+      filename = decodeURIComponent(res.headers.get("X-Print-Filename"));
+    }
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -7154,8 +7345,12 @@ async function runPrint(query, filename, button) {
 }
 
 async function printScope(scope, button, filename) {
-  return runPrint(printSheetQuery(scope),
-                  filename || printDownloadName(scope), button);
+  return runPrint(
+    printSheetQuery(scope),
+    filename || printDownloadName(scope),
+    button,
+    scope === "week"
+      ? "正在排未来一周的复习包，题目多时可能要几分钟…" : null);
 }
 
 async function printQids(qids, title, button, opts) {
@@ -7181,7 +7376,9 @@ function openPrintSheet() {
   $("printFilterCount").textContent = state.book.total
     ? state.book.total + " 题（最多 30）"
     : (active != null ? active + " 题（全部未掌握）" : "—");
-  const overview = state.review.overview;
+  const overview = state.review.overview
+    || (state.home && state.home.review)
+    || null;
   $("printReviewCount").textContent = overview
     ? (overview.count ? overview.count + " 题" : "今天没有到期题")
     : "—";
@@ -7208,7 +7405,12 @@ async function downloadPrint(scope) {
   status.classList.remove("hidden");
   for (const b of buttons) b.disabled = true;
   try {
-    if (await runPrint(q, printDownloadName(scope), null)) closePrintSheet();
+    const message = scope === "week"
+      ? "正在排未来 " + ($("printWeekDays").value || "7") + " 天的复习包，可能要几分钟…"
+      : null;
+    if (await runPrint(q, printDownloadName(scope), null, message)) {
+      closePrintSheet();
+    }
   } finally {
     status.classList.add("hidden");
     for (const b of buttons) b.disabled = false;
@@ -7374,6 +7576,7 @@ renderReviewTags();
 show("dash");
 loadMeta();
 loadHome();
+autoBriefing();
 refreshNavCount();
 
 if ("serviceWorker" in navigator && window.isSecureContext) {
@@ -7394,6 +7597,12 @@ if (deep) {
   show("home");
 } else if (tab === "book") {
   openBook();
+} else if (tab === "guide") {
+  // A bookmarkable manual: /?tab=guide opens the daily sheet plus the full
+  // usage guide without waiting for a click.
+  openBriefing().then(openManual).catch(() => {});
+} else if (tab === "print") {
+  openPrintSheet();
 } else if (tab === "data") {
   const view = params.get("view") || "stats";
   const code = params.get("code");
