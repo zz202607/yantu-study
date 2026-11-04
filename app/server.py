@@ -23,6 +23,7 @@ import tempfile
 import threading
 import time
 from pathlib import Path
+from urllib.parse import quote
 
 import numpy as np
 from fastapi import Body, FastAPI, File, Form, HTTPException, UploadFile
@@ -35,13 +36,16 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 import crop_question as CQ  # noqa: E402
 import recognize_qid as RQ  # noqa: E402
-from app import analytics, baseline as baseline_app, clauses as clauses_app, drill as drill_app, plan as study_plan, reading as reading_app, report as report_app, standards  # noqa: E402
+from app import analytics, baseline as baseline_app, briefing as briefing_app, clauses as clauses_app, drill as drill_app, plan as study_plan, reading as reading_app, report as report_app, standards  # noqa: E402
 from app.answer_ocr import analyze_crop  # noqa: E402
 from app.net import lan_ip  # noqa: E402
 from app.catalog import Catalog  # noqa: E402
 from app.curriculum import CASE_BY_KEY, category_key, load_exam_tags  # noqa: E402
 from app.photo_import import import_photos, scan_photos  # noqa: E402
-from app.print_export import MAX_QUESTIONS, export_pdf, parse_qid_list  # noqa: E402
+from app.print_export import (  # noqa: E402
+    MAX_QUESTIONS, MAX_WEEK_QUESTIONS, export_pdf, parse_qid_list,
+    print_filename,
+)
 from app.settings import Settings  # noqa: E402
 from app.store import PRACTICE_SOURCES, PROCESS_LABELS, Store, TAGS  # noqa: E402
 
@@ -293,6 +297,24 @@ def home():
     except Exception:  # noqa: BLE001 - reading is a bonus, home must load
         data["reading"] = None
     return data
+
+
+@app.get("/api/briefing")
+def briefing():
+    """The "what do I do today" sheet; the phone opens it once per day."""
+    conf = settings_store.load()
+    try:
+        reading_view = reading_app.overview(store)
+    except Exception:  # noqa: BLE001 - a missing route must not block the day
+        reading_view = None
+    try:
+        plan_view = study_plan.overview(store, DATA, conf)
+    except Exception:  # noqa: BLE001 - the daily sheet still has review
+        plan_view = None
+    return briefing_app.build(
+        store, conf, reading=reading_view, baseline=baseline_view(),
+        plan=plan_view,
+    )
 
 
 @app.get("/api/stats")
@@ -1591,6 +1613,80 @@ def print_questions(
             )["items"]
         ]
         title = "最近 7 天错题卷"
+    elif scope == "week":
+        # Travel pack: the next N days projected from the current schedule.
+        # Results typed into the app later move the real dates; the cover says
+        # so instead of pretending the forecast is a promise.
+        try:
+            days = max(1, min(int(days or 7), 10))
+        except (TypeError, ValueError):
+            days = 7
+        forecast = store.review_forecast(days=days)
+        sections = []
+        for index, bucket in enumerate(forecast, 1):
+            day_qids = bucket["qids"]
+            if not day_qids:
+                continue
+            sections.append({
+                "title": "第 %d 天 · %s %s" % (
+                    index, bucket["day"][5:], bucket["weekday"]),
+                "subtitle": "复习 %d 题 · 预计 %d 分钟" % (
+                    len(day_qids), max(1, len(day_qids) * 2)),
+                "short": "D%d" % index,
+                "qids": day_qids,
+            })
+        # The week's new-question drill rides along: a travel pack that only
+        # held a thin review queue would not be "a week's worth".
+        week_qids = []
+        try:
+            selection = study_plan.week_drill(
+                store, DATA, settings_store.load(),
+                per_prototype=per_prototype, limit=MAX_QUESTIONS,
+            )
+            seen = {qid for section in sections for qid in section["qids"]}
+            week_qids = [qid for qid in selection["qids"] if qid not in seen]
+        except Exception:  # noqa: BLE001 - review pages are still worth printing
+            week_qids = []
+        review_total = sum(len(section["qids"]) for section in sections)
+        room, dropped = MAX_WEEK_QUESTIONS - len(week_qids), 0
+        kept = []
+        for section in sections:
+            if room <= 0:
+                dropped += len(section["qids"])
+                continue
+            if len(section["qids"]) > room:
+                dropped += len(section["qids"]) - room
+                section["qids"] = section["qids"][:room]
+            room -= len(section["qids"])
+            kept.append(section)
+        sections = kept
+        if week_qids:
+            sections.append({
+                "title": "本周任务 · 未完成原型",
+                "subtitle": "新题 %d 题 · 做完在计划页记四个数" % len(week_qids),
+                "short": "W",
+                "qids": week_qids,
+            })
+        if not sections:
+            raise HTTPException(404, "未来 %d 天没有要复习的题" % days)
+        title = "未来 %d 天复习包" % days
+        subtitle = "%s 起 · 按当前排期 复习 %d 题" % (
+            forecast[0]["day"], review_total - dropped)
+        if week_qids:
+            subtitle += " + 新题 %d 题" % len(week_qids)
+        if dropped:
+            subtitle += "（只排前 %d 题）" % MAX_WEEK_QUESTIONS
+        subtitle += "；今天做对/做错会改变后面几天"
+        cover_data = {
+            "title": title,
+            "subtitle": subtitle,
+            "tasks": [
+                {"label": "%s · %d 题" % (section["title"],
+                                          len(section["qids"]))}
+                for section in sections
+            ],
+            "qids": [],
+        }
     else:
         qids = [
             item["qid"]
@@ -1603,22 +1699,36 @@ def print_questions(
                 limit=MAX_QUESTIONS,
             )["items"]
         ]
-        title = "错题筛选卷"
-    qids = list(dict.fromkeys(qids))[:MAX_QUESTIONS]
-    if not qids:
-        raise HTTPException(404, "没有可打印的题")
+        label = []
+        if family:
+            label.append({"C": "案例", "Z": "知识"}.get(family.upper(), family))
+        if tag:
+            label.append(TAGS.get(tag, tag))
+        if chapter:
+            label.append(chapter)
+        if days:
+            label.append("近%d天" % days)
+        if (status or "") == "active":
+            label.append("未掌握")
+        title = "错题卷" + ("-" + "-".join(label) if label else "")
+    if scope != "week":
+        qids = list(dict.fromkeys(qids))[:MAX_QUESTIONS]
+        if not qids:
+            raise HTTPException(404, "没有可打印的题")
     try:
         EXPORTS.mkdir(parents=True, exist_ok=True)
         cutoff = time.time() - 7 * 86400
-        for old in EXPORTS.glob("yantu-print-*.pdf"):
-            try:
-                if old.stat().st_mtime < cutoff:
-                    old.unlink()
-            except OSError:
-                pass
-        stamp = time.strftime("%Y%m%d-%H%M%S")
-        out = EXPORTS / ("yantu-print-%s.pdf" % stamp)
-        header = "%s · %s" % (title, time.strftime("%Y-%m-%d"))
+        # Old naming plus the current 岩土-<title>-<stamp> names both expire.
+        for pattern in ("yantu-print-*.pdf", "岩土-*.pdf"):
+            for old in EXPORTS.glob(pattern):
+                try:
+                    if old.stat().st_mtime < cutoff:
+                        old.unlink()
+                except OSError:
+                    pass
+        filename = print_filename(title)
+        out = EXPORTS / filename
+        header = "%s · %s" % (title, time.strftime("%Y-%m-%d %H:%M"))
         scratch_root = CACHE.parent
         scratch_root.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=str(scratch_root)) as tmp:
@@ -1627,11 +1737,15 @@ def print_questions(
                 jpeg = (max(120, min(int(jpeg_dpi), 300)),
                         max(60, min(int(jpeg_quality), 95)))
             stats = export_pdf(
-                qids, out, header, tmp, engine=RQ.engine(), ocr_lock=_ocr_lock,
+                None if scope == "week" else qids, out, header, tmp,
+                engine=RQ.engine(), ocr_lock=_ocr_lock,
                 jpeg=jpeg,
                 writing_scale=writing_scale,
                 result_boxes=bool(result_boxes),
                 cover=cover_data if cover else None,
+                sections=sections if scope == "week" else None,
+                max_questions=(MAX_WEEK_QUESTIONS if scope == "week"
+                               else MAX_QUESTIONS),
             )
     except HTTPException:
         raise
@@ -1639,8 +1753,14 @@ def print_questions(
         raise HTTPException(400, str(exc))
     except Exception as exc:  # noqa: BLE001 - one bad crop must not 500 the page
         raise HTTPException(500, "生成打印卷失败：%s" % exc)
+    stats["filename"] = out.name
+    stats["scope"] = scope
+    if scope == "week":
+        stats["days"] = days
+        stats["truncated"] = dropped
     response = FileResponse(out, media_type="application/pdf", filename=out.name)
     response.headers["X-Print-Stats"] = json.dumps(stats, ensure_ascii=True)
+    response.headers["X-Print-Filename"] = quote(out.name, safe="")
     return response
 
 

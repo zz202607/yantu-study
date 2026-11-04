@@ -1020,6 +1020,40 @@ class Store:
         finally:
             conn.close()
 
+    def day_activity(self, day=None):
+        """Counters for one local day, used by the daily briefing.
+
+        Every number comes from the logs the app already writes, so a task can
+        never be marked done by the checklist itself.  Read-only.
+        """
+        day = day or _local_day()
+        conn = self._connect()
+        try:
+            row = conn.execute(
+                "SELECT"
+                " (SELECT COUNT(*) FROM review_log"
+                "   WHERE substr(at, 1, 10) = ?) AS reviews,"
+                " (SELECT COUNT(*) FROM review_log"
+                "   WHERE substr(at, 1, 10) = ? AND result = 'correct') AS correct,"
+                " (SELECT COUNT(*) FROM review_log"
+                "   WHERE substr(at, 1, 10) = ? AND status_after = 'mastered'"
+                "   AND COALESCE(status_before, '') != 'mastered') AS mastered,"
+                " (SELECT COUNT(*) FROM attempts"
+                "   WHERE substr(created_at, 1, 10) = ?) AS new_attempts,"
+                " (SELECT COUNT(*) FROM practice_sessions"
+                "   WHERE day = ?) AS practices,"
+                " (SELECT COUNT(*) FROM drill_sessions"
+                "   WHERE day = ?) AS drills,"
+                " (SELECT COUNT(*) FROM reading_log"
+                "   WHERE substr(at, 1, 10) = ?) AS readings",
+                (day, day, day, day, day, day, day),
+            ).fetchone()
+        finally:
+            conn.close()
+        data = {key: row[key] for key in row.keys()}
+        data["day"] = day
+        return data
+
     def learning_snapshot(self):
         """Read-only rows for the dashboard.
 
@@ -1139,13 +1173,85 @@ class Store:
         for item in items:
             reasons[item["review_reason"]] = reasons.get(item["review_reason"], 0) + 1
         stats = self.stats(now)
+        # A frozen session keeps the day's original plan size; without one the
+        # current queue is the plan.  The briefing uses this instead of the
+        # shrinking queue so grading three of five does not look "done".
+        session = self.session(now=now)
+        planned = (len(session.get("queue") or [])
+                   if session.get("id") else len(items))
         return {
             "day": _local_day(now),
             "count": len(items),
+            "planned": planned,
             "est_minutes": max(1, round(len(items) * 2)) if items else 0,
             "reasons": reasons,
             "stats": stats,
         }
+
+    def review_forecast(self, days=7, now=None, limit=REVIEW_DAY_LIMIT):
+        """Project the next N days from the current schedule.
+
+        This is a snapshot, not a promise: today's answers move later days.
+        Questions already due today are spread over the following days by the
+        same 20-a-day cap the app uses, and the chapter-interleave order is
+        kept so one chapter cannot fill a whole day.
+        """
+        try:
+            days = max(1, min(int(days or 7), 14))
+            limit = max(1, min(int(limit or REVIEW_DAY_LIMIT), REVIEW_DAY_LIMIT))
+        except (TypeError, ValueError):
+            days, limit = 7, REVIEW_DAY_LIMIT
+        now_dt = _parse_iso(now_iso(now)) or datetime.now().astimezone()
+        today = now_dt.date()
+        conn = self._connect()
+        try:
+            ids = [
+                row["id"] for row in conn.execute(
+                    "SELECT id FROM attempts WHERE status = 'active'"
+                )
+            ]
+            pending = self._items(conn, ids)
+        finally:
+            conn.close()
+
+        # The row fields the planner needs; items carry display fields too.
+        pending = [
+            {
+                "id": item["id"],
+                "qid": item["qid"],
+                "times": item["times"],
+                "last_at": item["last_at"],
+                "next_at": item.get("next_at"),
+            }
+            for item in pending
+        ]
+        today_start = today.isoformat() + "T00:00:00"
+        out = []
+        for offset in range(days):
+            day = today + timedelta(days=offset)
+            cutoff = day.isoformat() + "T23:59:59"
+            due = [
+                row for row in pending
+                if (row["next_at"] or row["last_at"]) <= cutoff
+            ]
+            due.sort(key=lambda r: (r["next_at"] or r["last_at"],
+                                    -r["times"], r["id"]))
+            chosen = self._interleave(due)[:limit]
+            taken = {row["id"] for row in chosen}
+            pending = [row for row in pending if row["id"] not in taken]
+            out.append({
+                "day": day.isoformat(),
+                "weekday": "周" + "一二三四五六日"[day.weekday()],
+                "qids": [row["qid"] for row in chosen],
+                "count": len(chosen),
+                "overdue": bool(
+                    offset == 0 and any(
+                        (row["next_at"] or row["last_at"]) < today_start
+                        for row in chosen
+                    )
+                ),
+            })
+        return out
 
     # -- guided standards reading -----------------------------------------
 
