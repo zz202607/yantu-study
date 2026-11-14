@@ -61,6 +61,24 @@ BARE_RE = re.compile(r"(?<![\d.])(\d{2,4})(?=[\)\](）】])")
 # `20419某…` is `4-19` behind a stray `20`.  Only trusted when the run leads
 # straight into a question stem (`某`) and the index resolves one suffix.
 BARE_STEM_RE = re.compile(r"(?<![\d.])(\d{3,5})(?=某)")
+# A date written at the top of a page is not a question label.  OCR often
+# reads `.` / `/` as `-`, so `2024-11-14` would otherwise resolve to the
+# valid-looking key `4-11` (the tail of the year plus the month).  Every
+# candidate whose match lies inside one of these spans is discarded.
+DATE_SEP = "-—–_./·一"
+DATE_RES = (
+    re.compile(
+        r"(?<!\d)(?:19|20)\d{2}\s*[%s年]\s*(?:0?[1-9]|1[0-2])"
+        r"(?:\s*[%s月]\s*(?:0?[1-9]|[12]\d|3[01])\s*日?)?(?!\d)"
+        % (DATE_SEP, DATE_SEP)
+    ),
+    # Two-digit year, e.g. `24-11-14`; both month and day are required so a
+    # normal `4-11` label is never swallowed.
+    re.compile(
+        r"(?<![\d.])\d{2}\s*[%s]\s*(?:0?[1-9]|1[0-2])\s*[%s]\s*"
+        r"(?:0?[1-9]|[12]\d|3[01])(?!\d)" % (DATE_SEP, DATE_SEP)
+    ),
+)
 HEAD_CHARS = 16
 
 MIN_LINE_SCORE = 0.4     # detection confidence for a line-like box
@@ -149,6 +167,14 @@ def _split_bare(digits):
     return out
 
 
+def _date_spans(text):
+    """Character ranges occupied by dates such as `2024-11-14`."""
+    spans = []
+    for pattern in DATE_RES:
+        spans.extend(match.span() for match in pattern.finditer(text))
+    return spans
+
+
 def qid_candidates(text, valid):
     """Pull question-number candidates out of one recognised line.
 
@@ -160,19 +186,26 @@ def qid_candidates(text, valid):
     t = normalize_text(text).strip()
     if not t:
         return out
+    dates = _date_spans(t)
 
     def unit_follows(match):
         end = match.end()
         return end < len(t) and t[end].isascii() and t[end].isalpha()
 
+    def inside_date(match):
+        return any(match.start() < end and match.end() > start
+                   for start, end in dates)
+
     match = ANCHOR_RE.match(t)
-    if match and not unit_follows(match):
+    if match and not unit_follows(match) and not inside_date(match):
         qid = "%d-%d" % (int(match.group(1)), int(match.group(2)))
         if valid is None or qid in valid:
             out.append((qid, 1.0, "start"))
 
     head = t[:HEAD_CHARS]
     for match in LOOSE_RE.finditer(head):
+        if inside_date(match):
+            continue
         digits, number = match.group(1), match.group(3)
         if unit_follows(match):
             continue
@@ -187,11 +220,15 @@ def qid_candidates(text, valid):
 
     if valid is not None:
         for match in BARE_RE.finditer(t[:10]):
+            if inside_date(match):
+                continue
             found = {q for q in _split_bare(match.group(1)) if q in valid}
             if len(found) == 1:
                 out.append((found.pop(), 0.8, "bare"))
 
         for match in BARE_STEM_RE.finditer(t[:14]):
+            if inside_date(match):
+                continue
             digits = match.group(1)
             found = {}
             for length in range(2, len(digits) + 1):

@@ -128,6 +128,11 @@
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .viewer-head .pos { flex: 0 0 auto; font-size: 13px; color: var(--muted); }
+  .viewer-head .back {
+    flex: 0 0 auto; padding: 5px 10px; font-size: 16px; line-height: 1.1;
+  }
+  .lookup-back { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .lookup-back .ghost { padding: 6px 11px; font-size: 13px; }
   .tabs {
     display: flex; flex: 0 0 auto; background: var(--paper); border-radius: 10px;
     padding: 3px; border: 1px solid var(--line);
@@ -1053,10 +1058,17 @@
       <button id="go" class="ghost">查</button>
     </div>
     <p class="hint">题号按「篇-题」，跨册同号时以当前册为准。拍完可整页勾选、记错、批量复习。</p>
+    <button id="resumePick" class="ghost hidden" type="button" style="width:100%;margin-top:8px">
+      继续上次识别（<b id="resumeCount">0</b> 题）
+    </button>
   </section>
 
   <!-- 2. recognizing / candidates -->
   <section id="pick" class="card hidden">
+    <div class="lookup-back">
+      <button id="pickBack" class="ghost" type="button">‹ 返回</button>
+      <span class="hint">返回不会丢掉这张照片和勾选</span>
+    </div>
     <div class="thumbs"><img id="preview" class="thumb" alt="刚拍的照片"></div>
     <div id="busy" class="status"><span class="spinner"></span><span id="busyText">识别中…</span></div>
     <div id="pickBody" class="hidden">
@@ -1072,7 +1084,7 @@
       <div class="toolbar">
         <input id="manual2" type="text" placeholder="都不对？手输题号" autocomplete="off">
         <button id="go2" class="ghost">查</button>
-        <button id="retry" class="ghost">重拍</button>
+        <button id="retry" class="ghost">拍下一张</button>
       </div>
     </div>
   </section>
@@ -1080,6 +1092,7 @@
   <!-- 3. viewer -->
   <section id="viewer" class="card hidden">
     <div class="viewer-head">
+      <button id="viewerBack" class="ghost back" type="button" aria-label="返回上一层">‹</button>
       <h2 id="qidTitle">—</h2>
       <span id="wrongBadge" class="badge2 hidden"></span>
       <span id="pos" class="pos"></span>
@@ -1097,7 +1110,7 @@
       <button id="markOne" class="ghost">记错</button>
       <button id="zoom" class="ghost">放大</button>
       <button id="back" class="ghost">回候选</button>
-      <button id="again" class="ghost">再拍</button>
+      <button id="again" class="ghost">拍下一张</button>
     </div>
     <div id="paperWrap" class="paper-wrap"><img id="paper" alt="题目"></div>
     <p class="hint" id="viewerHint"></p>
@@ -1312,6 +1325,7 @@
       <h3 id="sheetTitle">记入错题本</h3>
       <span id="sheetCount" class="hint"></span>
     </div>
+    <p class="hint" style="margin:2px 0 0">超时不算错因：按真实原因选；没时间做完可以不选。</p>
     <div class="chips" id="sheetTags"></div>
     <textarea id="sheetNote" rows="2" placeholder="一句话备注（可不填）"></textarea>
     <label class="check" id="sheetPhotoRow">
@@ -1460,6 +1474,7 @@
       <label>超时<input type="number" id="bqOvertime" min="0" max="25" inputmode="numeric"></label>
     </div>
     <p class="bq-hint" id="bqAutoHint">逐题可不录；只填四个数也能保存。逐题录满 25 题时，四个数自动计算。</p>
+    <p class="bq-hint">象限规则：做错 + 超时仍归「做错」；超时只单独计数，把「做对但超时」识别成「会但慢」。</p>
     <div class="bq-photo">
       <button type="button" id="bqPhotoPick" class="ghost small">拍答案纸照片</button>
       <img id="bqPhotoThumb" class="hidden" alt="答案纸照片">
@@ -1798,10 +1813,14 @@ const TAB_FOR_SCREEN = {
   data: "data",
 };
 
+let currentScreen = "dash";
+
 function show(section) {
   for (const id of SCREENS) {
     $(id).classList.toggle("hidden", id !== section);
   }
+  currentScreen = section;
+  if (section === "home") updateResumePick();
   const tab = TAB_FOR_SCREEN[section] || "dash";
   for (const button of $("tabbar").querySelectorAll("button")) {
     button.classList.toggle("on", button.dataset.tab === tab);
@@ -1810,7 +1829,40 @@ function show(section) {
   // The family picker belongs to the lookup flow only; the book has its own.
   $("family").classList.toggle("hidden", tab !== "lookup");
   window.scrollTo(0, 0);
+  // A photo in progress must survive the phone's back gesture.  One sentinel
+  // entry turns "back" into viewer → pick → home instead of closing the PWA
+  // and throwing away the scan.
+  if (section === "pick" || section === "viewer") armBackGuard();
 }
+
+function armBackGuard() {
+  if (history.state && history.state.yantuLookup) return;
+  history.pushState({ yantuLookup: true }, "");
+}
+
+function lookupBack(fallback) {
+  if (history.state && history.state.yantuLookup) {
+    history.back();
+    return;
+  }
+  show(fallback);
+}
+
+window.addEventListener("popstate", (event) => {
+  if (event.state && event.state.yantuLookup) return; // forward nav to our entry
+  if (!$("sheet").classList.contains("hidden")) {
+    // The mark sheet is the top layer; back closes it and keeps the scan.
+    closeSheet();
+    armBackGuard();
+    return;
+  }
+  if (currentScreen === "viewer") {
+    closeViewer();
+    show(state.cands.length ? "pick" : "home");
+  } else if (currentScreen === "pick") {
+    show("home");
+  }
+});
 
 $("tabbar").addEventListener("click", (event) => {
   const button = event.target.closest("button[data-tab]");
@@ -1879,21 +1931,30 @@ $("camera").addEventListener("change", async (e) => {
 });
 
 $("retry").addEventListener("click", () => {
-  closeViewer();
-  show("home");
+  // Reopen the camera from here; going home first cost an extra tap and made
+  // "how do I shoot the next page?" a real question.
+  $("camera").click();
 });
 
 // Back to the ticks, not all the way home: adjusting a mis-ticked question
 // must not cost another photo.
 $("back").addEventListener("click", () => {
   closeViewer();
-  show(state.cands.length ? "pick" : "home");
+  lookupBack(state.cands.length ? "pick" : "home");
 });
 
 $("again").addEventListener("click", () => {
-  closeViewer();
-  show("home");
+  $("camera").click();
 });
+
+$("pickBack").addEventListener("click", () => lookupBack("home"));
+
+$("viewerBack").addEventListener("click", () => {
+  closeViewer();
+  lookupBack(state.cands.length ? "pick" : "home");
+});
+
+$("resumePick").addEventListener("click", () => show("pick"));
 
 for (const [btn, input] of [["go", "manual"], ["go2", "manual2"]]) {
   $(btn).addEventListener("click", () => openManual($(input).value));
@@ -1912,6 +1973,7 @@ async function recognizeFile(file) {
   state.sel = new Set();
   state.off = new Set();
   state.cands = [];
+  updateResumePick();
   state.file = file;   // offered as the attachment when marking a wrong answer
   // Candidate ids are bare ("3-11"); remember the book they were read under
   // so a later family switch cannot silently re-prefix them.
@@ -1963,10 +2025,17 @@ function handleStage(data) {
   renderCandidates(data, data.stage === "full");
 }
 
+function updateResumePick() {
+  const n = state.cands.length;
+  $("resumePick").classList.toggle("hidden", !n);
+  $("resumeCount").textContent = n;
+}
+
 function renderCandidates(data, final) {
   $("busy").classList.toggle("hidden", final);
   $("pickBody").classList.remove("hidden");
   state.cands = data.candidates || [];
+  updateResumePick();
   const cands = state.cands;
   $("busyText").textContent = "先给你 " + cands.length + " 个题号，继续找…";
   $("pickMeta").textContent = final
@@ -2123,7 +2192,6 @@ async function showViewerAt(index, note) {
     $("pos").textContent = batch ? (index + 1) + " / " + state.order.length : "";
     $("prev").classList.toggle("hidden", !batch);
     $("next").classList.toggle("hidden", !batch);
-    $("again").classList.toggle("hidden", batch);
     $("viewerPrint").textContent = batch
       ? "打印 " + state.order.length + " 题" : "打印这题";
     $("viewerSpec").classList.toggle("hidden", !info.category_key);
@@ -2321,7 +2389,8 @@ async function saveSheet() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || res.statusText);
     const n = data.created.length + data.updated.length;
-    toast(n ? "已记 " + n + " 题" : "没有记入新题");
+    const next = sheet.from === "viewer" ? " · 拍下一张继续" : "";
+    toast(n ? "已记 " + n + " 题" + next : "没有记入新题");
     if (data.errors.length) {
       toast("有 " + data.errors.length + " 题没记上：" + data.errors[0].detail);
     }
@@ -6699,7 +6768,7 @@ async function startReview() {
 
 function renderReviewTags() {
   const box = $("rTagBox");
-  box.innerHTML = '<span class="hint" style="align-self:center">错因（可选）</span>';
+  box.innerHTML = '<span class="hint" style="align-self:center">错因（可选；超时不算错因）</span>';
   for (const key of Object.keys(TAG_LABELS)) {
     const b = document.createElement("button");
     b.type = "button";

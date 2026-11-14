@@ -68,14 +68,23 @@ def _as_list(value):
     return [] if value is None else [v for v in value]
 
 
-def _is_question_line(box, page_width):
-    """True if a detected line is a full text line, not a figure fragment."""
+def _is_question_line(box, page_width, text=""):
+    """True if a detected line is a full text line, not a figure fragment.
+
+    A label printed on its own line ("4-9" separated from the stem) is short,
+    so it fails the stem-width rule; the regex already proves it is a label,
+    and the left-margin check keeps figure fragments out.
+    """
     if box is None:
         return False
     width = box[2][0] - box[0][0]
     if width >= page_width * FULL_LINE_RATIO:
         return True
-    return box[0][0] <= page_width * LEFT_MARGIN_RATIO and width >= MIN_STEM_WIDTH
+    if box[0][0] <= page_width * LEFT_MARGIN_RATIO:
+        if QID_RE.match(text):
+            return True
+        return width >= MIN_STEM_WIDTH
+    return False
 
 
 def page_qids(doc, index):
@@ -106,7 +115,7 @@ def page_qids(doc, index):
     hits = []
     for j, text in enumerate(txts):
         box = boxes[j] if j < len(boxes) else None
-        if not _is_question_line(box, pix.width):
+        if not _is_question_line(box, pix.width, text):
             continue
         match = QID_RE.match(text)
         if not match:
