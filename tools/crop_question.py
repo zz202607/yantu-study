@@ -15,6 +15,7 @@ import argparse
 import json
 import os
 import re
+import threading
 
 import pymupdf
 
@@ -25,6 +26,15 @@ INDEX = os.path.join(ROOT, "index")
 BOX_DIR = os.path.join(INDEX, "boxes")
 PX_DPI = 100          # chapter books store boxes at this render dpi
 RENDER_DPI = 200      # output resolution for reading / printing
+
+# Printed label at the start of a line.  The trailing (?!\d) is what separates
+# a question number from a regulation code: `JGJ 94-2008` must not read as 94-200.
+QID_LABEL_RE = re.compile(r"^\s*[\(\[（【'\"“]?\s*(\d{1,2})\s*[-—–_·一]\s*(\d{1,3})(?!\d)")
+
+_CHAPTERS = {}
+_PROBE_CACHE = {}
+_PROBE_LOCK = threading.Lock()
+_PROBE_OCR_LOCK = threading.Lock()
 
 
 def load_jsonl(path):
@@ -107,6 +117,103 @@ def boxes_for(book, pages, number, qid):
         below = [h["box"][1] * scale for h in hits if h["box"][1] * scale > y0 + 1]
         return page_no, y0, (min(below) if below else None)
     return None
+
+
+def book_chapters(book):
+    """Chapter numbers this volume actually contains (empty for exam/mock)."""
+    key = os.path.splitext(book)[0]
+    if key in _CHAPTERS:
+        return _CHAPTERS[key]
+    chapters = set()
+    try:
+        with open(os.path.join(INDEX, "books.json"), encoding="utf-8") as fh:
+            rows = json.load(fh).get("books", [])
+        for row in rows:
+            if os.path.splitext(row.get("file", ""))[0] == key:
+                chapters = {int(v) for v in (row.get("chapters") or [])}
+                break
+    except (OSError, ValueError, TypeError):
+        pass
+    _CHAPTERS[key] = chapters
+    return chapters
+
+
+def label_qid(hit):
+    """The label a hit really carries, or None for OCR noise.
+
+    Older JSONL files predate the trailing-digit guard, so a citation such as
+    `JGJ 94-2008` can still sit in the index as `94-200`.  Replaying the
+    current regex over `raw` drops those without another OCR pass.
+    """
+    match = QID_LABEL_RE.match(str(hit.get("raw") or ""))
+    if not match:
+        return None
+    return "%s-%s" % (match.group(1), match.group(2))
+
+
+def is_next_label(parsed, qid, chapters):
+    """True when `parsed` can open the question after `qid` in this volume."""
+    try:
+        cur_ch, cur_num = (int(v) for v in qid[1:].split("-"))
+        ch, num = (int(v) for v in parsed.split("-"))
+    except (ValueError, AttributeError):
+        return False
+    if chapters and ch not in chapters:
+        return False
+    if ch < cur_ch:
+        return False
+    return ch != cur_ch or num > cur_num
+
+
+def next_label(hits, scale, y0, qid, chapters):
+    """Y (PDF points) of the next question label below `y0`, or None."""
+    ys = []
+    for hit in hits:
+        box = hit.get("box")
+        if not box:
+            continue
+        y = box[1] * scale
+        if y <= y0 + 1:
+            continue
+        parsed = label_qid(hit)
+        if parsed and is_next_label(parsed, qid, chapters):
+            ys.append(y)
+    return min(ys) if ys else None
+
+
+def page_opens_with_label(doc, page_no, book, qid, chapters):
+    """True when OCR sees a question label at the top of an unlabelled page.
+
+    The page index is built from OCR and can miss a label printed on its own
+    line; following the hits alone would then swallow the next question into
+    the current crop.  OCR is only paid for pages the index has no label for,
+    and the answer is cached for this process.
+    """
+    key = (os.path.splitext(book)[0], page_no, qid)
+    with _PROBE_LOCK:
+        if key in _PROBE_CACHE:
+            return _PROBE_CACHE[key]
+    found = False
+    try:
+        import extract_qids as EQ
+
+        # RapidOCR is a shared engine; crop threads must not drive it at once.
+        with _PROBE_OCR_LOCK:
+            hits = EQ.page_qids(doc, page_no - 1)
+        height = doc[page_no - 1].rect.height
+        for hit in hits:
+            box = hit.get("box")
+            if not box or box[1] * 72.0 / PX_DPI > height * 0.20:
+                continue
+            parsed = label_qid(hit)
+            if parsed and is_next_label(parsed, qid, chapters):
+                found = True
+                break
+    except Exception:  # noqa: BLE001 - OCR is an assist, never a hard failure
+        found = False
+    with _PROBE_LOCK:
+        _PROBE_CACHE[key] = found
+    return found
 
 
 def has_ink(page, strip_points=40):
@@ -338,11 +445,24 @@ def plan_segments(book, pages, number, qid, max_pages=3):
     discovered by following the ink at the bottom edge.
     """
     rows, scale, (field, value) = load_labels(book, qid, number)
+    chapters = book_chapters(book) if field == "qid" else set()
     filename = book if book.lower().endswith(".pdf") else book + ".pdf"
     doc = pymupdf.open(book_pdf(filename))
     queue = list(pages) + [p + 1 for p in pages]
     seen = set()
     segments = []
+
+    def boundary(hits, y0):
+        """First label below y0 that can start the next question, or None."""
+        if field == "qid":
+            return next_label(hits, scale, y0, qid, chapters)
+        ys = [
+            h["box"][1] * scale
+            for h in hits
+            if h.get("box") and h["box"][1] * scale > y0 + 1
+        ]
+        return min(ys) if ys else None
+
     try:
         while queue and len(segments) < max_pages:
             page_no = queue.pop(0)
@@ -358,9 +478,9 @@ def plan_segments(book, pages, number, qid, max_pages=3):
                 if not segments:
                     continue  # label not here yet
                 # continuation: everything above the next label belongs to us
-                y1 = min((h["box"][1] * scale for h in hits), default=page.rect.y1)
+                y1 = boundary(hits, -1) or page.rect.y1
                 segments.append((page_no, page.rect.y0, y1))
-                if hits:
+                if y1 < page.rect.y1 - 0.5:
                     break
                 if not has_ink(page) or len(segments) >= max_pages:
                     break
@@ -368,9 +488,9 @@ def plan_segments(book, pages, number, qid, max_pages=3):
                 continue
 
             y0 = target["box"][1] * scale
-            below = [h["box"][1] * scale for h in hits if h["box"][1] * scale > y0 + 1]
-            segments.append((page_no, y0, min(below) if below else page.rect.y1))
-            if below:
+            y1 = boundary(hits, y0)
+            segments.append((page_no, y0, y1 or page.rect.y1))
+            if y1:
                 break
             # The label is the last one on the page, so whatever sits above the
             # next page's first label belongs to this question, even when this
@@ -382,9 +502,14 @@ def plan_segments(book, pages, number, qid, max_pages=3):
             # far down carries the tail of this question above it.
             nxt = page_no + 1
             nrow = rows.get(nxt) or {}
-            nhits = [h["box"][1] * scale for h in nrow.get("hits", []) if h.get("box")]
-            first_y = min(nhits) if nhits else doc[nxt - 1].rect.y1
-            if first_y < doc[nxt - 1].rect.height * 0.15:
+            nhits = [h for h in nrow.get("hits", []) if h.get("box")]
+            first_y = boundary(nhits, -1)
+            if first_y is not None:
+                if first_y < doc[nxt - 1].rect.height * 0.15:
+                    break
+            elif field == "qid" and page_opens_with_label(doc, nxt, book, qid, chapters):
+                # The index has no label here, but the page may still open with
+                # one (a label printed on its own line is easy to miss).
                 break
             queue.append(nxt)
         return segments
@@ -400,12 +525,18 @@ def main():
     args = parser.parse_args()
 
     if args.answer:
-        pair = answer_pages(args.qid)
-        if not pair:
-            raise SystemExit("no answer page for %s" % args.qid)
-        book, pages = pair
+        if args.qid[0] in "CZ":
+            # Chapter workbooks keep the solution in a separate volume, same
+            # split as app/server.build_crop.
+            book, pages, _, _ = resolve_qid(args.qid, prefer="solutions")
+        else:
+            pair = answer_pages(args.qid)
+            if not pair:
+                raise SystemExit("no answer page for %s" % args.qid)
+            book, pages = pair
     else:
-        book, pages, _, _ = resolve_qid(args.qid)
+        prefer = "blank" if args.qid[0] == "C" else "solutions"
+        book, pages, _, _ = resolve_qid(args.qid, prefer=prefer)
     if args.out == "":
         args.out = os.path.join(ROOT, ".probe", "%s%s.png" % (args.qid.replace("-", "_"), "_a" if args.answer else ""))
 
