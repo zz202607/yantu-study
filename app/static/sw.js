@@ -4,7 +4,7 @@
  * question or a stale review queue.  The shell itself is network-first with a
  * cache fallback so a flaky Wi-Fi hop does not blank the page.
  */
-const CACHE = "yantu-shell-v6";
+const CACHE = "yantu-shell-v7";
 const SHELL = [
   "/",
   "/manifest.webmanifest",
@@ -33,8 +33,13 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/")) return;
+  // Navigation bypasses the HTTP cache too; the shell is small and must match
+  // /api/version on the same request.
+  const network = request.mode === "navigate"
+    ? fetch(request, { cache: "no-store" })
+    : fetch(request);
   event.respondWith(
-    fetch(request)
+    network
       .then((response) => {
         if (response.ok) {
           const copy = response.clone();

@@ -19,23 +19,38 @@ MANUAL = [
     {
         "title": "每天怎么走",
         "steps": [
-            "打开 App，首页第一张卡「今天这么走」就是顺序，跟着「现在做」往下点。",
-            "① 打印今天的卷：一份 PDF 装今天要复习的错题 + 今天的新题（按每周 "
-            "11 小时摊到每天，复习先占时间）；没时间就点卡片底下的 30/60 分钟短卷，"
-            "先保复习，剩下的顺延。",
-            "② 错题复习：按到期 → 新错 → 顽固排好，做对/做错两个键；"
-            "案例按过程评分。",
-            "③ 上传手写：纸上做完的题，选题目 → 拍照，照片挂在这道题上。",
-            "④ 记今天四个数（作答 / 做对 / 放弃 / 超时）—— 点一下直接填，"
-            "周计划和纠偏都靠它。",
-            "新错题：拍题号 → 核对题干/解析 → 勾错因存档；"
+            "打开 App，首页「今天的卷」只有两步：先打印，做完回来核对。",
+            "① 打印今天的卷：App 自己知道哪些是复习、哪些是新题，"
+            "按每周可投入时间算好张数；没时间就用 30/60 分钟短卷。",
+            "② 做完核对：点「做完核对」→ 默认都算做对，只把没做对的题点成"
+            "「错」并选错因；也可以拍一张卷面。",
+            "保存后自动归档：错题入本、复习排期、练习总量都自动写，"
+            "不用再填四个数。",
+            "没打印的日子：点「直接在 App 里复习」；新错题也可以单独用「拍题」记。",
             "有精力再做限时拆解 / 认题卡、规范伴读。",
+        ],
+    },
+    {
+        "title": "系统怎么运作",
+        "steps": [
+            "错题要先录一次才会进复习：在 App 里复习点「没做对」会自动记；"
+            "纸上做的用「拍题」把题号拍进来，勾选后一次记一页，不用一题一题录。",
+            "每题只有一行账：错几次、上次对错、下次哪天复习；同一题再记只加次数。",
+            "每天排队顺序：先到期，再 3 天内新错，最后最多 3 道顽固题；每天上限 20 题，"
+            "超出的自动顺延。",
+            "复习结果自动排下次：做对 7 → 15 → 30 天；连续两次做对且间隔 ≥7 天才算掌握；"
+            "做错回到 1 天（长间隔后再错给 3 天）。",
+            "新题量：阶段周目标（现在 20 题/周）÷ 剩余天数，再受每天约 94 分钟的时间预算限制；"
+            "题目按未完成原型从题库里选。",
+            "练习四个数不用手填：今日卷核对时按题目结果自动算；"
+            "只有没打印、自己另做的练习，才在计划页手动记一次。",
         ],
     },
     {
         "title": "打印怎么用",
         "steps": [
-            "首页第 1 步「打印今天的卷」一键出卷；顶部「打印」按钮有更多范围。",
+            "首页「今天的卷」点一下就能打印；顶部「打印」按钮有更多范围。"
+            "打印会记住这张卷的题号，核对时不用再找题。",
             "题面在前、答案单独成页；第一次先别翻答案部分。",
             "每份文件名带卷名和生成时间，下载后不会互相覆盖。",
             "封面自带结果回填格，做完可以照格子录回 App。",
@@ -161,7 +176,7 @@ def _practice_task(activity):
     return {
         "key": "practice",
         "title": "记练习台账",
-        "detail": "点「记四个数」直接填：作答 / 做对 / 放弃 / 超时。",
+        "detail": "作答 / 做对 / 放弃 / 超时 · 只算新题和套卷，复习自动记。",
         "route": "plan",
         "minutes": 1,
         "done": (activity.get("practices") or 0) > 0,
@@ -219,7 +234,7 @@ def daily_new_quota(plan, review_count=0, now=None):
     return min(share, fitted)
 
 
-def _plan_task(plan, activity, now, review_count=0):
+def _plan_task(plan, activity, now, review_count=0, pack=None):
     """New-question volume from the weekly plan, spread over the days left."""
     week = (plan or {}).get("week") or {}
     try:
@@ -233,6 +248,29 @@ def _plan_task(plan, activity, now, review_count=0):
     days_left = max(1, 7 - now.weekday())
     daily = daily_new_quota(plan, review_count, now)
     recorded = (activity.get("practices") or 0) > 0
+    if (pack and pack.get("closed")
+            and not pack.get("summary", {}).get("superseded")):
+        return {
+            "key": "plan",
+            "title": "今日卷已自动归档",
+            "detail": "错题、复习排期和练习总量都已写入，不用再手填四个数。",
+            "route": "pack",
+            "minutes": 0,
+            "progress": "%d/%d" % (min(attempted, target), target),
+            "done": True,
+            "optional": True,
+        }
+    if pack and not pack.get("closed"):
+        return {
+            "key": "plan",
+            "title": "做完今日卷再核对",
+            "detail": "核对归档后，错题和练习量会自动写入。",
+            "route": "pack",
+            "minutes": 0,
+            "progress": "%d/%d" % (min(attempted, target), target),
+            "done": False,
+            "optional": True,
+        }
     progress = "%d/%d" % (min(attempted, target), target)
     if remaining <= 0:
         title = "本周题量已完成"
@@ -244,7 +282,7 @@ def _plan_task(plan, activity, now, review_count=0):
         done = True
     else:
         title = "新题练习 今天约 %d 题" % daily
-        detail = "本周 %d/%d 题，剩 %d 天；做完点「记四个数」直接填。" % (
+        detail = "本周 %d/%d 题，剩 %d 天；做完点第 4 步直接填。" % (
             attempted, target, days_left)
         done = False
     return {
@@ -267,9 +305,10 @@ def build(store, settings, *, now=None, reading=None, baseline=None, plan=None):
     recommendation = ((reading or {}).get("recommendation")
                       if isinstance(reading, dict) else None)
 
+    pack = store.latest_day_pack(day)
     tasks = [_review_task(overview, activity)]
     for candidate in (
-        _plan_task(plan, activity, now, overview.get("count") or 0),
+        _plan_task(plan, activity, now, overview.get("count") or 0, pack),
         _drill_task(store, activity, baseline),
         _reading_task(recommendation, activity),
     ):

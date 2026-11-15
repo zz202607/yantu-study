@@ -27,7 +27,9 @@ from urllib.parse import quote
 
 import numpy as np
 from fastapi import Body, FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import (
+    FileResponse, HTMLResponse, JSONResponse, StreamingResponse,
+)
 from PIL import Image, ImageOps
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -36,7 +38,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 import crop_question as CQ  # noqa: E402
 import recognize_qid as RQ  # noqa: E402
-from app import analytics, baseline as baseline_app, briefing as briefing_app, clauses as clauses_app, drill as drill_app, plan as study_plan, reading as reading_app, report as report_app, standards  # noqa: E402
+from app import analytics, baseline as baseline_app, briefing as briefing_app, clauses as clauses_app, daypack as daypack_app, drill as drill_app, plan as study_plan, reading as reading_app, report as report_app, standards  # noqa: E402
 from app.answer_ocr import analyze_crop  # noqa: E402
 from app.net import lan_ip  # noqa: E402
 from app.catalog import Catalog  # noqa: E402
@@ -240,9 +242,37 @@ def answer_image(qid):
     return build_crop(qid, True)
 
 
+INDEX_HTML = STATIC / "index.html"
+
+
+def app_build():
+    """A version stamp that changes whenever the page shell changes."""
+    try:
+        return str(int(INDEX_HTML.stat().st_mtime))
+    except OSError:
+        return "0"
+
+
 @app.get("/")
 def index():
-    return FileResponse(STATIC / "index.html")
+    """Serve the shell with its build id and no HTTP cache.
+
+    An installed PWA resumes its old DOM instead of navigating, so the page
+    polls /api/version and reloads itself when the shell on disk moved on.
+    """
+    html = INDEX_HTML.read_text(encoding="utf-8").replace(
+        "__APP_BUILD__", app_build())
+    return HTMLResponse(
+        html, headers={"Cache-Control": "no-store, max-age=0"}
+    )
+
+
+@app.get("/api/version")
+def app_version():
+    return JSONResponse(
+        {"build": app_build()},
+        headers={"Cache-Control": "no-store, max-age=0"},
+    )
 
 
 @app.get("/api/books")
@@ -298,6 +328,10 @@ def home():
         "budget_minutes": briefing_app.daily_budget(plan_view),
         "review_questions": overview["count"],
         "minutes": minutes_for(overview["count"], new_quota),
+    }
+    data["day_pack"] = {
+        "open": _pack_view(store.open_day_pack()),
+        "latest": _pack_view(store.latest_day_pack()),
     }
     try:
         read_view = reading_app.overview(store)
@@ -950,7 +984,9 @@ def handbook_page(p: int, dpi: int = 110):
 @app.get("/manifest.webmanifest")
 def web_manifest():
     return FileResponse(
-        STATIC / "manifest.webmanifest", media_type="application/manifest+json"
+        STATIC / "manifest.webmanifest",
+        media_type="application/manifest+json",
+        headers={"Cache-Control": "no-cache"},
     )
 
 
@@ -959,7 +995,10 @@ def service_worker():
     return FileResponse(
         STATIC / "sw.js",
         media_type="application/javascript",
-        headers={"Service-Worker-Allowed": "/"},
+        headers={
+            "Service-Worker-Allowed": "/",
+            "Cache-Control": "no-store, max-age=0",
+        },
     )
 
 
@@ -1067,6 +1106,44 @@ def baseline_payload():
     data.setdefault("year", baseline_app.YEAR)
     data.setdefault("pass_line", baseline_app.PASS_SCORE)
     return data
+
+
+def _pack_view(pack):
+    """A day pack with catalog display fields and role/result counts."""
+    if not pack:
+        return None
+    items = []
+    counts = {"review": 0, "new": 0, "wrong": 0}
+    for row in pack.get("items") or []:
+        info = catalog.describe(row["qid"])
+        item = {
+            "qid": row["qid"],
+            "role": row.get("role", "new"),
+            "result": row.get("result", ""),
+            "tags": row.get("tags") or [],
+            "family": info.get("family", ""),
+            "family_name": info.get("family_name", ""),
+            "chapter": info.get("chapter", ""),
+            "section": info.get("section", ""),
+            "book": info.get("book", ""),
+        }
+        counts[item["role"]] = counts.get(item["role"], 0) + 1
+        if item["result"] == "wrong":
+            counts["wrong"] += 1
+        items.append(item)
+    return {
+        "id": pack["id"],
+        "day": pack["day"],
+        "title": pack["title"],
+        "created_at": pack["created_at"],
+        "closed_at": pack["closed_at"],
+        "closed": pack["closed"],
+        "session_id": pack.get("session_id"),
+        "photo_id": pack.get("photo_id"),
+        "summary": pack.get("summary") or {},
+        "items": items,
+        "counts": counts,
+    }
 
 
 def _describe(item):
@@ -1418,6 +1495,33 @@ def review_today():
     return overview
 
 
+@app.get("/api/day-pack")
+def get_day_pack():
+    """The open printed sheet for today, ready to be checked."""
+    pack = store.open_day_pack()
+    return {"day": time.strftime("%Y-%m-%d"), "pack": _pack_view(pack)}
+
+
+@app.post("/api/day-pack/{pack_id}/result")
+def submit_day_pack(pack_id: int, payload: dict = Body(...)):
+    """Check a printed day sheet: grade reviews, file wrongs, record practice."""
+    pack = store.day_pack(pack_id)
+    if not pack:
+        raise HTTPException(404, "今日卷不存在")
+    try:
+        outcome = daypack_app.apply_results(
+            store, pack,
+            payload.get("items") or [],
+            photo_sha=payload.get("photo_sha"),
+        )
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    return {
+        "pack": _pack_view(outcome["pack"]),
+        "summary": outcome["summary"],
+    }
+
+
 @app.get("/api/handwriting/targets")
 def handwriting_targets():
     """Questions today's paper work can be attached to.
@@ -1638,7 +1742,10 @@ def print_questions(
         # review is done, so a late print only carries new questions.
         session = store.session()
         if session.get("id") and not session.get("finished"):
-            review_qids = list(session.get("queue") or [])
+            graded = session.get("graded") or {}
+            review_qids = [
+                qid for qid in session.get("queue") or [] if qid not in graded
+            ]
         elif session.get("id"):
             review_qids = []
         else:
@@ -1647,6 +1754,17 @@ def print_questions(
             minutes = max(0, min(int(minutes or 0), 180))
         except (TypeError, ValueError):
             minutes = 0
+        # Freeze the review queue when the sheet is printed: the pack stores
+        # that session so checking the paper can grade it without re-entering
+        # the review flow.
+        pack_session_id = None
+        if review_qids:
+            if session.get("id") and not session.get("finished"):
+                pack_session_id = session["id"]
+            else:
+                started = store.start_session()
+                if started.get("id") and not started.get("finished"):
+                    pack_session_id = started["id"]
         new_qids, daily = [], 0
         try:
             plan_view = study_plan.overview(
@@ -1820,6 +1938,21 @@ def print_questions(
         raise HTTPException(500, "生成打印卷失败：%s" % exc)
     stats["filename"] = out.name
     stats["scope"] = scope
+    if scope == "today":
+        # The sheet is the day's source of truth: it records which qids were
+        # review and which were new, so checking it needs no manual totals.
+        pack_items = []
+        for section in sections:
+            role = "review" if section.get("short") == "复" else "new"
+            pack_items.extend(
+                {"qid": qid, "role": role} for qid in section["qids"]
+            )
+        try:
+            pack = store.save_day_pack(
+                pack_items, session_id=pack_session_id, title=title)
+            stats["day_pack"] = pack["id"]
+        except ValueError as exc:
+            stats["day_pack_error"] = str(exc)
     if scope == "week":
         stats["days"] = days
         stats["truncated"] = dropped
