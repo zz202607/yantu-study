@@ -13,6 +13,12 @@ pipeline is:
    over, so a detection-free scan is the only way to see those labels.
 5. Keep candidates whose patch text *starts* with a question-number pattern.
 
+Two label shapes are read: workbook labels (`3-11`) and self-describing book
+labels (`A2025-A-7`, `K2025-P-68`, `M2-13`).  The latter name their own book,
+so they need no family prefix and are validated against the exam/mock index
+instead.  Both shapes can appear on one page: a printed wrong-book sheet mixes
+case, knowledge and past-exam questions.
+
 Cost is ~20 ms per patch whatever its size, and every channel is a list of
 patches, so the pipeline is shaped to send few, cheap patches: heads are cut
 narrow (wide ones get squeezed by the recogniser's fixed input), strip windows
@@ -20,8 +26,8 @@ are sized to its cheapest aspect, blank windows are skipped, and a confident
 head read skips the strip scan entirely.
 
 Only question numbers are recognised -- stems and figures stay as page images
-(decision D2).  Family prefixes are not decided here; that is the app's job
-(decision D1: current book first).
+(decision D2).  Workbook family prefixes are not decided here; that is the
+app's job (decision D1: current book first).
 
 Usage:
     py -3 tools/recognize_qid.py "拍照错题/3-11.jpg"
@@ -45,7 +51,7 @@ INDEX = os.path.join(ROOT, "index")
 # `3-11` at the start of the line.  OCR often turns the hyphen into a dash,
 # a CJK `一`, or drops it entirely; surrounding spaces and a bracket are
 # tolerated.  `DASH` is shared by the looser patterns below.
-DASH = "-—–_·一"
+DASH = "-—–_·一−"
 ANCHOR_RE = re.compile(
     r"^\s*[\(\[（【'\"“]?\s*(\d{1,2})\s*[%s]\s*(\d{1,3})(?!\d)" % DASH
 )
@@ -66,6 +72,30 @@ BARE_STEM_RE = re.compile(r"(?<![\d.])(\d{3,5})(?=某)")
 # valid-looking key `4-11` (the tail of the year plus the month).  Every
 # candidate whose match lies inside one of these spans is discarded.
 DATE_SEP = "-—–_./·一"
+# Past-exam and mock labels already carry their own book: `A2025-A-7` is the
+# 2025 morning case paper, question 7.  OCR turns hyphens into dash-like
+# glyphs, splits them with spaces, or drops them outright, so both separators
+# are optional -- but a read is only kept when the index holds the exact key,
+# so a dropped dash cannot invent a question.  The trailing `(?!\d)` guard
+# stops `A2025-A-70` from being read as question 7.
+EXAM_SEP = r"[\s\-—–_·−一./]?"
+_EXAM_BODY = (
+    r"([AK])\s*(\d{4})\s*%s\s*([AP])\s*%s\s*(\d{1,3})(?!\d)"
+    % (EXAM_SEP, EXAM_SEP)
+)
+EXAM_RE = re.compile(
+    r"^\s*[\(\[（【'\"“]?\s*" + _EXAM_BODY, re.IGNORECASE
+)
+# A label with a stray mark or handwriting glued to its left still carries the
+# key; only the first few characters are searched so page text stays silent.
+EXAM_ANY_RE = re.compile(_EXAM_BODY, re.IGNORECASE)
+MOCK_RE = re.compile(
+    r"^\s*[\(\[（【'\"“]?\s*M\s*(\d{1,2})\s*[%s]\s*(\d{1,3})(?!\d)" % DASH,
+    re.IGNORECASE,
+)
+MOCK_BARE_RE = re.compile(
+    r"^\s*[\(\[（【'\"“]?\s*M\s*(\d{2,4})(?!\d)", re.IGNORECASE
+)
 DATE_RES = (
     re.compile(
         r"(?<!\d)(?:19|20)\d{2}\s*[%s年]\s*(?:0?[1-9]|1[0-2])"
@@ -130,7 +160,8 @@ def as_list(value):
 
 
 _FULLWIDTH = str.maketrans(
-    "０１２３４５６７８９－．（）【】", "0123456789-.()[]"
+    "０１２３４５６７８９－．（）【】ＡＫＰＭａｋｐｍ",
+    "0123456789-.()[]AKPMakpm",
 )
 
 
@@ -142,6 +173,30 @@ def load_valid(family):
     """Question keys of a book family from index/lookup.json, without prefix."""
     lookup = json.load(open(os.path.join(INDEX, "lookup.json"), encoding="utf-8"))
     return {key[1:] for key in lookup["chapter"] if key.startswith(family)}
+
+
+_REGISTRY = {}
+_REGISTRY_LOCK = threading.Lock()
+
+
+def load_self_describing():
+    """Full keys of the exam and mock books, loaded once per process.
+
+    Unlike chapter keys these need no family prefix -- `A2025-A-7` names its
+    own book -- so they are validated as-is.  Loading is deferred until the
+    first photo and cached: one photo can mix every family, and the sets are
+    small next to the workbook key map the server already holds.
+    """
+    if not _REGISTRY:
+        with _REGISTRY_LOCK:
+            if not _REGISTRY:
+                with open(
+                    os.path.join(INDEX, "lookup.json"), encoding="utf-8"
+                ) as fh:
+                    lookup = json.load(fh)
+                _REGISTRY["exam"] = frozenset(lookup.get("exam") or ())
+                _REGISTRY["mock"] = frozenset(lookup.get("mock") or ())
+    return _REGISTRY["exam"], _REGISTRY["mock"]
 
 
 def _split_qids(digits, number):
@@ -175,12 +230,17 @@ def _date_spans(text):
     return spans
 
 
-def qid_candidates(text, valid):
+def qid_candidates(text, valid, exam_keys=None, mock_keys=None):
     """Pull question-number candidates out of one recognised line.
 
     Returns (qid, confidence multiplier, kind) tuples.  With `valid` (the
     current book's keys) even damaged reads like `p=143-2` or `(412)` resolve;
     without it only the conservative anchored read is accepted.
+
+    `exam_keys` / `mock_keys` are the full keys of the past-exam and mock
+    books.  A label like `A2025-A-7` is self-describing, so it is emitted as
+    a full key; `None` means "accept a well-formed read" (benchmark/test use
+    without an index), while a set restricts the read to real questions.
     """
     out = []
     t = normalize_text(text).strip()
@@ -196,6 +256,70 @@ def qid_candidates(text, valid):
         return any(match.start() < end and match.end() > start
                    for start, end in dates)
 
+    # A self-describing label contains digit-hyphen-digit runs of its own
+    # (`M2-13` holds `2-13`).  Those characters belong to the label, not to
+    # the current workbook, so chapter reads inside the span are suppressed.
+    label_spans = []
+
+    def inside_label(match):
+        return any(match.start() < end and match.end() > start
+                   for start, end in label_spans)
+
+    def exam_key(match):
+        return "%s%s-%s-%d" % (
+            match.group(1).upper(), match.group(2),
+            match.group(3).upper(), int(match.group(4)),
+        )
+
+    # Self-describing labels first: they cannot be mistaken for chapter pairs,
+    # and on a mixed printed sheet they are what a photo most often shows.
+    emitted = set()
+
+    def emit_self(key, score, kind, span):
+        if key in emitted:
+            return
+        emitted.add(key)
+        label_spans.append(span)
+        out.append((key, score, kind))
+
+    match = EXAM_RE.match(t)
+    if match and not unit_follows(match):
+        key = exam_key(match)
+        if exam_keys is None or key in exam_keys:
+            emit_self(key, 1.0, "start", match.span())
+    # Scan a little past HEAD_CHARS so a spaced-out key is not cut in half;
+    # only the match's start position is constrained.
+    for match in EXAM_ANY_RE.finditer(t[:HEAD_CHARS + 20]):
+        if match.start() > 6 or match.start() == 0:
+            continue
+        if unit_follows(match):
+            continue
+        key = exam_key(match)
+        if exam_keys is not None and key not in exam_keys:
+            continue
+        emit_self(key, 0.93 if match.start() <= 2 else 0.88, "loose",
+                  match.span())
+
+    match = MOCK_RE.match(t)
+    if match and not unit_follows(match):
+        key = "M%d-%d" % (int(match.group(1)), int(match.group(2)))
+        if mock_keys is None or key in mock_keys:
+            emit_self(key, 1.0, "start", match.span())
+    elif mock_keys is not None:
+        # Dash dropped by OCR (`M213`): only a split that the mock index
+        # resolves uniquely counts, and it never auto-opens.
+        match = MOCK_BARE_RE.match(t)
+        if match:
+            digits = match.group(1)
+            found = set()
+            for cut in (1, 2):
+                if cut < len(digits):
+                    key = "M%d-%d" % (int(digits[:cut]), int(digits[cut:]))
+                    if key in mock_keys:
+                        found.add(key)
+            if len(found) == 1:
+                emit_self(found.pop(), 0.8, "bare", match.span())
+
     match = ANCHOR_RE.match(t)
     if match and not unit_follows(match) and not inside_date(match):
         qid = "%d-%d" % (int(match.group(1)), int(match.group(2)))
@@ -204,7 +328,7 @@ def qid_candidates(text, valid):
 
     head = t[:HEAD_CHARS]
     for match in LOOSE_RE.finditer(head):
-        if inside_date(match):
+        if inside_date(match) or inside_label(match):
             continue
         digits, number = match.group(1), match.group(3)
         if unit_follows(match):
@@ -220,14 +344,14 @@ def qid_candidates(text, valid):
 
     if valid is not None:
         for match in BARE_RE.finditer(t[:10]):
-            if inside_date(match):
+            if inside_date(match) or inside_label(match):
                 continue
             found = {q for q in _split_bare(match.group(1)) if q in valid}
             if len(found) == 1:
                 out.append((found.pop(), 0.8, "bare"))
 
         for match in BARE_STEM_RE.finditer(t[:14]):
-            if inside_date(match):
+            if inside_date(match) or inside_label(match):
                 continue
             digits = match.group(1)
             found = {}
@@ -454,16 +578,23 @@ def _margin_windows(arr, h, margin, right=8.0, left=None, step_scale=None, upsca
     return patches, rows
 
 
-def recognize(photo, work_width=WORK_WIDTH, debug=False, valid=None, on_partial=None):
+def recognize(photo, work_width=WORK_WIDTH, debug=False, valid=None,
+              exam_keys=None, mock_keys=None, on_partial=None):
     """Return orientation, candidates and timing for one photo.
 
     `valid` is the current book's question-key set (see load_valid); passing
     it lets damaged reads (`p=143-2`, `(412)`) resolve against the index.
+    `exam_keys` / `mock_keys` are the self-describing key sets; when omitted
+    they are loaded once from the index, so past-exam labels are always read.
 
     `on_partial` is called with the candidates found by the line channel
     before the slower margin scan starts, so a caller can show something
     early.  Its argument has `candidates`, `auto` and `lines` keys.
     """
+    if exam_keys is None or mock_keys is None:
+        default_exam, default_mock = load_self_describing()
+        exam_keys = default_exam if exam_keys is None else exam_keys
+        mock_keys = default_mock if mock_keys is None else mock_keys
     started = time.time()
     im = load_photo(photo) if isinstance(photo, str) else photo
     rot, orient_lines = detect_orientation(im)
@@ -515,7 +646,9 @@ def recognize(photo, work_width=WORK_WIDTH, debug=False, valid=None, on_partial=
                 )
             if score < MIN_PATCH_SCORE:
                 continue
-            for qid, penalty, kind in qid_candidates(text, valid):
+            for qid, penalty, kind in qid_candidates(
+                text, valid, exam_keys, mock_keys
+            ):
                 cand = {
                     "qid": qid,
                     "score": round(score * penalty * weight, 3),

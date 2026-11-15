@@ -3,7 +3,12 @@
 import sqlite3
 from datetime import datetime, timedelta, timezone
 
-from app.briefing import build
+from app.briefing import (
+    build,
+    daily_budget,
+    daily_new_quota,
+    daily_new_target,
+)
 from app.settings import Settings
 from app.store import Store
 
@@ -163,3 +168,39 @@ def test_drill_task_only_when_unfinished_or_drillable(tmp_path):
     drill = task(data, "drill")
     assert "5 道可练" in drill["detail"]
     assert drill["done"] is False
+
+
+def test_daily_new_target_spreads_the_rest_of_the_week():
+    plan = {"week": {"target": 35, "attempted": 21}}
+    monday = datetime(2026, 11, 2, 9, 0, tzinfo=TZ)
+    sunday = datetime(2026, 11, 8, 9, 0, tzinfo=TZ)
+    assert daily_new_target(plan, monday) == 2   # 14 / 7 days left
+    assert daily_new_target(plan, sunday) == 14  # last day: no spread left
+
+
+def test_daily_new_target_is_zero_when_the_week_is_done():
+    plan = {"week": {"target": 35, "attempted": 35}}
+    assert daily_new_target(plan, BASE) == 0
+    assert daily_new_target({}, BASE) == 0
+
+
+def test_daily_quota_is_capped_by_the_time_budget():
+    plan = {
+        "week": {"target": 20, "attempted": 0},
+        "config": {"weekly_hours": 11},
+    }
+    sunday = datetime(2026, 11, 8, 9, 0, tzinfo=TZ)
+    # 94 minutes/day; 16 reviews take 32, leaving 62 -> six new questions.
+    assert daily_new_quota(plan, 16, sunday) == 6
+    assert daily_new_quota(plan, 0, sunday) == 10  # 94 // 9, share is 20
+
+
+def test_daily_quota_without_a_config_keeps_the_weekly_share():
+    plan = {"week": {"target": 20, "attempted": 0}}
+    sunday = datetime(2026, 11, 8, 9, 0, tzinfo=TZ)
+    assert daily_new_quota(plan, 16, sunday) == 20
+
+
+def test_daily_budget_comes_from_weekly_hours():
+    assert daily_budget({"config": {"weekly_hours": 11}}) == 94
+    assert daily_budget({}) == 0

@@ -284,14 +284,6 @@
   .warn { color: var(--warn); }
 
   /* review */
-  .review-cta {
-    display: block; width: 100%; text-align: left; cursor: pointer;
-    border: 0; border-radius: 14px; padding: 16px 18px; margin-bottom: 14px;
-    background: linear-gradient(135deg, #0f2a3f, #1667d9);
-    color: #fff; font-family: inherit;
-  }
-  .review-cta span { display: block; font-size: 20px; font-weight: 700; letter-spacing: .02em; }
-  .review-cta small { display: block; margin-top: 4px; font-size: 12.5px; opacity: .8; }
   .review-paper { max-height: 62vh; }
   .answer-label {
     margin: 14px 0 6px; font-size: 12px; font-weight: 600;
@@ -444,16 +436,86 @@
   }
   .quick svg { width: 19px; height: 19px; flex: 0 0 auto; color: var(--accent); }
   .quick small { display: block; color: var(--muted); font-size: 10.5px; margin-top: 1px; }
-  .print-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  .print-card {
-    display: flex; align-items: center; gap: 9px; text-align: left;
-    background: var(--card); border: 1px solid var(--line); border-radius: 13px;
-    padding: 12px; font-family: inherit; font-size: 13.5px; color: var(--ink);
+  /* daily path */
+  .today-card {
+    border: 1px solid var(--line); border-radius: 16px; background: #fff;
+    padding: 12px 13px 7px; margin: 12px 0 14px;
   }
-  .print-card:active { background: var(--paper); }
-  .print-card:disabled { opacity: .55; }
-  .print-card svg { width: 19px; height: 19px; flex: 0 0 auto; color: var(--accent); }
-  .print-card small { display: block; color: var(--muted); font-size: 10.5px; margin-top: 1px; }
+  .today-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .today-head h2 { font-size: 15px; margin: 0; }
+  .today-head .hint { color: var(--muted); font-size: 11px; text-align: right; }
+  .today-lead {
+    margin: 4px 0 7px; font-size: 12.5px; line-height: 1.5;
+    color: var(--accent); font-weight: 600;
+  }
+  .today-step {
+    display: flex; align-items: center; gap: 9px; width: 100%;
+    padding: 10px 3px; border: 0; border-top: 1px solid var(--line);
+    background: transparent; font: inherit; color: var(--ink);
+    text-align: left; cursor: pointer;
+  }
+  .today-step .num {
+    flex: 0 0 auto; width: 25px; height: 25px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--paper); border: 1px solid var(--line);
+    font-size: 12px; font-weight: 700; color: var(--muted);
+  }
+  .today-step .txt { flex: 1; min-width: 0; }
+  .today-step b { display: block; font-size: 14px; font-weight: 600; }
+  .today-step small {
+    display: block; margin-top: 2px; font-size: 11.5px;
+    color: var(--muted); line-height: 1.45;
+  }
+  .today-step .cta {
+    flex: 0 0 auto; border-radius: 999px; padding: 7px 12px;
+    background: var(--accent); color: #fff; font-size: 12.5px; font-weight: 600;
+  }
+  .today-step.optional .cta {
+    background: #fff; color: var(--accent); border: 1px solid var(--accent);
+  }
+  .today-step.on { background: rgba(22,103,217,.05); border-radius: 10px; }
+  .today-step.on .num { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .today-step.done { opacity: .62; }
+  .today-step.done .num {
+    background: rgba(29,122,79,.12); border-color: rgba(29,122,79,.25);
+    color: var(--good);
+  }
+  .today-step.done .cta {
+    background: #fff; color: var(--muted); border: 1px solid var(--line);
+  }
+  .today-shortcuts {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    padding: 8px 2px 4px; border-top: 1px solid var(--line);
+  }
+  .today-shortcuts .hint { font-size: 11px; color: var(--muted); }
+  .today-shortcuts button {
+    border: 1px solid var(--line); background: #fff; color: var(--accent);
+    border-radius: 999px; padding: 4px 9px; font: inherit;
+    font-size: 11.5px; cursor: pointer;
+  }
+  .today-extra { display: flex; flex-wrap: wrap; gap: 6px; padding: 7px 2px 3px; }
+  .today-extra button {
+    border: 1px dashed var(--line); background: var(--paper);
+    color: var(--muted); border-radius: 999px; padding: 5px 9px;
+    font: inherit; font-size: 11.5px; cursor: pointer;
+  }
+
+  /* handwriting upload */
+  .hand-list { display: grid; gap: 7px; margin-top: 8px; max-height: 52vh; overflow: auto; }
+  .hand-row {
+    display: flex; align-items: center; gap: 9px;
+    border: 1px solid var(--line); border-radius: 12px;
+    background: #fff; padding: 9px 10px;
+  }
+  .hand-row .qid { flex: 0 0 auto; font-size: 13px; font-weight: 700; }
+  .hand-row .where {
+    flex: 1; min-width: 0; font-size: 11.5px; color: var(--muted);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .hand-row.uploaded { border-color: rgba(29,122,79,.3); background: rgba(29,122,79,.05); }
+  .hand-row button { flex: 0 0 auto; padding: 7px 11px; font-size: 12px; }
+  .summary-next { display: grid; gap: 8px; margin-top: 6px; }
+  .summary-next button { width: 100%; padding: 12px; font-size: 14px; border-radius: 11px; }
   header .head-print {
     flex: 0 0 auto; border: 1px solid rgba(255,255,255,.35);
     background: rgba(255,255,255,.12); color: #fff; border-radius: 8px;
@@ -487,16 +549,6 @@
   .stat-grid div { background: var(--paper); border: 1px solid var(--line); border-radius: 11px; padding: 9px 3px; text-align: center; }
   .stat-grid b { display: block; font-size: 19px; line-height: 1.25; font-variant-numeric: tabular-nums; }
   .stat-grid span { font-size: 10.5px; color: var(--muted); }
-  .plan-mini {
-    display: block; width: 100%; text-align: left; cursor: pointer;
-    border: 1px solid var(--line); background: #fff; color: var(--ink);
-    border-radius: 13px; padding: 11px 13px; margin: 0 0 12px;
-    font-family: inherit;
-  }
-  .plan-mini-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 12px; }
-  .plan-mini-top b { font-size: 16px; font-variant-numeric: tabular-nums; }
-  .plan-mini-track { display: block; height: 6px; background: var(--paper); border-radius: 999px; overflow: hidden; margin: 7px 0 5px; }
-  .plan-mini-track span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #1667d9, #4aa3d9); border-radius: 999px; }
   .plan-head {
     background: linear-gradient(145deg, #0b2233, #123f5c); color: #fff;
     border-radius: 16px; padding: 15px; margin-bottom: 12px;
@@ -797,7 +849,6 @@
   }
 
   /* guided standards reading */
-  .read-mini { border-color: rgba(22,103,217,.28); background: linear-gradient(180deg,#fff,#f7fbff); }
   .read-hero {
     border: 1px solid rgba(22,103,217,.22); border-radius: 14px;
     background: linear-gradient(135deg, #f7fbff, #eef6ff);
@@ -937,50 +988,19 @@
       <span id="dashMilestoneNum">0/10</span>
     </div>
 
-    <button id="dashPlanCard" type="button" class="plan-mini">
-      <span class="plan-mini-top">
-        <span id="dashPlanPhase">本周计划</span>
-        <b id="dashPlanNum">—</b>
-      </span>
-      <span class="plan-mini-track"><span id="dashPlanFill"></span></span>
-      <span id="dashPlanHint" class="hint">—</span>
-    </button>
-
-    <button id="dashReading" type="button" class="plan-mini read-mini">
-      <span class="plan-mini-top">
-        <span id="dashReadPhase">规范伴读</span>
-        <b id="dashReadNum">—</b>
-      </span>
-      <span class="plan-mini-track"><span id="dashReadFill"></span></span>
-      <span class="hint" id="dashReadHint">正在读取阅读路线…</span>
-    </button>
-
-    <button id="dashReview" type="button" class="review-cta">
-      <span id="dashReviewTitle">今日复习</span>
-      <small id="dashReviewHint">正在统计…</small>
-    </button>
-
-    <div class="section-head">
-      <h2>打印出来做</h2>
-      <span class="hint">题面在前 · 答案在后</span>
-    </div>
-    <div class="print-grid">
-      <button class="print-card" type="button" id="dashPrintReview">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg>
-        <span>今日复习卷<small id="dashPrintReviewHint">—</small></span>
-      </button>
-      <button class="print-card" type="button" id="dashPrintWeek">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg>
-        <span>本周任务卷<small>按未完成原型 · 30 题</small></span>
-      </button>
-      <button class="print-card" type="button" id="dashPrintWrong">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg>
-        <span>错题卷<small id="dashPrintWrongHint">未掌握</small></span>
-      </button>
-      <button class="print-card" type="button" id="dashPrintMore">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg>
-        <span>更多打印选项<small>手写区 / 封面 / 范围</small></span>
-      </button>
+    <div class="today-card" id="todayCard">
+      <div class="today-head">
+        <h2>今天这么走</h2>
+        <span class="hint" id="todayCount">—</span>
+      </div>
+      <p class="today-lead" id="todayLead">正在读取今天的安排…</p>
+      <div id="todaySteps"></div>
+      <div class="today-shortcuts">
+        <span class="hint">没时间就做短的，剩下的复习会顺延：</span>
+        <button id="today30" type="button">30 分钟</button>
+        <button id="today60" type="button">60 分钟</button>
+      </div>
+      <div class="today-extra" id="todayExtra"></div>
     </div>
 
     <div class="encourage-card">
@@ -988,15 +1008,6 @@
       <p id="dashEncourage">正在读取学习记录…</p>
       <small id="dashEvidence"></small>
     </div>
-
-    <div class="section-head">
-      <h2>下一步</h2>
-      <span class="head-links">
-        <button id="dashBriefing" type="button">今日任务单</button>
-        <button id="dashSettings" type="button">设置</button>
-      </span>
-    </div>
-    <div id="dashActions"></div>
 
     <div class="section-head">
       <h2>知识分布</h2>
@@ -1054,10 +1065,10 @@
     </label>
     <input id="camera" type="file" accept="image/*" capture="environment" class="hidden">
     <div class="toolbar">
-      <input id="manual" type="text" inputmode="text" placeholder="手输题号，如 3-11" autocomplete="off">
+      <input id="manual" type="text" inputmode="text" placeholder="手输题号，如 3-11 / A2025-A-7" autocomplete="off">
       <button id="go" class="ghost">查</button>
     </div>
-    <p class="hint">题号按「篇-题」，跨册同号时以当前册为准。拍完可整页勾选、记错、批量复习。</p>
+    <p class="hint">题号按「篇-题」，真题按 A2025-A-7 这种印法；跨册同号时以当前册为准。拍完可整页勾选、记错、批量复习。</p>
     <button id="resumePick" class="ghost hidden" type="button" style="width:100%;margin-top:8px">
       继续上次识别（<b id="resumeCount">0</b> 题）
     </button>
@@ -1082,7 +1093,7 @@
         <button id="openSel" class="primary" disabled>查看所选</button>
       </div>
       <div class="toolbar">
-        <input id="manual2" type="text" placeholder="都不对？手输题号" autocomplete="off">
+        <input id="manual2" type="text" placeholder="都不对？手输题号，如 3-11 / A2025-A-7" autocomplete="off">
         <button id="go2" class="ghost">查</button>
         <button id="retry" class="ghost">拍下一张</button>
       </div>
@@ -1184,6 +1195,11 @@
     <div class="summary-block">
       <h3>下一步</h3>
       <p id="sNext">—</p>
+      <div class="summary-next" id="sNextActions">
+        <button id="sPlan" class="primary" type="button">去记今天四个数</button>
+        <button id="sHand" class="ghost" type="button">上传手写照片</button>
+        <button id="sPrintNew" class="ghost" type="button">打印今天的新题卷</button>
+      </div>
     </div>
     <div class="summary-block encourage">
       <h3>今天扎实的一点</h3>
@@ -1346,6 +1362,9 @@
     </div>
     <p class="hint">默认按原尺寸排版，每题留手写区，答案单独成页。单卷最多 30 题；未来周包最多 100 题。</p>
     <div class="print-options">
+      <button type="button" class="print-opt" data-scope="today">
+        <b>今日全套</b><span>复习 + 今天的新题 · 一键</span>
+      </button>
       <button type="button" class="print-opt" data-scope="plan">
         <b>本周任务卷</b><span id="printPlanCount">按当前原型</span>
       </button>
@@ -1387,6 +1406,22 @@
   </div>
 </div>
 
+<div id="handSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="handTitle">
+  <div class="sheet-panel brief-panel">
+    <div class="sheet-head">
+      <h3 id="handTitle">上传手写</h3>
+      <span class="hint" id="handDay"></span>
+    </div>
+    <p class="hint" id="handLead">纸上做完，把过程拍下来挂到对应题目；错题详情和复习里都能看到。</p>
+    <div class="hand-list" id="handList"></div>
+    <input id="handPhoto" type="file" accept="image/*" capture="environment" class="hidden">
+    <div class="sheet-actions">
+      <button id="handBook" class="ghost" type="button">去错题本找题</button>
+      <button id="handClose" class="primary" type="button">完成</button>
+    </div>
+  </div>
+</div>
+
 <div id="briefSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="briefTitle">
   <div class="sheet-panel brief-panel">
     <div class="sheet-head">
@@ -1395,6 +1430,10 @@
     </div>
     <p class="hint" id="briefLead">正在读取今天的学习记录…</p>
     <div id="briefTasks"></div>
+    <div class="toolbar wrap" style="margin:8px 0 4px">
+      <button id="briefPrintToday" type="button" class="primary">打印今天的卷</button>
+      <button id="briefHand" type="button" class="ghost">上传手写</button>
+    </div>
     <div class="section-head">
       <h2>每天怎么用</h2>
       <button id="briefManual" type="button">完整说明</button>
@@ -1688,6 +1727,7 @@ const state = {
   meta: null,
   home: null,
   briefing: null,
+  hand: { items: [], target: null, busy: false },
   settings: null,
   installPrompt: null,
   page: { n: null, count: null },
@@ -1882,9 +1922,6 @@ $("tabbar").addEventListener("click", (event) => {
   }
 });
 
-$("dashReview").addEventListener("click", startReview);
-$("dashPlanCard").addEventListener("click", () => openData("plan"));
-$("dashSettings").addEventListener("click", openSettings);
 $("quickSettings").addEventListener("click", openSettings);
 $("quickShot").addEventListener("click", () => {
   show("home");
@@ -2994,6 +3031,7 @@ $("dProcessPhoto").addEventListener("change", async (event) => {
     if (!res.ok) throw new Error(data.detail || res.statusText);
     state.detail = data;
     renderDetail();
+    pathMark("hand");
     toast("过程照片已保存");
   } catch (err) {
     $("dProcessState").textContent = "上传失败：" + err.message;
@@ -3093,7 +3131,8 @@ async function loadReviewToday() {
     if (!res.ok) return;
     const data = await res.json();
     state.review.overview = data;
-    renderReviewCta(data);
+    renderDashReview(data);
+    renderTodayPath();
   } catch (err) { /* offline: the tab still works once reachable */ }
 }
 
@@ -3105,10 +3144,24 @@ function pct(value) {
 
 async function loadHome() {
   try {
-    const res = await fetch("/api/home");
-    if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
-    const data = await res.json();
+    // The path needs today's task states; fetching both together keeps the
+    // home screen from rendering a step that is already done.
+    const [homeRes, briefRes] = await Promise.all([
+      fetch("/api/home"),
+      fetch("/api/briefing").catch(() => null),
+    ]);
+    if (!homeRes.ok) {
+      throw new Error((await homeRes.json()).detail || homeRes.statusText);
+    }
+    const data = await homeRes.json();
     state.home = data;
+    let brief = null;
+    if (briefRes && briefRes.ok) {
+      try { brief = await briefRes.json(); } catch (err) { /* path falls back */ }
+    }
+    // A stale sheet from yesterday must not mark today's steps.
+    state.briefing = brief && (!data.day || brief.day === data.day)
+      ? brief : null;
     renderHome(data);
   } catch (err) {
     $("dashEncourage").textContent = "读取学习数据失败：" + err.message;
@@ -3145,37 +3198,197 @@ function renderHome(d) {
   $("dashEncourage").textContent = encourage.text || "";
   $("dashEvidence").textContent = encourage.evidence || "";
   renderDashReview(d.review || { count: 0 });
-  const reviewCount = (d.review && d.review.count) || 0;
-  $("dashPrintReviewHint").textContent = reviewCount
-    ? reviewCount + " 题" : "今天没有到期题";
-  $("dashPrintWrongHint").textContent = totals.active != null
-    ? "未掌握 " + totals.active + " 题" : "未掌握";
-  renderPlanMini(d.plan);
-  renderDashReading(d.reading);
-  renderDashActions(d.next_actions || []);
+  renderTodayPath();
   renderDashCategories(d.categories || []);
   $("installCard").classList.toggle("hidden", !state.installPrompt);
 }
 
-function renderDashActions(actions) {
-  const box = $("dashActions");
-  box.innerHTML = "";
-  const icons = { baseline: "考", review: "复", drill: "练", weak: "弱",
-                  untouched: "书", stuck: "顽", steady: "稳" };
-  for (const action of actions.slice(0, 3)) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "action";
-    button.innerHTML =
-      '<span class="icon">' + escapeHtml(icons[action.kind] || "做") + "</span>"
-      + '<span class="txt"><b>' + escapeHtml(action.title || "") + "</b>"
-      + "<span>" + escapeHtml(action.detail || "") + "</span></span>"
-      + '<span class="go">›</span>';
-    button.addEventListener("click", () => runAction(action));
-    box.appendChild(button);
+// --- today path -----------------------------------------------------------
+
+function localDay() {
+  const now = new Date();
+  return now.getFullYear() + "-"
+    + String(now.getMonth() + 1).padStart(2, "0") + "-"
+    + String(now.getDate()).padStart(2, "0");
+}
+
+function pathDay() {
+  return (state.home && state.home.day) || localDay();
+}
+
+function pathMark(kind) {
+  try {
+    localStorage.setItem("todayPath:" + pathDay() + ":" + kind, "1");
+  } catch (err) { /* private mode: the step just stays open */ }
+  renderTodayPath();
+}
+
+function pathDone(kind) {
+  try {
+    return localStorage.getItem("todayPath:" + pathDay() + ":" + kind) === "1";
+  } catch (err) {
+    return false;
   }
-  if (!actions.length) {
-    box.innerHTML = '<div class="empty">今天没有待办，按自己的节奏来。</div>';
+}
+
+function dailyNewTarget() {
+  // The server has already trimmed the weekly share by today's time budget;
+  // the local formula is only a fallback for a failed briefing/home call.
+  const today = (state.home && state.home.today) || {};
+  if (today.new_questions != null) return Number(today.new_questions) || 0;
+  const week = (state.home && state.home.plan && state.home.plan.week) || {};
+  const remaining = Math.max(
+    0, Number(week.target || 0) - Number(week.attempted || 0));
+  if (!remaining) return 0;
+  const weekday = (new Date().getDay() + 6) % 7; // Monday = 0
+  return Math.ceil(remaining / Math.max(1, 7 - weekday));
+}
+
+function todayReviewState() {
+  // The live overview is fresher than the home snapshot after grading.
+  const review = (state.review && state.review.overview)
+    || (state.home && state.home.review) || {};
+  const session = review.session || {};
+  const count = Number(review.count || 0);
+  const planned = Number(review.planned || count);
+  const graded = Number(session.graded_count || 0);
+  const task = ((state.briefing && state.briefing.tasks) || [])
+    .find((row) => row.key === "review");
+  const done = task ? !!task.done : (planned ? graded >= planned : !count);
+  let title = task && task.title;
+  let detail = task && task.detail;
+  if (!title) {
+    if (session.id && !session.finished) {
+      title = "继续复习 (" + session.cursor + "/" + session.count + ")";
+    } else if (session.finished && !count) {
+      title = "今日复习已完成";
+    } else if (count) {
+      title = "错题复习 " + count + " 题";
+    } else {
+      title = "错题复习";
+    }
+  }
+  if (!detail) {
+    detail = count
+      ? "约 " + (review.est_minutes || count * 2) + " 分钟 · 到期优先"
+      : "今天没有到期题；也可以先记一道新错题";
+  }
+  let cta;
+  if (session.id && !session.finished) {
+    // The daily plan can be met while a fresh queue is still open: say so,
+    // instead of a "done" chip that silently starts another round.
+    cta = done ? "再练 " + count + " 题" : "继续";
+  } else if (session.id && session.finished && !count) {
+    cta = "看总结";
+  } else if (count) {
+    cta = done ? "再练 " + count + " 题" : "开始";
+  } else {
+    cta = "已完成";
+  }
+  return { done, title, detail, cta, count, planned, graded, session };
+}
+
+function renderTodayPath() {
+  const box = $("todaySteps");
+  if (!box) return;
+  const review = todayReviewState();
+  const taskList = (state.briefing && state.briefing.tasks) || [];
+  const practiceTask = taskList.find(
+    (task) => task.key === "plan" || task.key === "practice");
+  const practiceDone = practiceTask ? !!practiceTask.done : false;
+  const newDaily = dailyNewTarget();
+  const printDone = pathDone("print");
+  const handDone = pathDone("hand");
+  const plannedMinutes = review.count * 2 + newDaily * 9;
+  const printDetail = (review.count || newDaily)
+    ? [review.count ? "复习 " + review.count + " 题" : "",
+       newDaily ? "新题 " + newDaily + " 题" : ""].filter(Boolean).join(" + ")
+      + " · 约 " + Math.max(1, plannedMinutes) + " 分钟"
+    : "今天没有到期题；也能打印错题卷";
+  const steps = [
+    {
+      key: "print",
+      optional: true,
+      title: "打印今天的卷",
+      detail: printDetail,
+      done: printDone,
+      cta: printDone ? "再打" : "打印",
+      run: () => printScope("today", null, "今日卷.pdf")
+        .then((ok) => { if (ok) pathMark("print"); }),
+    },
+    {
+      key: "review",
+      title: review.title,
+      detail: review.detail,
+      done: review.done,
+      cta: review.cta,
+      run: startReview,
+    },
+    {
+      key: "hand",
+      optional: true,
+      title: "上传手写",
+      detail: handDone
+        ? "今天已上传；错题详情和复习里都能看到"
+        : "做完纸上题，把过程拍下来挂到题目",
+      done: handDone,
+      cta: handDone ? "再传" : "上传",
+      run: openHandSheet,
+    },
+    {
+      key: "practice",
+      title: "记今天四个数",
+      detail: practiceTask ? practiceTask.detail : "作答 / 做对 / 放弃 / 超时",
+      done: practiceDone,
+      cta: practiceDone ? "已记" : "去记",
+      // Straight to the four-number sheet: opening the whole plan screen
+      // first only adds a scroll and a second decision.
+      run: openSessionSheet,
+    },
+  ];
+  const required = steps.filter((step) => !step.optional);
+  const next = required.find((step) => !step.done);
+  const lead = $("todayLead");
+  if (lead) {
+    lead.textContent = next
+      ? "现在做：" + next.title + (next.detail ? " — " + next.detail : "")
+      : "今天必做都完成了。打印和上传手写随时补，或者加练一组。";
+  }
+  const count = $("todayCount");
+  if (count) {
+    count.textContent = "必做 " + required.filter((step) => step.done).length
+      + "/" + required.length;
+  }
+  box.innerHTML = "";
+  steps.forEach((step, index) => {
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "today-step"
+      + (step.optional ? " optional" : "")
+      + (step.done ? " done" : "")
+      + (next === step ? " on" : "");
+    row.innerHTML =
+      '<span class="num">' + (step.done ? "✓" : String(index + 1)) + "</span>"
+      + '<span class="txt"><b>' + escapeHtml(step.title) + "</b>"
+      + "<small>" + escapeHtml(step.detail || "") + "</small></span>"
+      + '<span class="cta">' + escapeHtml(step.cta) + "</span>";
+    row.addEventListener("click", () => step.run());
+    box.appendChild(row);
+  });
+  const extra = $("todayExtra");
+  if (extra) {
+    extra.innerHTML = "";
+    // Practice/plan is step 4, not an extra; only true bonus work rides here.
+    for (const task of taskList.filter(
+      (row) => row.optional && !row.done
+        && ["drill", "reading"].includes(row.key)).slice(0, 2)) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = "有余力：" + (task.title || "");
+      button.addEventListener("click", () => openBriefTask(task));
+      extra.appendChild(button);
+    }
+    extra.classList.toggle("hidden", !extra.children.length);
   }
 }
 
@@ -3683,56 +3896,6 @@ async function savePlanSettings() {
     $("planSettingsSave").disabled = false;
   }
 }
-
-function renderPlanMini(plan) {
-  if (!plan || !plan.week) {
-    $("dashPlanPhase").textContent = "本周计划";
-    $("dashPlanNum").textContent = "—";
-    $("dashPlanHint").textContent = "点开看计划";
-    $("dashPlanFill").style.width = "0%";
-    return;
-  }
-  const week = plan.week;
-  const phase = plan.phase || {};
-  const baseline = phase.key === "baseline";
-  const target = baseline ? Math.max(1, week.attempted || 0) : (week.target || 0);
-  const actual = week.attempted || 0;
-  $("dashPlanPhase").textContent = (phase.name || "计划") + " · 第 "
-    + (phase.week || 1) + " 周";
-  $("dashPlanNum").textContent = baseline
-    ? actual + " 题 · 基线" : actual + " / " + target + " 题";
-  $("dashPlanFill").style.width = (target
-    ? Math.min(100, Math.round(actual / target * 100)) : 0) + "%";
-  const advice = (plan.advice || [])[0] || "按本周任务走";
-  $("dashPlanHint").textContent = "正确率 " + pct(week.accuracy)
-    + " · " + advice;
-}
-
-function renderDashReading(reading) {
-  const stats = (reading && reading.stats) || {};
-  const rec = reading && reading.recommendation;
-  const total = stats.stops_total || 0;
-  const done = stats.stops_done || 0;
-  $("dashReadNum").textContent = total ? done + " / " + total + " 站" : "—";
-  $("dashReadFill").style.width = (total
-    ? Math.min(100, Math.round(done / total * 100)) : 0) + "%";
-  if (!rec) {
-    $("dashReadPhase").textContent = "规范伴读";
-    $("dashReadHint").textContent = total && done >= total
-      ? "路线已读完 · 可重读任意一站" : "点开看阅读路线";
-    return;
-  }
-  $("dashReadPhase").textContent = "规范伴读 · " + (rec.short || rec.name || "");
-  $("dashReadHint").textContent = (rec.section ? rec.section + " " : "")
-    + (rec.title || "") + " · " + (rec.minutes || 0) + " 分钟 · 本周已读 "
-    + (stats.week_minutes || 0) + " 分钟";
-}
-
-$("dashReading").addEventListener("click", () => {
-  const rec = state.home && state.home.reading && state.home.reading.recommendation;
-  if (rec) state.reading.pending = { code: rec.code_key, stop: rec.stop_id };
-  openData("reading");
-});
 
 $("sessionCancel").addEventListener("click", () => $("sessionSheet").classList.add("hidden"));
 $("sessionSave").addEventListener("click", saveSession);
@@ -6698,38 +6861,11 @@ $("quadrantSheet").addEventListener("click", (event) => {
 });
 
 function renderDashReview(data) {
-  const s = data && data.session;
-  const title = $("dashReviewTitle");
-  const hint = $("dashReviewHint");
   const badge = $("tabReviewBadge");
+  if (!badge) return;
   const count = (data && data.count) || 0;
   badge.textContent = count > 99 ? "99+" : String(count);
   badge.classList.toggle("hidden", !count);
-  if (!title || !hint) return;
-  if (s && s.id && s.finished && !count) {
-    title.textContent = "今日已完成 · 看总结";
-    hint.textContent = "完成 " + s.graded_count + " / " + s.count
-      + " 题 · 点开看数据与下一步";
-    return;
-  }
-  if (s && s.id && !s.finished) {
-    title.textContent = "继续复习 (" + s.cursor + "/" + s.count + ")";
-    hint.textContent = "还剩 " + Math.max(0, s.count - s.cursor) + " 题 · 进度已保存";
-    return;
-  }
-  if (count) {
-    const r = (data && data.reasons) || {};
-    title.textContent = "今日复习 (" + count + ")";
-    hint.textContent = "预计 " + (data.est_minutes || count * 2) + " 分钟 · 到期 "
-      + (r.due || 0) + " · 新错 " + (r.new || 0) + " · 顽固 " + (r.stuck || 0);
-    return;
-  }
-  title.textContent = "今日复习";
-  hint.textContent = "今天没有到期错题 · 先去记一道新错题也可以";
-}
-
-function renderReviewCta(data) {
-  renderDashReview(data);
 }
 
 async function startReview() {
@@ -6828,10 +6964,14 @@ function renderReview() {
   $("rHint").textContent = caseItem
     ? "先自己做一遍，拍下过程，再点「看答案」。案例按过程评分。"
     : "先自己做一遍，再点「看答案」。";
-  $("rProcessRow").classList.toggle("hidden", !caseItem);
+  // Every question can carry a photo of the paper work; the case bar still
+  // only appears for case items.
+  $("rProcessRow").classList.remove("hidden");
   $("rProcessPreview").classList.add("hidden");
   $("rProcessPreview").removeAttribute("src");
-  $("rProcessState").textContent = "案例题：拍下过程，回看错因更准（可选）";
+  $("rProcessState").textContent = caseItem
+    ? "案例题：拍下过程，回看错因更准（可选）"
+    : "纸上做的可以拍过程，之后回看（可选）";
   $("rCaseBar").classList.add("hidden");
   const paper = $("rPaper");
   paper.onerror = () => {
@@ -7120,6 +7260,7 @@ $("rProcessPhoto").addEventListener("change", async (event) => {
     $("rProcessPreview").src = "/api/photos/" + sha + "?size=thumb";
     $("rProcessPreview").classList.remove("hidden");
     $("rProcessState").textContent = "已附过程照片 · 评分时一起保存";
+    pathMark("hand");
   } catch (err) {
     $("rProcessState").textContent = "上传失败：" + err.message;
   }
@@ -7133,6 +7274,14 @@ $("sHome").addEventListener("click", () => {
   refreshNavCount();
 });
 $("sAgain").addEventListener("click", startReview);
+$("sHand").addEventListener("click", openHandSheet);
+$("sPlan").addEventListener("click", openSessionSheet);
+$("sPrintNew").addEventListener("click", () => {
+  // After a finished review the server's "today" sheet holds only today's
+  // new questions, which is exactly the next block of work.
+  printScope("today", null, "今日卷.pdf")
+    .then((ok) => { if (ok) pathMark("print"); });
+});
 $("sPrint").addEventListener("click", () => downloadPrint("review"));
 
 document.addEventListener("keydown", (e) => {
@@ -7311,7 +7460,6 @@ async function autoBriefing() {
 }
 
 $("headerBriefing").addEventListener("click", openBriefing);
-$("dashBriefing").addEventListener("click", openBriefing);
 $("briefClose").addEventListener("click", closeBriefing);
 $("briefManual").addEventListener("click", openManual);
 $("manualClose").addEventListener("click", () => $("manualSheet").classList.add("hidden"));
@@ -7326,6 +7474,7 @@ let printBusy = false;
 function printDownloadName(scope, title) {
   // Fallbacks only: the server returns the real, timestamped name in
   // X-Print-Stats / X-Print-Filename and runPrint prefers it.
+  if (scope === "today") return "今日卷.pdf";
   if (scope === "plan") return "本周任务卷.pdf";
   if (scope === "review") return "今日复习卷.pdf";
   if (scope === "recent") return "最近7天错题卷.pdf";
@@ -7413,13 +7562,19 @@ async function runPrint(query, filename, button, message) {
   }
 }
 
-async function printScope(scope, button, filename) {
+async function printScope(scope, button, filename, extra) {
+  const query = printSheetQuery(scope);
+  for (const [key, value] of Object.entries(extra || {})) {
+    if (value != null) query.set(key, String(value));
+  }
   return runPrint(
-    printSheetQuery(scope),
+    query,
     filename || printDownloadName(scope),
     button,
     scope === "week"
-      ? "正在排未来一周的复习包，题目多时可能要几分钟…" : null);
+      ? "正在排未来一周的复习包，题目多时可能要几分钟…"
+      : scope === "today"
+        ? "正在生成今天的卷（复习 + 新题）…" : null);
 }
 
 async function printQids(qids, title, button, opts) {
@@ -7467,6 +7622,101 @@ function closePrintSheet() {
   $("printSheet").classList.add("hidden");
 }
 
+// --- handwriting upload ---------------------------------------------------
+
+async function openHandSheet() {
+  $("handSheet").classList.remove("hidden");
+  $("handLead").textContent = "正在读取今天的题目…";
+  $("handDay").textContent = "";
+  $("handList").innerHTML = "";
+  state.hand.target = null;
+  try {
+    const res = await fetch("/api/handwriting/targets");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    state.hand.items = data.items || [];
+    renderHandList();
+  } catch (err) {
+    $("handLead").textContent = "读取失败：" + err.message;
+  }
+}
+
+function closeHandSheet() {
+  $("handSheet").classList.add("hidden");
+  $("handPhoto").value = "";
+}
+
+function renderHandList() {
+  const box = $("handList");
+  const items = state.hand.items || [];
+  $("handDay").textContent = items.length ? items.length + " 题可挂手写" : "";
+  if (!items.length) {
+    box.innerHTML = '<div class="empty">今天没有复习题或新错题。'
+      + "错题详情里也能补手写。</div>";
+    return;
+  }
+  $("handLead").textContent =
+    "点一道题，拍下纸上的手写过程；同一题再拍会覆盖上一张。";
+  box.innerHTML = "";
+  for (const item of items) {
+    const row = document.createElement("div");
+    row.className = "hand-row" + (item.process_photo ? " uploaded" : "");
+    const where = [item.chapter, item.section].filter(Boolean).join(" · ");
+    row.innerHTML =
+      '<span class="qid">' + escapeHtml(item.qid) + "</span>"
+      + '<span class="where">' + escapeHtml(where || item.book || "") + "</span>"
+      + (item.process_photo ? '<span class="ok">已传</span>' : "")
+      + '<button type="button" class="ghost small">拍照</button>';
+    row.querySelector("button").addEventListener("click", () => {
+      state.hand.target = item.id;
+      $("handPhoto").click();
+    });
+    box.appendChild(row);
+  }
+}
+
+$("handClose").addEventListener("click", closeHandSheet);
+$("handSheet").addEventListener("click", (event) => {
+  if (event.target === $("handSheet")) closeHandSheet();
+});
+$("handBook").addEventListener("click", () => {
+  closeHandSheet();
+  openBook();
+});
+$("handPhoto").addEventListener("change", async (event) => {
+  const file = event.target.files && event.target.files[0];
+  event.target.value = "";
+  const id = state.hand.target;
+  if (!file || !id || state.hand.busy) return;
+  state.hand.busy = true;
+  const item = state.hand.items.find((row) => row.id === id);
+  $("handLead").textContent = "上传中…";
+  try {
+    const sha = await uploadPhoto(file);
+    const res = await fetch("/api/attempts/" + id, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ process_photo_sha: sha }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    if (item) {
+      item.process_photo = data.process_photo
+        || { orig: "/api/photos/" + sha };
+    }
+    state.hand.target = null;
+    pathMark("hand");
+    renderHandList();
+    $("handLead").textContent = "已挂到 " + (item ? item.qid : "这道题")
+      + "；接着拍下一题，或点完成。";
+    toast("手写已保存");
+  } catch (err) {
+    $("handLead").textContent = "上传失败：" + err.message;
+  } finally {
+    state.hand.busy = false;
+  }
+});
+
 async function downloadPrint(scope) {
   const q = printSheetQuery(scope);
   const status = $("printStatus");
@@ -7479,6 +7729,7 @@ async function downloadPrint(scope) {
       : null;
     if (await runPrint(q, printDownloadName(scope), null, message)) {
       closePrintSheet();
+      if (scope === "today") pathMark("print");
     }
   } finally {
     status.classList.add("hidden");
@@ -7496,23 +7747,23 @@ for (const button of $("printSheet").querySelectorAll(".print-opt")) {
   button.addEventListener("click", () => downloadPrint(button.dataset.scope));
 }
 
-// Every screen that shows questions gets its own print key: home (today's
-// review / this week's tasks / wrong book), review, viewer, detail, drill.
-$("dashPrintReview").addEventListener("click", (event) => {
-  printScope("review", event.currentTarget, "今日复习卷.pdf");
+// Every screen that shows questions gets its own print key: the day path
+// (one-tap today sheet), review, viewer, detail, drill.
+$("briefPrintToday").addEventListener("click", () => {
+  closeBriefing();
+  printScope("today", null, "今日卷.pdf")
+    .then((ok) => { if (ok) pathMark("print"); });
 });
-$("dashPrintWeek").addEventListener("click", (event) => {
-  printScope("plan", event.currentTarget, "本周任务卷.pdf");
+$("briefHand").addEventListener("click", () => {
+  closeBriefing();
+  openHandSheet();
 });
-$("dashPrintWrong").addEventListener("click", (event) => {
-  // The home card prints every active question, not the last book filter.
-  const q = new URLSearchParams({ scope: "filter", status: "active" });
-  q.set("writing_scale", $("printWriting").value || "1");
-  q.set("result_boxes", $("printBoxes").checked ? "1" : "0");
-  q.set("cover", $("printCover").checked ? "1" : "0");
-  runPrint(q, "错题卷.pdf", event.currentTarget);
-});
-$("dashPrintMore").addEventListener("click", openPrintSheet);
+for (const [id, minutes] of [["today30", 30], ["today60", 60]]) {
+  $(id).addEventListener("click", () => {
+    printScope("today", null, "今日卷-" + minutes + "分钟.pdf", { minutes })
+      .then((ok) => { if (ok) pathMark("print"); });
+  });
+}
 
 $("rPrint").addEventListener("click", (event) => {
   const session = state.review.session;

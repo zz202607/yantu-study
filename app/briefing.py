@@ -9,6 +9,7 @@ serve on every open.
 from datetime import datetime
 
 from app import analytics
+from app.pacing import fit_counts
 
 WEEKDAYS = "一二三四五六日"
 
@@ -18,18 +19,23 @@ MANUAL = [
     {
         "title": "每天怎么走",
         "steps": [
-            "打开 App，先看这张「今日任务单」，从上往下做。",
-            "复习：错题按到期 → 新错 → 顽固排好，照着做，做对/做错两个键。",
-            "新题：任务单给今天的分量；做完在「计划」页记四个数"
-            "（作答 / 做对 / 放弃 / 超时）。",
-            "拍题：遇到新错题就拍照 —— 拍题号 → 核对题干/解析 → 勾错因存档。",
-            "有精力再做选做：限时拆解 / 认题卡、规范伴读下一站。",
+            "打开 App，首页第一张卡「今天这么走」就是顺序，跟着「现在做」往下点。",
+            "① 打印今天的卷：一份 PDF 装今天要复习的错题 + 今天的新题（按每周 "
+            "11 小时摊到每天，复习先占时间）；没时间就点卡片底下的 30/60 分钟短卷，"
+            "先保复习，剩下的顺延。",
+            "② 错题复习：按到期 → 新错 → 顽固排好，做对/做错两个键；"
+            "案例按过程评分。",
+            "③ 上传手写：纸上做完的题，选题目 → 拍照，照片挂在这道题上。",
+            "④ 记今天四个数（作答 / 做对 / 放弃 / 超时）—— 点一下直接填，"
+            "周计划和纠偏都靠它。",
+            "新错题：拍题号 → 核对题干/解析 → 勾错因存档；"
+            "有精力再做限时拆解 / 认题卡、规范伴读。",
         ],
     },
     {
         "title": "打印怎么用",
         "steps": [
-            "顶部「打印」按钮随时可用；首页也有四格快捷打印。",
+            "首页第 1 步「打印今天的卷」一键出卷；顶部「打印」按钮有更多范围。",
             "题面在前、答案单独成页；第一次先别翻答案部分。",
             "每份文件名带卷名和生成时间，下载后不会互相覆盖。",
             "封面自带结果回填格，做完可以照格子录回 App。",
@@ -155,7 +161,7 @@ def _practice_task(activity):
     return {
         "key": "practice",
         "title": "记练习台账",
-        "detail": "做了套题或散题就补四个数：作答 / 做对 / 放弃 / 超时。",
+        "detail": "点「记四个数」直接填：作答 / 做对 / 放弃 / 超时。",
         "route": "plan",
         "minutes": 1,
         "done": (activity.get("practices") or 0) > 0,
@@ -163,7 +169,57 @@ def _practice_task(activity):
     }
 
 
-def _plan_task(plan, activity, now):
+def daily_new_target(plan, now=None):
+    """Today's share of the weekly new-question target.
+
+    The same number drives the briefing, the home path and the one-tap day
+    sheet, so the printed question count never contradicts the app.
+    """
+    week = (plan or {}).get("week") or {}
+    try:
+        target = int(week.get("target") or 0)
+        attempted = int(week.get("attempted") or 0)
+    except (TypeError, ValueError):
+        return 0
+    remaining = max(0, target - attempted)
+    if not remaining:
+        return 0
+    now = now or datetime.now().astimezone()
+    days_left = max(1, 7 - now.weekday())
+    return -(-remaining // days_left)
+
+
+def daily_budget(plan):
+    """Minutes available for today, spread from the weekly-hours setting."""
+    hours = ((plan or {}).get("config") or {}).get("weekly_hours")
+    try:
+        hours = float(hours)
+    except (TypeError, ValueError):
+        return 0
+    if hours <= 0:
+        return 0
+    return max(1, int(round(hours * 60 / 7)))
+
+
+def daily_new_quota(plan, review_count=0, now=None):
+    """Today's new questions: the weekly share, never past the day's budget.
+
+    This is the stop-gate against a Sunday catch-up turning into 20 new
+    questions on top of a full review queue.  A short review queue leaves
+    the weekly share intact; a long one shrinks today's new count, and the
+    rest stays in the weekly plan instead of disappearing.
+    """
+    share = daily_new_target(plan, now)
+    if not share:
+        return 0
+    budget = daily_budget(plan)
+    if not budget:
+        return share
+    _, fitted = fit_counts(budget, review_count, share)
+    return min(share, fitted)
+
+
+def _plan_task(plan, activity, now, review_count=0):
     """New-question volume from the weekly plan, spread over the days left."""
     week = (plan or {}).get("week") or {}
     try:
@@ -175,7 +231,7 @@ def _plan_task(plan, activity, now):
         return _practice_task(activity)
     remaining = max(0, target - attempted)
     days_left = max(1, 7 - now.weekday())
-    daily = -(-remaining // days_left) if remaining else 0
+    daily = daily_new_quota(plan, review_count, now)
     recorded = (activity.get("practices") or 0) > 0
     progress = "%d/%d" % (min(attempted, target), target)
     if remaining <= 0:
@@ -188,7 +244,7 @@ def _plan_task(plan, activity, now):
         done = True
     else:
         title = "新题练习 今天约 %d 题" % daily
-        detail = "本周 %d/%d 题，剩 %d 天；做完在计划页记四个数。" % (
+        detail = "本周 %d/%d 题，剩 %d 天；做完点「记四个数」直接填。" % (
             attempted, target, days_left)
         done = False
     return {
@@ -213,7 +269,7 @@ def build(store, settings, *, now=None, reading=None, baseline=None, plan=None):
 
     tasks = [_review_task(overview, activity)]
     for candidate in (
-        _plan_task(plan, activity, now),
+        _plan_task(plan, activity, now, overview.get("count") or 0),
         _drill_task(store, activity, baseline),
         _reading_task(recommendation, activity),
     ):
