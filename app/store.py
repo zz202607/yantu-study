@@ -36,7 +36,7 @@ TAGS = {
 }
 TAG_KEYS = tuple(TAGS)
 STATUSES = ("active", "mastered")
-SOURCES = ("batch", "single", "import")
+SOURCES = ("batch", "single", "import", "paper")
 
 # Case questions (C/A/M) are subjective and scored on the written process.
 # These statuses are chosen by the user, never inferred from an option letter.
@@ -60,6 +60,7 @@ PRACTICE_SOURCES = {
     "exercise": "习题",
     "mock": "模拟",
     "drill": "限时拆解",
+    "paper": "今日卷",
     "other": "其他",
 }
 PLAN_CATEGORIES = tuple("C%d" % i for i in range(1, 11)) + ("mixed", "knowledge")
@@ -248,6 +249,21 @@ CREATE TABLE IF NOT EXISTS reading_log (
     seconds INTEGER NOT NULL DEFAULT 0,
     status TEXT NOT NULL
 );
+-- One printed sheet for a day.  Items start as [{qid, role}] and gain a
+-- result + tags when the user checks the sheet; the print knows which qids
+-- were review and which were new, so the user never types totals.
+CREATE TABLE IF NOT EXISTS day_packs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    day TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    closed_at TEXT,
+    session_id INTEGER,
+    title TEXT NOT NULL DEFAULT '',
+    items TEXT NOT NULL,
+    photo_id INTEGER REFERENCES photos(id) ON DELETE SET NULL,
+    summary TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_day_packs_day ON day_packs(day DESC, id DESC);
 CREATE TABLE IF NOT EXISTS review_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     session_id INTEGER NOT NULL REFERENCES review_sessions(id) ON DELETE CASCADE,
@@ -464,7 +480,7 @@ class Store:
             " WHERE baseline_half IN ('A', 'P')"
         )
         conn.execute(
-            "UPDATE meta SET value = '9' WHERE key = 'schema_version'"
+            "UPDATE meta SET value = '10' WHERE key = 'schema_version'"
         )
 
     # -- photos -----------------------------------------------------------
@@ -479,6 +495,7 @@ class Store:
 
     def _photo_dict(self, row):
         return {
+            "id": row["id"],
             "sha256": row["sha256"],
             "thumb": "/api/photos/%s?size=thumb" % row["sha256"],
             "orig": "/api/photos/%s?size=orig" % row["sha256"],
@@ -1217,6 +1234,152 @@ class Store:
         return queue + [
             item for item in self.today_attempts(day) if item["id"] not in seen
         ]
+
+    # -- day packs --------------------------------------------------------
+
+    @staticmethod
+    def _day_pack_dict(row):
+        if not row:
+            return None
+
+        def load(value, fallback):
+            try:
+                return json.loads(value) if value else fallback
+            except (TypeError, ValueError):
+                return fallback
+
+        return {
+            "id": row["id"],
+            "day": row["day"],
+            "created_at": row["created_at"],
+            "closed_at": row["closed_at"],
+            "session_id": row["session_id"],
+            "title": row["title"],
+            "items": load(row["items"], []),
+            "photo_id": row["photo_id"],
+            "summary": load(row["summary"], {}),
+            "closed": bool(row["closed_at"]),
+        }
+
+    def save_day_pack(self, items, day=None, session_id=None, title="今日卷"):
+        """Record what one printed day sheet contains before it is done.
+
+        A newer print supersedes an untouched earlier sheet for the same day,
+        so the home screen never has to guess which open pack is current.
+        """
+        day = day or _local_day()
+        clean, seen = [], set()
+        for item in items or []:
+            qid = str(item.get("qid") or "").strip().upper()
+            role = str(item.get("role") or "").strip().lower()
+            if not qid or role not in ("review", "new") or qid in seen:
+                continue
+            seen.add(qid)
+            clean.append({"qid": qid, "role": role})
+        if not clean:
+            raise ValueError("今日卷没有题目")
+        stamp = now_iso()
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    conn.execute(
+                        "UPDATE day_packs SET closed_at = ?, summary = ?"
+                        " WHERE day = ? AND closed_at IS NULL",
+                        (stamp, json.dumps({"superseded": True},
+                                           ensure_ascii=False), day),
+                    )
+                    cur = conn.execute(
+                        "INSERT INTO day_packs (day, created_at, session_id,"
+                        " title, items) VALUES (?, ?, ?, ?, ?)",
+                        (day, stamp, session_id, title,
+                         json.dumps(clean, ensure_ascii=False)),
+                    )
+                    row = conn.execute(
+                        "SELECT * FROM day_packs WHERE id = ?",
+                        (cur.lastrowid,),
+                    ).fetchone()
+                return self._day_pack_dict(row)
+            finally:
+                conn.close()
+
+    def day_pack(self, pack_id):
+        conn = self._connect()
+        try:
+            row = conn.execute(
+                "SELECT * FROM day_packs WHERE id = ?", (int(pack_id),)
+            ).fetchone()
+        finally:
+            conn.close()
+        return self._day_pack_dict(row)
+
+    def open_day_pack(self, day=None):
+        day = day or _local_day()
+        conn = self._connect()
+        try:
+            row = conn.execute(
+                "SELECT * FROM day_packs WHERE day = ? AND closed_at IS NULL"
+                " ORDER BY id DESC LIMIT 1",
+                (day,),
+            ).fetchone()
+        finally:
+            conn.close()
+        return self._day_pack_dict(row)
+
+    def latest_day_pack(self, day=None):
+        day = day or _local_day()
+        conn = self._connect()
+        try:
+            row = conn.execute(
+                "SELECT * FROM day_packs WHERE day = ? ORDER BY id DESC LIMIT 1",
+                (day,),
+            ).fetchone()
+        finally:
+            conn.close()
+        return self._day_pack_dict(row)
+
+    def close_day_pack(self, pack_id, results, photo_id=None, summary=None):
+        """Merge per-question results into a pack and close it once."""
+        pack = self.day_pack(pack_id)
+        if not pack:
+            raise ValueError("今日卷不存在")
+        if pack["closed"]:
+            raise ValueError("这张卷已经归档")
+        by_qid = {}
+        for row in results or []:
+            qid = str(row.get("qid") or "").strip().upper()
+            result = str(row.get("result") or "").strip().lower()
+            if result not in ("correct", "wrong", "skipped", "overtime"):
+                raise ValueError("未知结果：%s" % result)
+            tags = _normalize_tags(row.get("tags")) if row.get("tags") else []
+            by_qid[qid] = {"result": result, "tags": tags}
+        merged = []
+        for item in pack["items"]:
+            row = dict(item)
+            hit = by_qid.get(row["qid"])
+            # Anything not flagged is the sheet's default: done correctly.
+            row["result"] = hit["result"] if hit else "correct"
+            row["tags"] = hit["tags"] if hit else []
+            merged.append(row)
+        stamp = now_iso()
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    conn.execute(
+                        "UPDATE day_packs SET closed_at = ?, items = ?,"
+                        " photo_id = ?, summary = ? WHERE id = ?",
+                        (stamp, json.dumps(merged, ensure_ascii=False),
+                         photo_id,
+                         json.dumps(summary or {}, ensure_ascii=False),
+                         int(pack_id)),
+                    )
+                    row = conn.execute(
+                        "SELECT * FROM day_packs WHERE id = ?", (int(pack_id),)
+                    ).fetchone()
+                return self._day_pack_dict(row)
+            finally:
+                conn.close()
 
     def review_forecast(self, days=7, now=None, limit=REVIEW_DAY_LIMIT):
         """Project the next N days from the current schedule.

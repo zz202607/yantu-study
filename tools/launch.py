@@ -9,6 +9,7 @@ show a QR code for the phone.  Running it twice reuses the running server.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import socket
 import subprocess
@@ -92,6 +93,22 @@ def stop_server(port):
     return out.returncode
 
 
+def shell_build(port):
+    """The running page's build id, used to keep a scanned URL out of caches.
+
+    WeChat's built-in browser keeps its own page snapshots and ignores most
+    cache headers; a URL that changes with the shell is the reliable escape.
+    """
+    try:
+        with urllib.request.urlopen(
+            "http://127.0.0.1:%d/api/version" % port, timeout=2.0
+        ) as res:
+            data = json.loads(res.read().decode("utf-8"))
+        return str(data.get("build") or "")
+    except (OSError, ValueError):
+        return ""
+
+
 def show_qr(url, open_image=True):
     """Save a scannable PNG and (optionally) open it in the default viewer."""
     try:
@@ -129,13 +146,17 @@ def main():
             return 1
         print("服务已启动（后台运行）。")
 
-    local = "http://localhost:%d" % port
+    # A versioned URL bypasses WeChat/browser page snapshots; the shell also
+    # no-stores, but a changing address is what actually moves WeChat.
+    build = shell_build(port)
+    suffix = "/?v=" + build if build.isdigit() else ""
+    local = "http://localhost:%d%s" % (port, suffix)
     lan = lan_ip()
     print("电脑：%s" % local)
     if lan == "127.0.0.1":
         print("未找到手机可用的局域网地址；请检查 Wi-Fi，或用 YANTU_HOST 指定。")
     else:
-        phone = "http://%s:%d" % (lan, port)
+        phone = "http://%s:%d%s" % (lan, port, suffix)
         print("手机：%s" % phone)
         show_qr(phone, open_image=not args.no_open)
     print("换网络后重新运行 start.bat 即可生成新二维码。")

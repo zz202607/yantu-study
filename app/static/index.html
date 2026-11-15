@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="岩土备考">
+<meta name="app-build" content="__APP_BUILD__">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
@@ -422,7 +423,7 @@
   .action span { display: block; margin-top: 2px; font-size: 11.5px; color: var(--muted); line-height: 1.4; }
   .action .go { flex: 0 0 auto; color: var(--accent); font-size: 18px; }
   .head-links { display: flex; gap: 10px; }
-  .sheet-panel.brief-panel { max-height: 92vh; overflow: auto; }
+  .sheet-panel.brief-panel { max-height: 92vh; overflow-y: auto; overflow-x: hidden; }
   .brief-task.done { opacity: .66; }
   .brief-task.done .icon { background: rgba(29,122,79,.12); color: var(--good); }
   .brief-task .prog { flex: 0 0 auto; color: var(--muted); font-size: 12px; }
@@ -448,41 +449,6 @@
     margin: 4px 0 7px; font-size: 12.5px; line-height: 1.5;
     color: var(--accent); font-weight: 600;
   }
-  .today-step {
-    display: flex; align-items: center; gap: 9px; width: 100%;
-    padding: 10px 3px; border: 0; border-top: 1px solid var(--line);
-    background: transparent; font: inherit; color: var(--ink);
-    text-align: left; cursor: pointer;
-  }
-  .today-step .num {
-    flex: 0 0 auto; width: 25px; height: 25px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--paper); border: 1px solid var(--line);
-    font-size: 12px; font-weight: 700; color: var(--muted);
-  }
-  .today-step .txt { flex: 1; min-width: 0; }
-  .today-step b { display: block; font-size: 14px; font-weight: 600; }
-  .today-step small {
-    display: block; margin-top: 2px; font-size: 11.5px;
-    color: var(--muted); line-height: 1.45;
-  }
-  .today-step .cta {
-    flex: 0 0 auto; border-radius: 999px; padding: 7px 12px;
-    background: var(--accent); color: #fff; font-size: 12.5px; font-weight: 600;
-  }
-  .today-step.optional .cta {
-    background: #fff; color: var(--accent); border: 1px solid var(--accent);
-  }
-  .today-step.on { background: rgba(22,103,217,.05); border-radius: 10px; }
-  .today-step.on .num { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .today-step.done { opacity: .62; }
-  .today-step.done .num {
-    background: rgba(29,122,79,.12); border-color: rgba(29,122,79,.25);
-    color: var(--good);
-  }
-  .today-step.done .cta {
-    background: #fff; color: var(--muted); border: 1px solid var(--line);
-  }
   .today-shortcuts {
     display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
     padding: 8px 2px 4px; border-top: 1px solid var(--line);
@@ -499,13 +465,81 @@
     color: var(--muted); border-radius: 999px; padding: 5px 9px;
     font: inherit; font-size: 11.5px; cursor: pointer;
   }
+  .today-status {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 8px; font-size: 12px; color: var(--muted); margin: 2px 0 8px;
+  }
+  .today-main {
+    display: block; width: 100%; border: 0; border-radius: 13px;
+    padding: 13px 15px; background: var(--accent); color: #fff;
+    font: inherit; font-size: 16px; font-weight: 700; text-align: center;
+    cursor: pointer;
+  }
+  .today-main:disabled { opacity: .55; }
+  .today-main small {
+    display: block; margin-top: 3px; font-size: 11.5px;
+    font-weight: 400; opacity: .85;
+  }
+  .today-links { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
+  .today-links button {
+    border: 1px solid var(--line); background: #fff; color: var(--accent);
+    border-radius: 999px; padding: 6px 10px; font: inherit;
+    font-size: 12px; cursor: pointer;
+  }
+  .today-done {
+    border: 1px solid rgba(29,122,79,.25); background: rgba(29,122,79,.06);
+    border-radius: 11px; padding: 10px 12px; font-size: 13px;
+    color: var(--good); margin-bottom: 8px;
+  }
+
+  /* day-pack check sheet */
+  .pack-photo-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    margin: 8px 0; padding: 8px 10px;
+    border: 1px dashed var(--line); border-radius: 11px; background: var(--paper);
+  }
+  .pack-photo-row .mini { width: 58px; height: 42px; object-fit: cover; }
+  .pack-photo-row .hint { flex: 1; min-width: 120px; }
+  .pack-group {
+    margin: 12px 0 5px; font-size: 12px; font-weight: 600;
+    color: var(--muted); letter-spacing: .03em;
+  }
+  .pack-row {
+    border: 1px solid var(--line); border-radius: 11px;
+    background: #fff; padding: 8px 9px; margin-bottom: 7px;
+  }
+  .pack-top { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+  .pack-qid { flex: 0 0 auto; font-size: 13px; font-weight: 700; }
+  .pack-where {
+    flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; font-size: 11px; color: var(--muted);
+  }
+  .pack-seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 6px; }
+  .pack-seg button {
+    border: 1px solid var(--line); background: #fff; color: var(--muted);
+    border-radius: 7px; padding: 6px 2px; font: inherit;
+    font-size: 11.5px; cursor: pointer;
+  }
+  .pack-seg button.on {
+    border-color: var(--accent); background: rgba(22,103,217,.08);
+    color: var(--accent); font-weight: 600;
+  }
+  .pack-seg button.wrong.on {
+    border-color: #b3261e; background: rgba(179,38,30,.07); color: #b3261e;
+  }
+  .pack-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .pack-tags .chip { font-size: 11.5px; padding: 4px 9px; }
 
   /* handwriting upload */
-  .hand-list { display: grid; gap: 7px; margin-top: 8px; max-height: 52vh; overflow: auto; }
+  .hand-list {
+    display: grid; grid-template-columns: minmax(0, 1fr);
+    gap: 7px; margin-top: 8px; max-height: 52vh; overflow: auto;
+    width: 100%; min-width: 0;
+  }
   .hand-row {
     display: flex; align-items: center; gap: 9px;
     border: 1px solid var(--line); border-radius: 12px;
-    background: #fff; padding: 9px 10px;
+    background: #fff; padding: 9px 10px; min-width: 0;
   }
   .hand-row .qid { flex: 0 0 auto; font-size: 13px; font-weight: 700; }
   .hand-row .where {
@@ -514,6 +548,9 @@
   }
   .hand-row.uploaded { border-color: rgba(29,122,79,.3); background: rgba(29,122,79,.05); }
   .hand-row button { flex: 0 0 auto; padding: 7px 11px; font-size: 12px; }
+  .hand-new { margin: 8px 0 10px; }
+  .hand-new button { width: 100%; padding: 11px; border-radius: 11px; }
+  .hand-new .hint { margin: 6px 0 0; }
   .summary-next { display: grid; gap: 8px; margin-top: 6px; }
   .summary-next button { width: 100%; padding: 12px; font-size: 14px; border-radius: 11px; }
   header .head-print {
@@ -977,6 +1014,12 @@
       </div>
     </div>
 
+    <div class="encourage-card">
+      <h3>今天扎实的一点</h3>
+      <p id="dashEncourage">正在读取学习记录…</p>
+      <small id="dashEvidence"></small>
+    </div>
+
     <div class="dash-stats">
       <div class="dash-stat"><b id="dashTotal">—</b><span>错题入本</span></div>
       <div class="dash-stat"><b id="dashActive">—</b><span>未掌握</span></div>
@@ -990,7 +1033,7 @@
 
     <div class="today-card" id="todayCard">
       <div class="today-head">
-        <h2>今天这么走</h2>
+        <h2>今天的卷</h2>
         <span class="hint" id="todayCount">—</span>
       </div>
       <p class="today-lead" id="todayLead">正在读取今天的安排…</p>
@@ -1001,12 +1044,6 @@
         <button id="today60" type="button">60 分钟</button>
       </div>
       <div class="today-extra" id="todayExtra"></div>
-    </div>
-
-    <div class="encourage-card">
-      <h3>今天扎实的一点</h3>
-      <p id="dashEncourage">正在读取学习记录…</p>
-      <small id="dashEvidence"></small>
     </div>
 
     <div class="section-head">
@@ -1196,8 +1233,7 @@
       <h3>下一步</h3>
       <p id="sNext">—</p>
       <div class="summary-next" id="sNextActions">
-        <button id="sPlan" class="primary" type="button">去记今天四个数</button>
-        <button id="sHand" class="ghost" type="button">上传手写照片</button>
+        <button id="sHand" class="ghost" type="button">补单题手写</button>
         <button id="sPrintNew" class="ghost" type="button">打印今天的新题卷</button>
       </div>
     </div>
@@ -1406,13 +1442,38 @@
   </div>
 </div>
 
+<div id="packSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="packTitle">
+  <div class="sheet-panel brief-panel">
+    <div class="sheet-head">
+      <h3 id="packTitle">核对今天的卷</h3>
+      <span class="hint" id="packHint"></span>
+    </div>
+    <p class="hint">默认都算做对。只标出没做对的题、选错因；复习排期、错题本和练习总量会自动处理。</p>
+    <div class="pack-photo-row">
+      <button id="packPhotoBtn" class="ghost small" type="button">拍卷面（可选）</button>
+      <img id="packPhotoPreview" class="mini hidden" alt="卷面照片">
+      <span class="hint" id="packPhotoState">照片会随错题一起保存</span>
+      <input id="packPhotoFile" type="file" accept="image/*" capture="environment" class="hidden">
+    </div>
+    <div id="packItems"></div>
+    <div class="sheet-actions">
+      <button id="packCancel" class="ghost" type="button">取消</button>
+      <button id="packSave" class="primary" type="button">保存，自动归档</button>
+    </div>
+  </div>
+</div>
+
 <div id="handSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="handTitle">
   <div class="sheet-panel brief-panel">
     <div class="sheet-head">
-      <h3 id="handTitle">上传手写</h3>
+      <h3 id="handTitle">补单题手写</h3>
       <span class="hint" id="handDay"></span>
     </div>
-    <p class="hint" id="handLead">纸上做完，把过程拍下来挂到对应题目；错题详情和复习里都能看到。</p>
+    <p class="hint" id="handLead">给已在错题本里的题补过程照片。和复习页的「拍手写过程」是同一位置：那里是边评边拍，这里是事后补。</p>
+    <div class="hand-new">
+      <button id="handNewWrong" class="primary" type="button">拍新错题 · 识别题号后入本</button>
+      <p class="hint">照片随错题一起保存。下面的列表只用于给已入本的题补过程照片。</p>
+    </div>
     <div class="hand-list" id="handList"></div>
     <input id="handPhoto" type="file" accept="image/*" capture="environment" class="hidden">
     <div class="sheet-actions">
@@ -1432,7 +1493,7 @@
     <div id="briefTasks"></div>
     <div class="toolbar wrap" style="margin:8px 0 4px">
       <button id="briefPrintToday" type="button" class="primary">打印今天的卷</button>
-      <button id="briefHand" type="button" class="ghost">上传手写</button>
+      <button id="briefHand" type="button" class="ghost">补单题手写</button>
     </div>
     <div class="section-head">
       <h2>每天怎么用</h2>
@@ -1478,6 +1539,7 @@
     </label>
     <p class="hint">倒计时、周目标、基线提醒都会随这里更新。</p>
     <p class="hint">手机用浏览器菜单「添加到主屏幕」即可当 App 打开；局域网 HTTP 下系统不会弹自动安装提示。</p>
+    <p class="hint">页面版本：<span id="appBuild">—</span> · 回到 App 会自动检查新版本</p>
     <div class="storage-box">
       <div class="storage-line"><b>照片存储</b><span id="storageText">读取中…</span></div>
       <p class="hint">新照片压到 2400px q85；每题默认保留最近 2 张过程照片。标记原图不会被清理。</p>
@@ -1552,8 +1614,8 @@
 <div id="sessionSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="sessionTitle">
   <div class="sheet-panel">
     <div class="sheet-head">
-      <h3 id="sessionTitle">记一次练习</h3>
-      <span class="hint">只记四个数，系统算节奏</span>
+      <h3 id="sessionTitle">记录今天的练习</h3>
+      <span class="hint">四个数，约 1 分钟</span>
     </div>
     <div class="session-grid">
       <label>日期<input type="date" id="psDay"></label>
@@ -3031,7 +3093,6 @@ $("dProcessPhoto").addEventListener("change", async (event) => {
     if (!res.ok) throw new Error(data.detail || res.statusText);
     state.detail = data;
     renderDetail();
-    pathMark("hand");
     toast("过程照片已保存");
   } catch (err) {
     $("dProcessState").textContent = "上传失败：" + err.message;
@@ -3205,32 +3266,6 @@ function renderHome(d) {
 
 // --- today path -----------------------------------------------------------
 
-function localDay() {
-  const now = new Date();
-  return now.getFullYear() + "-"
-    + String(now.getMonth() + 1).padStart(2, "0") + "-"
-    + String(now.getDate()).padStart(2, "0");
-}
-
-function pathDay() {
-  return (state.home && state.home.day) || localDay();
-}
-
-function pathMark(kind) {
-  try {
-    localStorage.setItem("todayPath:" + pathDay() + ":" + kind, "1");
-  } catch (err) { /* private mode: the step just stays open */ }
-  renderTodayPath();
-}
-
-function pathDone(kind) {
-  try {
-    return localStorage.getItem("todayPath:" + pathDay() + ":" + kind) === "1";
-  } catch (err) {
-    return false;
-  }
-}
-
 function dailyNewTarget() {
   // The server has already trimmed the weekly share by today's time budget;
   // the local formula is only a fallback for a failed briefing/home call.
@@ -3288,97 +3323,108 @@ function todayReviewState() {
   return { done, title, detail, cta, count, planned, graded, session };
 }
 
+function packCounts(pack) {
+  const counts = (pack && pack.counts) || {};
+  return "复习 " + (counts.review || 0) + " + 新题 " + (counts.new || 0);
+}
+
+async function printToday(button) {
+  const ok = await printScope("today", button, "今日卷.pdf");
+  if (ok) await loadHome();
+  return ok;
+}
+
 function renderTodayPath() {
   const box = $("todaySteps");
   if (!box) return;
   const review = todayReviewState();
-  const taskList = (state.briefing && state.briefing.tasks) || [];
-  const practiceTask = taskList.find(
-    (task) => task.key === "plan" || task.key === "practice");
-  const practiceDone = practiceTask ? !!practiceTask.done : false;
+  const packInfo = (state.home && state.home.day_pack) || {};
+  const open = packInfo.open;
+  const latest = packInfo.latest;
   const newDaily = dailyNewTarget();
-  const printDone = pathDone("print");
-  const handDone = pathDone("hand");
+  const planned = review.count || newDaily;
   const plannedMinutes = review.count * 2 + newDaily * 9;
-  const printDetail = (review.count || newDaily)
-    ? [review.count ? "复习 " + review.count + " 题" : "",
-       newDaily ? "新题 " + newDaily + " 题" : ""].filter(Boolean).join(" + ")
-      + " · 约 " + Math.max(1, plannedMinutes) + " 分钟"
-    : "今天没有到期题；也能打印错题卷";
-  const steps = [
-    {
-      key: "print",
-      optional: true,
-      title: "打印今天的卷",
-      detail: printDetail,
-      done: printDone,
-      cta: printDone ? "再打" : "打印",
-      run: () => printScope("today", null, "今日卷.pdf")
-        .then((ok) => { if (ok) pathMark("print"); }),
-    },
-    {
-      key: "review",
-      title: review.title,
-      detail: review.detail,
-      done: review.done,
-      cta: review.cta,
-      run: startReview,
-    },
-    {
-      key: "hand",
-      optional: true,
-      title: "上传手写",
-      detail: handDone
-        ? "今天已上传；错题详情和复习里都能看到"
-        : "做完纸上题，把过程拍下来挂到题目",
-      done: handDone,
-      cta: handDone ? "再传" : "上传",
-      run: openHandSheet,
-    },
-    {
-      key: "practice",
-      title: "记今天四个数",
-      detail: practiceTask ? practiceTask.detail : "作答 / 做对 / 放弃 / 超时",
-      done: practiceDone,
-      cta: practiceDone ? "已记" : "去记",
-      // Straight to the four-number sheet: opening the whole plan screen
-      // first only adds a scroll and a second decision.
-      run: openSessionSheet,
-    },
-  ];
-  const required = steps.filter((step) => !step.optional);
-  const next = required.find((step) => !step.done);
   const lead = $("todayLead");
-  if (lead) {
-    lead.textContent = next
-      ? "现在做：" + next.title + (next.detail ? " — " + next.detail : "")
-      : "今天必做都完成了。打印和上传手写随时补，或者加练一组。";
-  }
   const count = $("todayCount");
-  if (count) {
-    count.textContent = "必做 " + required.filter((step) => step.done).length
-      + "/" + required.length;
-  }
+  const links = document.createElement("div");
+  links.className = "today-links";
+  // While a sheet is waiting to be checked, do not invite a second print.
+  const shortcuts = document.querySelector(".today-shortcuts");
+  if (shortcuts) shortcuts.classList.toggle("hidden", !!open);
+
   box.innerHTML = "";
-  steps.forEach((step, index) => {
-    const row = document.createElement("button");
-    row.type = "button";
-    row.className = "today-step"
-      + (step.optional ? " optional" : "")
-      + (step.done ? " done" : "")
-      + (next === step ? " on" : "");
-    row.innerHTML =
-      '<span class="num">' + (step.done ? "✓" : String(index + 1)) + "</span>"
-      + '<span class="txt"><b>' + escapeHtml(step.title) + "</b>"
-      + "<small>" + escapeHtml(step.detail || "") + "</small></span>"
-      + '<span class="cta">' + escapeHtml(step.cta) + "</span>";
-    row.addEventListener("click", () => step.run());
-    box.appendChild(row);
-  });
+  const status = document.createElement("div");
+  status.className = "today-status";
+  const primary = document.createElement("button");
+  primary.type = "button";
+  primary.className = "today-main";
+
+  if (open) {
+    status.innerHTML = "<span>已打印：" + escapeHtml(packCounts(open))
+      + "</span><span>" + open.items.length + " 题</span>";
+    if (lead) {
+      lead.textContent =
+        "做完这张卷，回来点「核对归档」：只标没做对的题和错因，其他自动处理。";
+    }
+    primary.textContent = "做完核对（" + open.items.length + " 题）";
+    primary.addEventListener("click", openDayPackSheet);
+    if (count) count.textContent = "待核对";
+  } else if (latest && latest.closed && !(latest.summary || {}).superseded) {
+    const summary = latest.summary || {};
+    status.innerHTML = "<span>今天的卷已归档</span><span>错 "
+      + (summary.wrongs || []).length + " 题</span>";
+    if (lead) {
+      lead.textContent =
+        "错题已入本、复习已排期、练习已自动记；不用再填四个数。";
+    }
+    primary.innerHTML = "再打一份<small>" + escapeHtml(packCounts(latest))
+      + "</small>";
+    primary.addEventListener("click", (e) => printToday(e.currentTarget));
+    if (count) count.textContent = "已完成";
+  } else {
+    status.innerHTML = "<span>今天的量："
+      + (review.count ? "复习 " + review.count + " 题" : "无到期复习")
+      + " + 新题 " + newDaily + " 题</span><span>约 "
+      + Math.max(1, plannedMinutes) + " 分钟</span>";
+    if (lead) {
+      lead.textContent = planned
+        ? "先打印；做完拍照核对，标出错题和错因，其余自动归档。"
+        : "今天没有要打印的题；可以直接在 App 里复习或加练。";
+    }
+    primary.innerHTML = "打印今天的卷<small>复习 " + review.count
+      + " 题 + 新题 " + newDaily + " 题</small>";
+    primary.disabled = !planned;
+    primary.addEventListener("click", (e) => printToday(e.currentTarget));
+    if (count) count.textContent = planned ? "待打印" : "无待办";
+  }
+  box.appendChild(status);
+  box.appendChild(primary);
+
+  if (review.count) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "直接在 App 里复习 (" + review.count + ")";
+    button.addEventListener("click", startReview);
+    links.appendChild(button);
+  }
+  const hand = document.createElement("button");
+  hand.type = "button";
+  hand.textContent = "补单题手写";
+  hand.addEventListener("click", openHandSheet);
+  links.appendChild(hand);
+  if (latest && latest.closed && !open) {
+    const book = document.createElement("button");
+    book.type = "button";
+    book.textContent = "看错题本";
+    book.addEventListener("click", openBook);
+    links.appendChild(book);
+  }
+  box.appendChild(links);
+
   const extra = $("todayExtra");
   if (extra) {
     extra.innerHTML = "";
-    // Practice/plan is step 4, not an extra; only true bonus work rides here.
+    const taskList = (state.briefing && state.briefing.tasks) || [];
     for (const task of taskList.filter(
       (row) => row.optional && !row.done
         && ["drill", "reading"].includes(row.key)).slice(0, 2)) {
@@ -3388,9 +3434,201 @@ function renderTodayPath() {
       button.addEventListener("click", () => openBriefTask(task));
       extra.appendChild(button);
     }
+    const manual = document.createElement("button");
+    manual.type = "button";
+    manual.textContent = "手动记一次练习";
+    manual.addEventListener("click", openSessionSheet);
+    extra.appendChild(manual);
     extra.classList.toggle("hidden", !extra.children.length);
   }
 }
+
+// --- day-pack check sheet -------------------------------------------------
+
+const PACK_RESULT_LABELS = {
+  correct: "对",
+  wrong: "错",
+  skipped: "没做",
+  overtime: "超时",
+};
+
+async function openDayPackSheet() {
+  let pack = (state.home && state.home.day_pack
+    && state.home.day_pack.open) || null;
+  if (!pack) {
+    try {
+      const res = await fetch("/api/day-pack");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || res.statusText);
+      pack = data.pack;
+    } catch (err) {
+      toast("读取今日卷失败：" + err.message);
+      return;
+    }
+  }
+  if (!pack) {
+    const latest = (state.home && state.home.day_pack
+      && state.home.day_pack.latest) || null;
+    if (latest && latest.closed) {
+      toast("今天的卷已归档；错题和练习都已自动记");
+      show("dash");
+      loadHome();
+      return;
+    }
+    toast("今天的卷还没打印，先打一份");
+    return;
+  }
+  state.packSheet = {
+    pack,
+    results: Object.fromEntries(
+      pack.items.map((item) => [item.qid, "correct"])),
+    tags: {},
+    photoSha: null,
+    busy: false,
+  };
+  $("packHint").textContent = packCounts(pack);
+  $("packPhotoPreview").classList.add("hidden");
+  $("packPhotoPreview").removeAttribute("src");
+  $("packPhotoState").textContent = "照片会随错题一起保存";
+  renderPackItems();
+  $("packSheet").classList.remove("hidden");
+}
+
+function closePackSheet() {
+  $("packSheet").classList.add("hidden");
+  $("packPhotoFile").value = "";
+  state.packSheet = null;
+}
+
+function renderPackItems() {
+  const sheet = state.packSheet;
+  if (!sheet) return;
+  const box = $("packItems");
+  box.innerHTML = "";
+  for (const role of ["review", "new"]) {
+    const items = sheet.pack.items.filter((item) => item.role === role);
+    if (!items.length) continue;
+    const head = document.createElement("div");
+    head.className = "pack-group";
+    head.textContent = (role === "review" ? "错题复习 " : "今日新题 ")
+      + items.length;
+    box.appendChild(head);
+    for (const item of items) {
+      const result = sheet.results[item.qid] || "correct";
+      const row = document.createElement("div");
+      row.className = "pack-row";
+      const where = [item.chapter, item.section]
+        .filter(Boolean).join(" · ");
+      row.innerHTML =
+        '<div class="pack-top"><span class="pack-qid">'
+        + escapeHtml(item.qid) + '</span><span class="pack-where">'
+        + escapeHtml(where || item.book || "") + "</span></div>"
+        + '<div class="pack-seg">'
+        + Object.entries(PACK_RESULT_LABELS).map(([key, label]) =>
+          '<button type="button" data-result="' + key + '" class="'
+          + (result === key ? "on" : "")
+          + (key === "wrong" ? " wrong" : "") + '">' + label + "</button>"
+        ).join("") + "</div>";
+      row.querySelector(".pack-seg").addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-result]");
+        if (!button) return;
+        sheet.results[item.qid] = button.dataset.result;
+        renderPackItems();
+      });
+      if (result === "wrong") {
+        const tagBox = document.createElement("div");
+        tagBox.className = "pack-tags";
+        const chosen = sheet.tags[item.qid] || new Set();
+        sheet.tags[item.qid] = chosen;
+        for (const key of Object.keys(TAG_LABELS)) {
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "chip" + (chosen.has(key) ? " on" : "");
+          chip.textContent = tagLabel(key);
+          chip.addEventListener("click", () => {
+            if (chosen.has(key)) chosen.delete(key);
+            else chosen.add(key);
+            renderPackItems();
+          });
+          tagBox.appendChild(chip);
+        }
+        row.appendChild(tagBox);
+      }
+      box.appendChild(row);
+    }
+  }
+}
+
+$("packCancel").addEventListener("click", closePackSheet);
+$("packSheet").addEventListener("click", (event) => {
+  if (event.target === $("packSheet")) closePackSheet();
+});
+$("packPhotoBtn").addEventListener("click", () => $("packPhotoFile").click());
+$("packPhotoFile").addEventListener("change", async (event) => {
+  const file = event.target.files && event.target.files[0];
+  event.target.value = "";
+  if (!file || !state.packSheet) return;
+  state.packSheet.photoBusy = true;
+  $("packSave").disabled = true;
+  $("packPhotoState").textContent = "上传中…";
+  try {
+    const sha = await uploadPhoto(file);
+    state.packSheet.photoSha = sha;
+    $("packPhotoPreview").src = "/api/photos/" + sha + "?size=thumb";
+    $("packPhotoPreview").classList.remove("hidden");
+    $("packPhotoState").textContent = "已附卷面照片";
+  } catch (err) {
+    $("packPhotoState").textContent = "上传失败：" + err.message;
+  } finally {
+    if (state.packSheet) state.packSheet.photoBusy = false;
+    $("packSave").disabled = false;
+  }
+});
+$("packSave").addEventListener("click", async () => {
+  const sheet = state.packSheet;
+  if (!sheet || sheet.busy || sheet.photoBusy) return;
+  sheet.busy = true;
+  const button = $("packSave");
+  button.disabled = true;
+  button.textContent = "归档中…";
+  try {
+    const items = sheet.pack.items.map((item) => {
+      const result = sheet.results[item.qid] || "correct";
+      const tags = result === "wrong"
+        ? [...(sheet.tags[item.qid] || [])] : [];
+      return { qid: item.qid, result, tags };
+    });
+    const body = { items };
+    if (sheet.photoSha) body.photo_sha = sheet.photoSha;
+    const res = await fetch(
+      "/api/day-pack/" + sheet.pack.id + "/result",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    const summary = data.summary || {};
+    const newInfo = summary.new || {};
+    const reviewInfo = summary.review || {};
+    closePackSheet();
+    toast("已归档：错 " + (summary.wrongs || []).length + " 题入本 · 复习 "
+      + (reviewInfo.total || 0) + " 题已排期 · 练习 "
+      + ((newInfo.total || 0) - (newInfo.skipped || 0)) + " 题自动记");
+    if ((summary.warnings || []).length) {
+      toast("有 " + summary.warnings.length + " 条复习未改排期，去复习页看看");
+    }
+    refreshNavCount();
+    await loadHome();
+  } catch (err) {
+    toast("归档失败：" + err.message);
+  } finally {
+    button.disabled = false;
+    button.textContent = "保存，自动归档";
+    if (state.packSheet) state.packSheet.busy = false;
+  }
+});
 
 function runAction(action) {
   if (action.route === "review") return startReview();
@@ -7260,7 +7498,6 @@ $("rProcessPhoto").addEventListener("change", async (event) => {
     $("rProcessPreview").src = "/api/photos/" + sha + "?size=thumb";
     $("rProcessPreview").classList.remove("hidden");
     $("rProcessState").textContent = "已附过程照片 · 评分时一起保存";
-    pathMark("hand");
   } catch (err) {
     $("rProcessState").textContent = "上传失败：" + err.message;
   }
@@ -7275,12 +7512,11 @@ $("sHome").addEventListener("click", () => {
 });
 $("sAgain").addEventListener("click", startReview);
 $("sHand").addEventListener("click", openHandSheet);
-$("sPlan").addEventListener("click", openSessionSheet);
 $("sPrintNew").addEventListener("click", () => {
   // After a finished review the server's "today" sheet holds only today's
   // new questions, which is exactly the next block of work.
   printScope("today", null, "今日卷.pdf")
-    .then((ok) => { if (ok) pathMark("print"); });
+    .then((ok) => { if (ok) loadHome(); });
 });
 $("sPrint").addEventListener("click", () => downloadPrint("review"));
 
@@ -7433,6 +7669,7 @@ function openManual() {
 
 function openBriefTask(task) {
   closeBriefing();
+  if (task.route === "pack") return openDayPackSheet();
   if (task.route === "review") return startReview();
   if (task.route === "drill") return openTraining();
   if (task.route === "reading") {
@@ -7656,7 +7893,7 @@ function renderHandList() {
     return;
   }
   $("handLead").textContent =
-    "点一道题，拍下纸上的手写过程；同一题再拍会覆盖上一张。";
+    "点一道题，拍下纸上的手写过程；和复习页的「拍手写过程」存到同一位置，同一题再拍会覆盖上一张。";
   box.innerHTML = "";
   for (const item of items) {
     const row = document.createElement("div");
@@ -7683,6 +7920,13 @@ $("handBook").addEventListener("click", () => {
   closeHandSheet();
   openBook();
 });
+$("handNewWrong").addEventListener("click", () => {
+  // New wrong answers go through the capture flow: photo -> printed qid ->
+  // ticked candidates -> 记错.  The photo rides along as the attempt photo.
+  closeHandSheet();
+  show("home");
+  $("camera").click();
+});
 $("handPhoto").addEventListener("change", async (event) => {
   const file = event.target.files && event.target.files[0];
   event.target.value = "";
@@ -7705,7 +7949,6 @@ $("handPhoto").addEventListener("change", async (event) => {
         || { orig: "/api/photos/" + sha };
     }
     state.hand.target = null;
-    pathMark("hand");
     renderHandList();
     $("handLead").textContent = "已挂到 " + (item ? item.qid : "这道题")
       + "；接着拍下一题，或点完成。";
@@ -7729,7 +7972,7 @@ async function downloadPrint(scope) {
       : null;
     if (await runPrint(q, printDownloadName(scope), null, message)) {
       closePrintSheet();
-      if (scope === "today") pathMark("print");
+      if (scope === "today") loadHome();
     }
   } finally {
     status.classList.add("hidden");
@@ -7752,7 +7995,7 @@ for (const button of $("printSheet").querySelectorAll(".print-opt")) {
 $("briefPrintToday").addEventListener("click", () => {
   closeBriefing();
   printScope("today", null, "今日卷.pdf")
-    .then((ok) => { if (ok) pathMark("print"); });
+    .then((ok) => { if (ok) loadHome(); });
 });
 $("briefHand").addEventListener("click", () => {
   closeBriefing();
@@ -7761,7 +8004,7 @@ $("briefHand").addEventListener("click", () => {
 for (const [id, minutes] of [["today30", 30], ["today60", 60]]) {
   $(id).addEventListener("click", () => {
     printScope("today", null, "今日卷-" + minutes + "分钟.pdf", { minutes })
-      .then((ok) => { if (ok) pathMark("print"); });
+      .then((ok) => { if (ok) loadHome(); });
   });
 }
 
@@ -7899,10 +8142,45 @@ loadHome();
 autoBriefing();
 refreshNavCount();
 
+// The installed PWA resumes the DOM it already has, so an updated shell would
+// otherwise stay invisible until the app is killed.  The server stamps each
+// index.html with a build id; on return to the app, compare and reload once.
+const APP_BUILD = (() => {
+  const meta = document.querySelector('meta[name="app-build"]');
+  const value = meta ? meta.getAttribute("content") : "";
+  return value && !value.startsWith("__") ? value : "";
+})();
+$("appBuild").textContent = APP_BUILD || "本地预览";
+
+async function checkAppBuild() {
+  if (!APP_BUILD) return;
+  try {
+    const res = await fetch("/api/version", { cache: "no-store" });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.build && data.build !== APP_BUILD) location.reload();
+  } catch (err) { /* offline: the cached shell is better than a blank page */ }
+}
+setInterval(checkAppBuild, 5 * 60 * 1000);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) checkAppBuild();
+});
+
 if ("serviceWorker" in navigator && window.isSecureContext) {
-  navigator.serviceWorker.register("/sw.js").catch(() => {
-    /* installability is a bonus, never a blocker */
+  let hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    // First install claims the page; only a replacement worker needs a reload.
+    if (hadController) location.reload();
+    hadController = true;
   });
+  navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" })
+    .then((registration) => {
+      registration.update().catch(() => {});
+      setInterval(() => registration.update().catch(() => {}), 60 * 60 * 1000);
+    })
+    .catch(() => {
+      /* installability is a bonus, never a blocker */
+    });
 }
 
 // Deep links: /?qid=3-11 opens the viewer; /?tab=review jumps to the queue.
