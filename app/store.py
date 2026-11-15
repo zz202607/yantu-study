@@ -1188,6 +1188,36 @@ class Store:
             "stats": stats,
         }
 
+    def today_attempts(self, day=None, limit=40):
+        """Attempts created today, newest first.
+
+        These are the questions a paper session just got wrong; they need a
+        place for the handwriting photo even when the 20-item review queue is
+        full or they were marked after review was done.
+        """
+        day = day or _local_day()
+        limit = max(1, min(int(limit or 40), 200))
+        conn = self._connect()
+        try:
+            ids = [
+                row["id"] for row in conn.execute(
+                    "SELECT id FROM attempts WHERE substr(created_at, 1, 10) = ?"
+                    " ORDER BY id DESC LIMIT ?",
+                    (day, limit),
+                )
+            ]
+            return self._items(conn, ids)
+        finally:
+            conn.close()
+
+    def handwriting_targets(self, day=None):
+        """Questions a paper sheet can attach work to: today's queue, then new."""
+        queue = self.review_queue()
+        seen = {item["id"] for item in queue}
+        return queue + [
+            item for item in self.today_attempts(day) if item["id"] not in seen
+        ]
+
     def review_forecast(self, days=7, now=None, limit=REVIEW_DAY_LIMIT):
         """Project the next N days from the current schedule.
 

@@ -19,15 +19,21 @@ from pathlib import Path
 import pymupdf
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tools"))
 
 import crop_question as CQ  # noqa: E402
 import make_print_sample as MPS  # noqa: E402
+from app.pacing import fit_counts, minutes_for  # noqa: E402
 
 MAX_QUESTIONS = 30
 # A travel pack prints several days at once; the per-request cap is higher but
 # still bounded so one request cannot occupy the printer loop for minutes.
 MAX_WEEK_QUESTIONS = 100
+# The one-tap day sheet: today's review (the queue is capped at 20 anyway)
+# plus today's new questions, kept to one printable sitting.
+TODAY_MAX_QUESTIONS = 40
+TODAY_REVIEW_CAP = 20
 DEFAULT_PRINT_NAME = "打印卷"
 BAD_NAME_CHARS = re.compile(r'[\\/:*?"<>|\r\n\t]+')
 CROP_DPI = 300
@@ -168,6 +174,56 @@ def _cover_page(doc, cover, title):
                 color=(0.3, 0.3, 0.3),
             )
     return page
+
+
+def day_pack(review_qids, new_qids, day_label="", max_total=TODAY_MAX_QUESTIONS,
+             minutes=0):
+    """Sections and one cover page for the one-tap "today" sheet.
+
+    Review comes first and keeps the frozen queue order; today's new-question
+    share fills the remaining room.  Section titles are omitted on purpose:
+    a day sheet gets one cover, not one cover per part.
+
+    `minutes` is the short-session box (30 / 60 minutes): review questions are
+    kept first because their dates are what compound when left undone.
+    """
+    review = list(dict.fromkeys(
+        str(qid).strip().upper() for qid in review_qids or () if qid
+    ))[:TODAY_REVIEW_CAP]
+    taken, room = set(review), max(0, max_total - len(review))
+    new = []
+    for qid in new_qids or ():
+        key = str(qid).strip().upper()
+        if not key or key in taken or len(new) >= room:
+            continue
+        taken.add(key)
+        new.append(key)
+    if minutes and minutes > 0:
+        keep_review, keep_new = fit_counts(
+            minutes, len(review), len(new),
+            review_cap=TODAY_REVIEW_CAP, total_cap=max_total,
+        )
+        review, new = review[:keep_review], new[:keep_new]
+    sections = []
+    if review:
+        sections.append({"short": "复", "qids": review})
+    if new:
+        sections.append({"short": "新", "qids": new})
+    tasks = []
+    if review:
+        tasks.append({"label": "错题复习 %d 题" % len(review)})
+    if new:
+        tasks.append({"label": "今日新题 %d 题" % len(new)})
+    tasks.append({"label": "做完回 App：复习评分 → 上传手写 → 记四个数"})
+    cover = {
+        "title": "今日卷",
+        "subtitle": ("%s · " % day_label if day_label else "")
+        + "复习 %d 题 + 新题 %d 题 · 约 %d 分钟" % (
+            len(review), len(new), minutes_for(len(review), len(new))),
+        "tasks": tasks,
+        "qids": review + new,
+    }
+    return sections, cover
 
 
 def _normalize_sections(qids, sections, max_questions):

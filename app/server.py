@@ -42,9 +42,10 @@ from app.net import lan_ip  # noqa: E402
 from app.catalog import Catalog  # noqa: E402
 from app.curriculum import CASE_BY_KEY, category_key, load_exam_tags  # noqa: E402
 from app.photo_import import import_photos, scan_photos  # noqa: E402
+from app.pacing import minutes_for  # noqa: E402
 from app.print_export import (  # noqa: E402
-    MAX_QUESTIONS, MAX_WEEK_QUESTIONS, export_pdf, parse_qid_list,
-    print_filename,
+    MAX_QUESTIONS, MAX_WEEK_QUESTIONS, TODAY_MAX_QUESTIONS, day_pack,
+    export_pdf, parse_qid_list, print_filename,
 )
 from app.settings import Settings  # noqa: E402
 from app.store import PRACTICE_SOURCES, PROCESS_LABELS, Store, TAGS  # noqa: E402
@@ -277,6 +278,7 @@ def home():
     overview = store.review_overview()
     data["review"] = {
         "count": overview["count"],
+        "planned": overview["planned"],
         "est_minutes": overview["est_minutes"],
         "reasons": overview["reasons"],
         "session": _session_view(store.session()),
@@ -287,6 +289,15 @@ def home():
         "week": plan_view["week"],
         "targets": plan_view["targets"],
         "advice": plan_view["advice"][:1],
+    }
+    # One time-aware answer for "how much is today": review first, then the
+    # weekly new-question share inside whatever minutes are left.
+    new_quota = briefing_app.daily_new_quota(plan_view, overview["count"])
+    data["today"] = {
+        "new_questions": new_quota,
+        "budget_minutes": briefing_app.daily_budget(plan_view),
+        "review_questions": overview["count"],
+        "minutes": minutes_for(overview["count"], new_quota),
     }
     try:
         read_view = reading_app.overview(store)
@@ -1407,6 +1418,21 @@ def review_today():
     return overview
 
 
+@app.get("/api/handwriting/targets")
+def handwriting_targets():
+    """Questions today's paper work can be attached to.
+
+    Review order first (the printed sheet's order), then questions recorded
+    today that fell outside the 20-item queue, so a freshly marked wrong
+    answer can receive its photo immediately.
+    """
+    items = store.handwriting_targets()
+    return {
+        "items": [_review_item(item) for item in items],
+        "count": len(items),
+    }
+
+
 @app.post("/api/review/session")
 def review_start(payload: dict = Body(default={})):
     """One tap enters today's review: resume, or freeze a fresh queue."""
@@ -1558,6 +1584,7 @@ def print_questions(
     result_boxes: int = 0,
     cover: int = 0,
     per_prototype: int = 5,
+    minutes: int = 0,
     jpeg_dpi: int = 220,
     jpeg_quality: int = 85,
 ):
@@ -1605,6 +1632,43 @@ def print_questions(
         if not qids:
             qids = [item["qid"] for item in store.review_queue()]
         title = "错题复习卷"
+    elif scope == "today":
+        # One sheet for the day: the frozen review order first, then today's
+        # share of the weekly new-question target.  A finished session means
+        # review is done, so a late print only carries new questions.
+        session = store.session()
+        if session.get("id") and not session.get("finished"):
+            review_qids = list(session.get("queue") or [])
+        elif session.get("id"):
+            review_qids = []
+        else:
+            review_qids = [item["qid"] for item in store.review_queue()]
+        try:
+            minutes = max(0, min(int(minutes or 0), 180))
+        except (TypeError, ValueError):
+            minutes = 0
+        new_qids, daily = [], 0
+        try:
+            plan_view = study_plan.overview(
+                store, DATA, settings_store.load(), baseline=baseline_view())
+            daily = briefing_app.daily_new_quota(plan_view, len(review_qids))
+            if daily:
+                selection = study_plan.week_drill(
+                    store, DATA, settings_store.load(),
+                    per_prototype=per_prototype, limit=MAX_QUESTIONS,
+                )
+                seen = set(review_qids)
+                new_qids = [
+                    qid for qid in selection["qids"] if qid not in seen
+                ][:daily]
+        except Exception:  # noqa: BLE001 - the review part still prints
+            new_qids, daily = [], 0
+        sections, cover_data = day_pack(
+            review_qids, new_qids, day_label=time.strftime("%m-%d"),
+            minutes=minutes)
+        if not sections:
+            raise HTTPException(404, "今天没有要打印的题")
+        title = "今日卷"
     elif scope == "recent":
         qids = [
             item["qid"]
@@ -1711,7 +1775,7 @@ def print_questions(
         if (status or "") == "active":
             label.append("未掌握")
         title = "错题卷" + ("-" + "-".join(label) if label else "")
-    if scope != "week":
+    if scope not in ("week", "today"):
         qids = list(dict.fromkeys(qids))[:MAX_QUESTIONS]
         if not qids:
             raise HTTPException(404, "没有可打印的题")
@@ -1737,14 +1801,15 @@ def print_questions(
                 jpeg = (max(120, min(int(jpeg_dpi), 300)),
                         max(60, min(int(jpeg_quality), 95)))
             stats = export_pdf(
-                None if scope == "week" else qids, out, header, tmp,
+                None if scope in ("week", "today") else qids, out, header, tmp,
                 engine=RQ.engine(), ocr_lock=_ocr_lock,
                 jpeg=jpeg,
                 writing_scale=writing_scale,
                 result_boxes=bool(result_boxes),
                 cover=cover_data if cover else None,
-                sections=sections if scope == "week" else None,
+                sections=sections if scope in ("week", "today") else None,
                 max_questions=(MAX_WEEK_QUESTIONS if scope == "week"
+                               else TODAY_MAX_QUESTIONS if scope == "today"
                                else MAX_QUESTIONS),
             )
     except HTTPException:
@@ -1758,6 +1823,8 @@ def print_questions(
     if scope == "week":
         stats["days"] = days
         stats["truncated"] = dropped
+    if scope == "today" and minutes:
+        stats["minutes"] = minutes
     response = FileResponse(out, media_type="application/pdf", filename=out.name)
     response.headers["X-Print-Stats"] = json.dumps(stats, ensure_ascii=True)
     response.headers["X-Print-Filename"] = quote(out.name, safe="")
