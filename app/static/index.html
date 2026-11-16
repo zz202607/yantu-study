@@ -963,6 +963,112 @@
   .read-actions { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 12px; }
   .read-actions .primary { flex: 1 1 150px; }
   .read-timer { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; }
+  .read-reader .page-wrap img { cursor: zoom-in; }
+  .read-open-hint { margin: -2px 0 9px; }
+
+  /* immersive reading room: guidance on the left, the scan on the right */
+  .read-room {
+    position: fixed; inset: 0; z-index: 15;
+    display: flex; flex-direction: column; background: #dfe4e7;
+  }
+  body.room-open { overflow: hidden; }
+  .rr-bar {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; background: #0f2a3f; color: #fff;
+  }
+  .rr-bar .ghost {
+    background: rgba(255,255,255,.1); color: #fff;
+    border-color: rgba(255,255,255,.28); flex: 0 0 auto;
+  }
+  .rr-bar .ghost:active { background: rgba(255,255,255,.2); }
+  .rr-bar .ghost:disabled { opacity: .35; }
+  .rr-bar .read-timer { color: rgba(255,255,255,.78); flex: 0 0 auto; }
+  .rr-id { flex: 1; min-width: 80px; display: flex; flex-direction: column; line-height: 1.3; }
+  .rr-id b { font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rr-id .hint { color: rgba(255,255,255,.66); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rr-tips { display: none; }
+  .rr-main { flex: 1; min-height: 0; display: flex; position: relative; }
+  .rr-side {
+    flex: 0 0 336px; width: 336px; min-width: 0; overflow: auto;
+    background: #fff; border-right: 1px solid var(--line);
+    padding: 13px 16px 18px;
+  }
+  .rr-side h2 { margin: 8px 0 3px; font-size: 17px; line-height: 1.35; }
+  .rr-side .read-why { font-size: 13.5px; }
+  .rr-side .read-block h3 { font-size: 12px; }
+  .rr-side .read-block ul { font-size: 13px; }
+  .rr-side .read-pit, .rr-side .read-check { font-size: 13px; }
+  .rr-side .read-actions {
+    position: sticky; bottom: -18px; z-index: 1;
+    background: #fff; border-top: 1px solid var(--line);
+    margin-top: 14px; padding: 10px 0 12px;
+  }
+  .rr-side .read-actions .primary { flex: 1 1 150px; padding: 11px; }
+  .rr-stop-pick { display: flex; gap: 6px; align-items: center; }
+  .rr-stop-pick select {
+    flex: 1; min-width: 0; background: #fff; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 9px;
+    padding: 8px; font-size: 12.5px; font-family: inherit;
+  }
+  .rr-stop-meta { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-top: 6px; font-size: 11.5px; color: var(--muted); }
+  .rr-note { margin-top: 12px; }
+  .rr-note textarea { min-height: 50px; font-size: 13px; }
+  .rr-keys { margin: 12px 0 0; font-size: 11px; }
+  .rr-stage { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .rr-tools {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    padding: 7px 10px; background: #f7f9fa; border-bottom: 1px solid var(--line);
+  }
+  .rr-tools .ghost { padding: 7px 10px; font-size: 12.5px; }
+  .rr-tools .ghost.on { background: rgba(22,103,217,.1); border-color: var(--accent); color: var(--accent); }
+  .rr-tools .grow { flex: 1; }
+  .rr-pageinfo { font-size: 12.5px; font-variant-numeric: tabular-nums; padding: 0 3px; }
+  .rr-tools input {
+    width: 58px; padding: 6px; font-size: 12.5px; text-align: center;
+    border: 1px solid var(--line); border-radius: 8px; font-family: inherit;
+  }
+  .rr-zoom { min-width: 42px; text-align: center; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .rr-page {
+    flex: 1; min-height: 0; overflow-y: scroll; overflow-x: auto; padding: 10px;
+    background: #dfe4e7; overscroll-behavior: contain;
+  }
+  .rr-page img {
+    display: block; margin: 0 auto; max-width: none; background: #fff;
+    box-shadow: 0 2px 18px rgba(15,42,63,.18); cursor: grab;
+    user-select: none; -webkit-user-drag: none;
+  }
+  .rr-page.dragging { cursor: grabbing; }
+  .rr-page.loading img { opacity: .45; }
+  .rr-error { padding: 30px 18px; text-align: center; font-size: 13px; color: var(--muted); }
+  .rr-hint { flex: 0 0 auto; padding: 4px 10px 6px; background: #f7f9fa; border-top: 1px solid var(--line); font-size: 11px; text-align: center; }
+  .rr-backdrop { display: none; }
+
+  @media (max-width: 900px) {
+    .rr-tips { display: inline-block; }
+    .rr-side {
+      position: absolute; top: 0; bottom: 0; left: 0; z-index: 3;
+      width: min(86vw, 360px); flex-basis: auto;
+      transform: translateX(-102%); transition: transform .22s ease;
+      box-shadow: 8px 0 30px rgba(15,42,63,.3);
+    }
+    .read-room.side-open .rr-side { transform: none; }
+    .rr-backdrop {
+      display: block; position: absolute; inset: 0; z-index: 2;
+      background: rgba(15,42,63,.35); opacity: 0; pointer-events: none;
+      transition: opacity .22s ease;
+    }
+    .read-room.side-open .rr-backdrop { opacity: 1; pointer-events: auto; }
+    .rr-keys, .rr-hint { display: none; }
+  }
+  @media (max-width: 620px) {
+    .rr-bar { gap: 5px; padding: 7px 8px; flex-wrap: wrap; }
+    .rr-bar .ghost { padding: 6px 8px; font-size: 12px; }
+    .rr-id .hint { display: none; }
+    .rr-word { display: none; }
+    .rr-tools { gap: 4px; padding: 6px; }
+    .rr-tools .ghost { padding: 6px 8px; font-size: 12px; }
+    .rr-page { padding: 4px; }
+  }
 
   @media (max-width: 520px) {
     .hero-days b { font-size: 56px; }
@@ -1706,6 +1812,41 @@
   </div>
 </div>
 
+<div id="readRoom" class="read-room hidden" role="dialog" aria-modal="true" aria-label="规范精读">
+  <div class="rr-bar">
+    <button id="rrExit" type="button" class="ghost small">‹ 退出</button>
+    <div class="rr-id"><b id="rrTitle">—</b><span id="rrMeta" class="hint">—</span></div>
+    <span id="rrTimer" class="read-timer">00:00</span>
+    <button id="rrTips" type="button" class="ghost small rr-tips">要点</button>
+    <button id="rrPrev" type="button" class="ghost small">‹<span class="rr-word"> 上一站</span></button>
+    <button id="rrNext" type="button" class="ghost small"><span class="rr-word">下一站 </span>›</button>
+  </div>
+  <div class="rr-main">
+    <div id="rrBackdrop" class="rr-backdrop"></div>
+    <aside id="rrSide" class="rr-side"></aside>
+    <section class="rr-stage">
+      <div class="rr-tools">
+        <button id="rrPagePrev" type="button" class="ghost small">‹ 上页</button>
+        <span id="rrPageInfo" class="rr-pageinfo">p — / —</span>
+        <button id="rrPageNext" type="button" class="ghost small">下页 ›</button>
+        <input id="rrPageInput" type="number" inputmode="numeric" min="1" aria-label="跳到第几页">
+        <button id="rrPageGo" type="button" class="ghost small">跳</button>
+        <span class="grow"></span>
+        <button id="rrZoomOut" type="button" class="ghost small" aria-label="缩小">−</button>
+        <span id="rrZoomLabel" class="rr-zoom">100%</span>
+        <button id="rrZoomIn" type="button" class="ghost small" aria-label="放大">＋</button>
+        <button id="rrFit" type="button" class="ghost small">整页</button>
+        <button id="rrPdf" type="button" class="ghost small">原 PDF</button>
+      </div>
+      <div id="rrPage" class="rr-page">
+        <img id="rrPageImg" alt="规范原页" draggable="false">
+        <div id="rrPageError" class="rr-error hidden">这一页没有渲染出来：标注版可能不在线，可以点「原 PDF」。</div>
+      </div>
+      <p class="rr-hint hint">← → 翻页 · 拖动平移 · + / − 缩放 · 双击放大 · Esc 退出</p>
+    </section>
+  </div>
+</div>
+
 <div id="pageSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="pageTitle">
   <div class="sheet-panel page-panel">
     <div class="sheet-head">
@@ -1821,6 +1962,9 @@ const state = {
     pending: null,
     page: 0,
     pageCount: 0,
+    room: false,
+    zoom: 1,
+    fit: "width",
   },
   baseline: {
     data: null,      // /api/baseline payload
@@ -3699,6 +3843,7 @@ function setDataView(view) {
   $("dataReading").classList.toggle("hidden", view !== "reading");
   $("dataStandards").classList.toggle("hidden", view !== "standards");
   $("dataHandbook").classList.toggle("hidden", view !== "handbook");
+  if (view !== "reading" && state.reading.room) closeReadingRoom();
   if (view === "stats") loadStats();
   else if (view === "plan") loadPlan();
   else if (view === "report") loadReport();
@@ -5239,9 +5384,12 @@ function readingCodeKey(codeKey) {
   return encodeURIComponent(codeKey || "");
 }
 
-function readingPageUrl(data, stop, page) {
+function readingPageUrl(data, stop, page, options) {
+  const opts = options || {};
+  const dpi = Number(opts.dpi) || 160;
+  const half = opts.full ? "" : "&half=left";
   return "/api/reading/" + readingCodeKey(data.code_key) + "/"
-    + readingCodeKey(stop.id) + "/page?dpi=140"
+    + readingCodeKey(stop.id) + "/page?dpi=" + dpi + half
     + (page ? "&p=" + Number(page) : "");
 }
 
@@ -5260,9 +5408,12 @@ function stopReadingTimer() {
 function startReadingTimer() {
   stopReadingTimer();
   const tick = () => {
+    const text = formatClock((Date.now() - state.reading.startedAt) / 1000);
     const el = $("readTimer");
-    if (!el) { stopReadingTimer(); return; }
-    el.textContent = formatClock((Date.now() - state.reading.startedAt) / 1000);
+    const room = state.reading.room ? $("rrTimer") : null;
+    if (!el && !room) { stopReadingTimer(); return; }
+    if (el) el.textContent = text;
+    if (room) room.textContent = text;
   };
   tick();
   state.reading.timer = setInterval(tick, 1000);
@@ -5437,10 +5588,15 @@ function openReadingStop(stopId) {
   }
   state.reading.stop = stop;
   state.reading.page = Number(stop.annotated_page) || 0;
-  state.reading.pageCount = Number((data.annotated || {}).page_count) || 0;
+  state.reading.pageCount = (data.annotated && data.annotated.available)
+    ? Number(data.annotated.page_count) || 0 : 0;
   state.reading.startedAt = Date.now();
   renderReadingStop();
   startReadingTimer();
+  if (state.reading.room) {
+    toggleReadingSide(false);
+    renderReadingRoom(true);
+  }
 }
 
 function renderReadingStop() {
@@ -5474,16 +5630,17 @@ function renderReadingStop() {
     + (stop.minutes || 0) + " 分钟 · 印刷 p" + (stop.page || "—")
     + (stop.annotated_page ? " · 标注版 p" + stop.annotated_page
       + (stop.annotated_estimated ? "（估）" : "") : "") + "</p>"
-    + '<div class="page-wrap" id="readPageWrap"><img id="readPageImg" src="' + pageUrl
+    + '<div class="page-wrap" id="readPageWrap" title="点开精读"><img id="readPageImg" src="' + pageUrl
     + '" alt="' + escapeHtml(stop.title || "规范原页") + '"></div>'
-    + (pageCount ? '<div class="read-page-row">'
+    + '<p class="hint read-open-hint">点图（或「全屏精读」）：左边要点、右边原页，可缩放拖动翻页。</p>'
+    + (pageCount && stop.annotated_page ? '<div class="read-page-row">'
       + '<button type="button" class="ghost small" id="readPagePrev">‹ 上一页</button>'
       + '<span class="hint" id="readPageInfo">标注版 p' + currentPage + " / " + pageCount
       + "</span>"
       + '<button type="button" class="ghost small" id="readPageNext">下一页 ›</button>'
       + "</div>" : "")
     + '<div class="page-tools"><button type="button" class="ghost small" id="readZoom">放大</button>'
-    + '<button type="button" class="ghost small" id="readFull">全屏看</button>'
+    + '<button type="button" class="ghost small" id="readFull">全屏精读</button>'
     + (data.annotated && data.annotated.available
       ? '<button type="button" class="ghost small" id="readFile">原 PDF</button>' : "")
     + '<span class="grow"></span>'
@@ -5508,18 +5665,13 @@ function renderReadingStop() {
     const wrap = $("readPageWrap");
     if (wrap) wrap.innerHTML = '<div class="empty" style="padding:18px">这一页没有渲染出来：标注版可能不在线，换“原 PDF”或稍后重试。</div>';
   });
+  $("readPageImg").addEventListener("click", () => openReadingRoom());
   $("readZoom").addEventListener("click", () => {
     const wrap = $("readPageWrap");
     wrap.classList.toggle("zoom");
     $("readZoom").textContent = wrap.classList.contains("zoom") ? "适应" : "放大";
   });
-  $("readFull").addEventListener("click", () => {
-    openPageViewer({
-      kind: "url", url: readingPageUrl(data, stop, state.reading.page),
-      title: data.code + " · " + (stop.section || "") + " " + (stop.title || ""),
-      count: 1, page: 1,
-    });
-  });
+  $("readFull").addEventListener("click", () => openReadingRoom());
   const changePage = (delta) => {
     const max = Number(state.reading.pageCount) || 0;
     if (!max) return;
@@ -5531,7 +5683,7 @@ function renderReadingStop() {
     $("readPagePrev").disabled = next <= 1;
     $("readPageNext").disabled = next >= max;
   };
-  if (pageCount) {
+  if (pageCount && stop.annotated_page) {
     $("readPagePrev").disabled = currentPage <= 1;
     $("readPageNext").disabled = currentPage >= pageCount;
     $("readPagePrev").addEventListener("click", () => changePage(-1));
@@ -5563,7 +5715,7 @@ function renderReadingStop() {
   startReadingTimer();
 }
 
-async function recordReading(status) {
+async function recordReading(status, noteOverride) {
   if (state.reading.busy) return;
   const data = state.reading.standard;
   const stop = state.reading.stop;
@@ -5571,7 +5723,9 @@ async function recordReading(status) {
   const seconds = Math.max(0, Math.min(
     7200, Math.round((Date.now() - state.reading.startedAt) / 1000)
   ));
-  const note = $("readNote") ? $("readNote").value : "";
+  const note = typeof noteOverride === "string"
+    ? noteOverride
+    : ($("readNote") ? $("readNote").value : "");
   state.reading.busy = true;
   try {
     const res = await fetch("/api/reading/" + readingCodeKey(data.code_key) + "/"
@@ -5598,14 +5752,17 @@ async function recordReading(status) {
         state.reading.startedAt = Date.now();
         renderReadingStop();
         startReadingTimer();
+        if (state.reading.room) renderReadingRoom(true);
         toast("记下了 · 下一站 " + (next.section || "") + " " + (next.title || ""));
       } else {
         state.reading.stop = null;
+        if (state.reading.room) closeReadingRoom();
         renderReading();
         toast("这本规范读完了，回看时再点任意一站");
       }
     } else {
       state.reading.stop = null;
+      if (state.reading.room) closeReadingRoom();
       renderReading();
       toast("已标记需回看，下次会优先排到这一站");
     }
@@ -5616,6 +5773,411 @@ async function recordReading(status) {
     state.reading.busy = false;
   }
 }
+
+// --- immersive reading room ----------------------------------------------
+
+const READ_ZOOM_STEPS = [1, 1.25, 1.5, 2, 2.5, 3];
+
+function readingRoomPageUrl(data, stop, page) {
+  return readingPageUrl(data, stop, page, { dpi: 220 });
+}
+
+function readingRoomPageCount() {
+  const data = state.reading.standard;
+  if (!data || !data.annotated || !data.annotated.available) return 0;
+  return Number(state.reading.pageCount) || 0;
+}
+
+function toggleReadingSide(force) {
+  const room = $("readRoom");
+  if (!room) return;
+  const open = typeof force === "boolean"
+    ? force
+    : !room.classList.contains("side-open");
+  room.classList.toggle("side-open", open);
+}
+
+function openReadingRoom() {
+  const data = state.reading.standard;
+  const stop = state.reading.stop;
+  if (!data || !stop) return;
+  state.reading.room = true;
+  state.reading.zoom = 1;
+  state.reading.fit = "width";
+  $("readRoom").classList.remove("hidden");
+  toggleReadingSide(false);
+  document.body.classList.add("room-open");
+  startReadingTimer();
+  renderReadingRoom(true);
+}
+
+function closeReadingRoom() {
+  if (!state.reading.room) return;
+  state.reading.room = false;
+  $("readRoom").classList.add("hidden");
+  toggleReadingSide(false);
+  document.body.classList.remove("room-open");
+  const data = state.reading.standard;
+  const stop = state.reading.stop;
+  const note = $("rrNote");
+  const inlineNote = $("readNote");
+  if (note && inlineNote) inlineNote.value = note.value;
+  const img = $("readPageImg");
+  if (img && data && stop) {
+    img.src = readingPageUrl(data, stop, state.reading.page);
+    const info = $("readPageInfo");
+    if (info && state.reading.pageCount) {
+      info.textContent = "标注版 p" + state.reading.page + " / " + state.reading.pageCount;
+    }
+  }
+}
+
+function stepReadingStop(delta) {
+  const data = state.reading.standard;
+  const stop = state.reading.stop;
+  if (!data || !stop) return;
+  const stops = data.stops || [];
+  const index = stops.findIndex((row) => row.id === stop.id);
+  const target = stops[index + delta];
+  if (target) openReadingStop(target.id);
+}
+
+function readingRoomScale() {
+  const box = $("rrPage");
+  const img = $("rrPageImg");
+  if (!img.naturalWidth || !img.naturalHeight) return 1;
+  const width = Math.max(120, box.clientWidth - 24);
+  const height = Math.max(120, box.clientHeight - 24);
+  if (state.reading.fit === "page") {
+    return Math.min(width / img.naturalWidth, height / img.naturalHeight);
+  }
+  // Default is width-fit: text is as large as the pane allows, scroll down.
+  return (width / img.naturalWidth) * (Number(state.reading.zoom) || 1);
+}
+
+function applyReadingZoom(reset) {
+  const box = $("rrPage");
+  const img = $("rrPageImg");
+  if (!box || !img) return;
+  const zoom = Number(state.reading.zoom) || 1;
+  const wholePage = state.reading.fit === "page";
+  $("rrZoomLabel").textContent = wholePage ? "整页" : Math.round(zoom * 100) + "%";
+  $("rrZoomIn").disabled = !wholePage
+    && zoom >= READ_ZOOM_STEPS[READ_ZOOM_STEPS.length - 1];
+  $("rrZoomOut").disabled = !wholePage && zoom <= READ_ZOOM_STEPS[0];
+  $("rrFit").classList.toggle("on", wholePage);
+  $("rrFit").setAttribute("aria-pressed", wholePage ? "true" : "false");
+  if (!img.naturalWidth) return;
+  const center = reset ? null : {
+    x: (box.scrollLeft + box.clientWidth / 2) / Math.max(1, img.clientWidth),
+    y: (box.scrollTop + box.clientHeight / 2) / Math.max(1, img.clientHeight),
+  };
+  const scale = readingRoomScale();
+  img.style.width = Math.max(120, Math.round(img.naturalWidth * scale)) + "px";
+  img.style.height = "auto";
+  if (center) {
+    box.scrollLeft = center.x * img.clientWidth - box.clientWidth / 2;
+    box.scrollTop = center.y * img.clientHeight - box.clientHeight / 2;
+  } else {
+    box.scrollLeft = Math.max(0, (img.clientWidth - box.clientWidth) / 2);
+    box.scrollTop = 0;
+  }
+}
+
+function setReadingZoom(value) {
+  const zoom = Math.max(
+    READ_ZOOM_STEPS[0],
+    Math.min(READ_ZOOM_STEPS[READ_ZOOM_STEPS.length - 1], Number(value) || 1)
+  );
+  const changed = state.reading.fit !== "width"
+    || Math.abs(zoom - (Number(state.reading.zoom) || 1)) >= 0.001;
+  if (!changed) return;
+  state.reading.fit = "width";
+  state.reading.zoom = zoom;
+  applyReadingZoom(false);
+}
+
+function setReadingWholePage() {
+  if (state.reading.fit === "page") {
+    setReadingZoom(1);
+    return;
+  }
+  state.reading.fit = "page";
+  applyReadingZoom(false);
+}
+
+function stepReadingZoom(delta) {
+  const current = Number(state.reading.zoom) || 1;
+  let index = READ_ZOOM_STEPS.findIndex((step) => Math.abs(step - current) < 0.001);
+  if (index < 0) index = 0;
+  index = Math.max(0, Math.min(READ_ZOOM_STEPS.length - 1, index + delta));
+  setReadingZoom(READ_ZOOM_STEPS[index]);
+}
+
+function prefetchReadingPage(delta) {
+  const data = state.reading.standard;
+  const stop = state.reading.stop;
+  const max = readingRoomPageCount();
+  const page = Number(state.reading.page) || 0;
+  if (!data || !stop || !max || !stop.annotated_page) return;
+  const target = page + delta;
+  if (target < 1 || target > max) return;
+  const image = new Image();
+  image.src = readingRoomPageUrl(data, stop, target);
+}
+
+function loadReadingRoomPage(page) {
+  const data = state.reading.standard;
+  const stop = state.reading.stop;
+  const max = readingRoomPageCount();
+  if (!state.reading.room || !data || !stop || !max || !stop.annotated_page) return;
+  const next = Math.max(1, Math.min(max, Number(page) || 1));
+  if (next === Number(state.reading.page)) return;
+  state.reading.page = next;
+  const img = $("rrPageImg");
+  const url = readingRoomPageUrl(data, stop, next);
+  if (img.dataset.url !== url) {
+    img.dataset.url = url;
+    img.classList.remove("hidden");
+    $("rrPageError").classList.add("hidden");
+    $("rrPage").classList.add("loading");
+    img.src = url;
+  }
+  $("rrPagePrev").disabled = next <= 1;
+  $("rrPageNext").disabled = next >= max;
+  $("rrPageInfo").textContent = "标注版 p" + next + " / " + max;
+  $("rrPageInput").value = next;
+  $("rrPageInput").max = max;
+}
+
+function renderReadingSide(data, stop, stops, index) {
+  const options = stops.map((row, i) => {
+    const mark = row.status === "done" ? " ✓" : (row.status === "review" ? " ⟲" : "");
+    return '<option value="' + escapeHtml(row.id) + '"'
+      + (row.id === stop.id ? " selected" : "") + ">"
+      + (i + 1) + ". " + escapeHtml((row.section || "") + " " + (row.title || ""))
+      + mark + "</option>";
+  }).join("");
+  const look = (stop.look_for || []).map((line) => "<li>" + escapeHtml(line) + "</li>").join("");
+  const clauses = (stop.clauses || []).map((clause) =>
+    '<button type="button" data-rr-clause="' + escapeHtml(clause) + '">'
+    + escapeHtml(clause) + "</button>").join("");
+  const practice = stop.practice
+    ? '<div class="read-block"><h3>停下来练一题</h3><button type="button" class="ghost small" '
+      + 'data-rr-practice="' + escapeHtml(stop.practice.qid) + '">'
+      + escapeHtml(stop.practice.label || ("从 " + stop.practice.qid + " 开始"))
+      + "</button></div>"
+    : "";
+  const status = stop.status === "done" ? "已读" : (stop.status === "review" ? "需回看" : "未读");
+  const meta = ["第 " + (index + 1) + "/" + stops.length + " 站",
+    "规划 " + (stop.minutes || 0) + " 分钟",
+    "印刷 p" + (stop.page || "—")];
+  if (stop.annotated_page) {
+    meta.push("标注版 p" + stop.annotated_page + (stop.annotated_estimated ? "（估）" : ""));
+  }
+  $("rrSide").innerHTML =
+    '<div class="rr-stop-pick"><select id="rrStopSelect" aria-label="跳到某一站">'
+    + options + "</select></div>"
+    + '<div class="rr-stop-meta"><span>' + escapeHtml(meta.join(" · "))
+    + "</span><span>" + status + "</span></div>"
+    + "<h2>" + escapeHtml(stop.section || "") + " " + escapeHtml(stop.title || "") + "</h2>"
+    + '<p class="read-why"><b>为什么读：</b>' + escapeHtml(stop.why || "") + "</p>"
+    + '<div class="read-block"><h3>先看这些</h3><ul>' + look + "</ul>"
+    + (clauses ? '<div class="read-clauses">' + clauses + "</div>" : "") + "</div>"
+    + '<div class="read-block"><h3>最容易错</h3><div class="read-pit">'
+    + escapeHtml(stop.pitfall || "") + "</div></div>"
+    + '<div class="read-block"><h3>合上页面自检</h3><div class="read-check">'
+    + escapeHtml(stop.check || "") + "</div></div>"
+    + practice
+    + '<div class="rr-note"><textarea id="rrNote" rows="2" placeholder="一句话笔记（可不填）">'
+    + escapeHtml(stop.note || "") + "</textarea></div>"
+    + '<div class="read-actions"><button type="button" class="ghost" data-rr-status="review">需回看</button>'
+    + '<button type="button" class="primary" data-rr-status="done">看完了 · 下一站</button></div>'
+    + '<p class="rr-keys hint">← → 翻页 · 拖动平移 · + / − 缩放 · 双击放大 · Esc 退出</p>';
+}
+
+function renderReadingRoom(reset) {
+  if (!state.reading.room) return;
+  const data = state.reading.standard;
+  const stop = state.reading.stop;
+  if (!data || !stop) { closeReadingRoom(); return; }
+  const stops = data.stops || [];
+  const index = stops.findIndex((row) => row.id === stop.id);
+  const prev = index > 0 ? stops[index - 1] : null;
+  const next = index >= 0 && index < stops.length - 1 ? stops[index + 1] : null;
+  const max = readingRoomPageCount();
+  const mapped = Number(stop.annotated_page) || 0;
+  const canFlip = !!(max && mapped);
+  let page = Number(state.reading.page) || mapped;
+  if (canFlip) page = Math.max(1, Math.min(max, page));
+  else page = 0;
+  state.reading.page = page;
+  const meta = ["第 " + (index + 1) + "/" + stops.length + " 站",
+    "规划 " + (stop.minutes || 0) + " 分钟", "印刷 p" + (stop.page || "—")];
+  if (stop.annotated_page) {
+    meta.push("标注版 p" + stop.annotated_page + (stop.annotated_estimated ? "（估）" : ""));
+  }
+  meta.push(data.code);
+  $("rrTitle").textContent = (data.short || data.name) + " · "
+    + (stop.section || "") + " " + (stop.title || "");
+  $("rrMeta").textContent = meta.join(" · ");
+  $("rrPrev").disabled = !prev;
+  $("rrNext").disabled = !next;
+  const hasPdf = !!(data.annotated && data.annotated.available);
+  $("rrPdf").classList.toggle("hidden", !hasPdf);
+  renderReadingSide(data, stop, stops, index);
+  if (reset) $("rrSide").scrollTop = 0;
+  const img = $("rrPageImg");
+  const url = readingRoomPageUrl(data, stop, page);
+  if (img.dataset.url !== url) {
+    img.dataset.url = url;
+    img.classList.remove("hidden");
+    $("rrPageError").classList.add("hidden");
+    $("rrPage").classList.add("loading");
+    img.src = url;
+  } else {
+    applyReadingZoom(reset);
+  }
+  $("rrPagePrev").disabled = !canFlip || page <= 1;
+  $("rrPageNext").disabled = !canFlip || page >= max;
+  $("rrPageInfo").textContent = canFlip
+    ? "标注版 p" + page + " / " + max
+    : (max ? "这一站无标注页 · 干净版回退" : "这一站没有标注页");
+  $("rrPageInput").value = page || 1;
+  $("rrPageInput").max = max || 1;
+  $("rrPageInput").disabled = !canFlip;
+  $("rrPageGo").disabled = !canFlip;
+}
+
+// one-time wiring for the reading room
+$("rrExit").addEventListener("click", closeReadingRoom);
+$("rrTips").addEventListener("click", () => toggleReadingSide());
+$("rrBackdrop").addEventListener("click", () => toggleReadingSide(false));
+$("rrPrev").addEventListener("click", () => stepReadingStop(-1));
+$("rrNext").addEventListener("click", () => stepReadingStop(1));
+$("rrPagePrev").addEventListener("click", () =>
+  loadReadingRoomPage((Number(state.reading.page) || 1) - 1));
+$("rrPageNext").addEventListener("click", () =>
+  loadReadingRoomPage((Number(state.reading.page) || 1) + 1));
+$("rrPageGo").addEventListener("click", () =>
+  loadReadingRoomPage(Number($("rrPageInput").value)));
+$("rrPageInput").addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+  event.preventDefault();
+  loadReadingRoomPage(Number($("rrPageInput").value));
+});
+$("rrZoomIn").addEventListener("click", () => stepReadingZoom(1));
+$("rrZoomOut").addEventListener("click", () => stepReadingZoom(-1));
+$("rrFit").addEventListener("click", () => setReadingWholePage());
+$("rrPdf").addEventListener("click", () => {
+  const data = state.reading.standard;
+  if (!data) return;
+  window.open("/api/reading/" + readingCodeKey(data.code_key) + "/file",
+    "_blank", "noopener");
+});
+$("rrPageImg").addEventListener("load", () => {
+  $("rrPage").classList.remove("loading");
+  $("rrPageError").classList.add("hidden");
+  $("rrPageImg").classList.remove("hidden");
+  applyReadingZoom(true);
+  prefetchReadingPage(1);
+  prefetchReadingPage(-1);
+});
+$("rrPageImg").addEventListener("error", () => {
+  $("rrPage").classList.remove("loading");
+  $("rrPageImg").classList.add("hidden");
+  $("rrPageError").classList.remove("hidden");
+});
+$("rrPageImg").addEventListener("dblclick", () => {
+  setReadingZoom((Number(state.reading.zoom) || 1) > 1 ? 1 : 2);
+});
+$("rrSide").addEventListener("click", (event) => {
+  const data = state.reading.standard;
+  const clause = event.target.closest("[data-rr-clause]");
+  if (clause && data) {
+    openStandardClause(data.code, clause.dataset.rrClause);
+    return;
+  }
+  const practice = event.target.closest("[data-rr-practice]");
+  if (practice) {
+    closeReadingRoom();
+    openViewer(practice.dataset.rrPractice, true);
+    return;
+  }
+  const status = event.target.closest("[data-rr-status]");
+  if (status) {
+    const note = $("rrNote") ? $("rrNote").value : "";
+    recordReading(status.dataset.rrStatus, note);
+  }
+});
+$("rrSide").addEventListener("change", (event) => {
+  if (event.target.id === "rrStopSelect") openReadingStop(event.target.value);
+});
+
+let readingDrag = null;
+$("rrPage").addEventListener("pointerdown", (event) => {
+  if (!state.reading.room || event.pointerType === "touch" || event.button !== 0) return;
+  const box = $("rrPage");
+  if (box.scrollWidth <= box.clientWidth + 2
+      && box.scrollHeight <= box.clientHeight + 2) return;
+  readingDrag = {
+    x: event.clientX, y: event.clientY,
+    left: box.scrollLeft, top: box.scrollTop,
+  };
+  box.classList.add("dragging");
+  event.preventDefault();
+});
+window.addEventListener("pointermove", (event) => {
+  if (!readingDrag) return;
+  const box = $("rrPage");
+  box.scrollLeft = readingDrag.left - (event.clientX - readingDrag.x);
+  box.scrollTop = readingDrag.top - (event.clientY - readingDrag.y);
+});
+window.addEventListener("pointerup", () => {
+  if (!readingDrag) return;
+  readingDrag = null;
+  $("rrPage").classList.remove("dragging");
+});
+$("rrPage").addEventListener("wheel", (event) => {
+  if (!event.ctrlKey) return;
+  event.preventDefault();
+  stepReadingZoom(event.deltaY < 0 ? 1 : -1);
+}, { passive: false });
+window.addEventListener("resize", () => {
+  if (state.reading.room) applyReadingZoom(true);
+});
+document.addEventListener("keydown", (event) => {
+  if (!state.reading.room) return;
+  const openSheet = document.querySelector(".sheet:not(.hidden)");
+  if (event.key === "Escape") {
+    if (openSheet) return;
+    if ($("readRoom").classList.contains("side-open")) {
+      toggleReadingSide(false);
+      return;
+    }
+    closeReadingRoom();
+    return;
+  }
+  if (openSheet) return;
+  const tag = (event.target.tagName || "").toLowerCase();
+  if (["input", "textarea", "select"].includes(tag)) return;
+  if (event.key === "ArrowRight" || event.key === "PageDown") {
+    event.preventDefault();
+    loadReadingRoomPage((Number(state.reading.page) || 1) + 1);
+  } else if (event.key === "ArrowLeft" || event.key === "PageUp") {
+    event.preventDefault();
+    loadReadingRoomPage((Number(state.reading.page) || 1) - 1);
+  } else if (event.key === "+" || event.key === "=") {
+    event.preventDefault();
+    stepReadingZoom(1);
+  } else if (event.key === "-" || event.key === "_") {
+    event.preventDefault();
+    stepReadingZoom(-1);
+  } else if (event.key === "0") {
+    event.preventDefault();
+    setReadingZoom(1);
+  }
+});
 
 // --- clause index: wrong book -> standards (M12) --------------------------
 

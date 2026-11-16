@@ -308,12 +308,25 @@ def record(store, code_key, stop_id, status, seconds=0, note=""):
     )
 
 
-def _cache_path(code_key, page, dpi):
-    return PAGE_CACHE / code_key / ("p%d_%d.png" % (page, dpi))
+HALVES = ("left", "right")
 
 
-def annotated_page_at(code_key, page, dpi=140):
-    """Render any page of the annotated PDF for this standard."""
+def _clean_half(half):
+    return half if half in HALVES else ""
+
+
+def _cache_path(code_key, page, dpi, half=""):
+    suffix = ("_" + half[0]) if half else ""
+    return PAGE_CACHE / code_key / ("p%d_%d%s.png" % (page, dpi, suffix))
+
+
+def annotated_page_at(code_key, page, dpi=140, half=""):
+    """Render any page of the annotated PDF for this standard.
+
+    The annotated scans are 2-up: every PDF page holds the same printed page
+    twice, side by side.  `half="left"|"right"` renders just one copy, which
+    doubles the on-screen text size without any loss of content.
+    """
     entry = annotated_entry(code_key)
     if not entry or not entry.get("file"):
         return None
@@ -327,7 +340,8 @@ def annotated_page_at(code_key, page, dpi=140):
     count = int(entry.get("page_count") or 0)
     if page < 1 or (count and page > count):
         return None
-    cache = _cache_path(code_key, page, int(dpi))
+    half = _clean_half(half)
+    cache = _cache_path(code_key, page, int(dpi), half)
     cache.parent.mkdir(parents=True, exist_ok=True)
     try:
         fresh = cache.exists() and cache.stat().st_mtime >= path.stat().st_mtime
@@ -338,14 +352,24 @@ def annotated_page_at(code_key, page, dpi=140):
             if not (cache.exists() and cache.stat().st_mtime >= path.stat().st_mtime):
                 doc = fitz.open(path)
                 try:
-                    pix = doc[page - 1].get_pixmap(dpi=int(dpi))
+                    source = doc[page - 1]
+                    clip = None
+                    if half:
+                        rect = source.rect
+                        middle = rect.x0 + rect.width / 2.0
+                        clip = (
+                            fitz.Rect(rect.x0, rect.y0, middle, rect.y1)
+                            if half == "left"
+                            else fitz.Rect(middle, rect.y0, rect.x1, rect.y1)
+                        )
+                    pix = source.get_pixmap(dpi=int(dpi), clip=clip)
                     pix.save(cache)
                 finally:
                     doc.close()
     return cache, page, count
 
 
-def annotated_page(code_key, stop_id, dpi=140):
+def annotated_page(code_key, stop_id, dpi=140, half=""):
     """Render the page mapped to one reading stop."""
     entry = annotated_entry(code_key)
     if not entry:
@@ -353,7 +377,7 @@ def annotated_page(code_key, stop_id, dpi=140):
     page = (entry.get("stops") or {}).get(stop_id)
     if not page:
         return None
-    return annotated_page_at(code_key, page, dpi=dpi)
+    return annotated_page_at(code_key, page, dpi=dpi, half=half)
 
 
 def fallback_page(code, pdf_page, dpi=120):

@@ -6,6 +6,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from pathlib import Path
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -125,6 +126,82 @@ class AnnotatedIndexTest(unittest.TestCase):
                 page = (entry.get("stops") or {}).get(stop["id"])
                 self.assertTrue(page, "%s %s" % (guide["code_key"], stop["id"]))
                 self.assertLessEqual(page, entry["page_count"])
+
+
+class AnnotatedPageCropTest(unittest.TestCase):
+    """The annotated scans are 2-up; half= crops one copy at full size."""
+
+    def setUp(self):
+        import pymupdf as fitz
+        self.tmp = tempfile.mkdtemp(prefix="reading-crop-")
+        folder = Path(self.tmp)
+        pdf = folder / "two-up.pdf"
+        doc = fitz.open()
+        page = doc.new_page(width=800, height=600)
+        page.insert_text((40, 100), "LEFT COPY", fontsize=30)
+        page.insert_text((440, 100), "RIGHT COPY", fontsize=30)
+        doc.save(pdf)
+        doc.close()
+        (folder / "annotated_index.json").write_text(json.dumps({
+            "built_at": "2026-11-16",
+            "folder": str(folder),
+            "files": {
+                "TEST-1": {
+                    "file": "two-up.pdf",
+                    "page_count": 1,
+                    "stops": {"t-1": 1},
+                }
+            },
+        }), encoding="utf-8")
+        self.folder = folder
+        self.saved = (
+            reading.ANNOTATED_INDEX_PATH,
+            reading.ANNOTATED_DIR,
+            reading.PAGE_CACHE,
+        )
+        reading.ANNOTATED_INDEX_PATH = folder / "annotated_index.json"
+        reading.ANNOTATED_DIR = folder
+        reading.PAGE_CACHE = folder / "cache"
+        reading._ANNOTATED_CACHE.update(mtime=None, data=None)
+
+    def tearDown(self):
+        (reading.ANNOTATED_INDEX_PATH,
+         reading.ANNOTATED_DIR,
+         reading.PAGE_CACHE) = self.saved
+        reading._ANNOTATED_CACHE.update(mtime=None, data=None)
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    @staticmethod
+    def image_size(path):
+        from PIL import Image
+        with Image.open(path) as image:
+            return image.size
+
+    def test_half_crop_is_half_the_width_of_the_full_page(self):
+        whole = reading.annotated_page_at("TEST-1", 1, dpi=72)
+        left = reading.annotated_page_at("TEST-1", 1, dpi=72, half="left")
+        right = reading.annotated_page_at("TEST-1", 1, dpi=72, half="right")
+        full_w, full_h = self.image_size(whole[0])
+        left_w, left_h = self.image_size(left[0])
+        right_w, right_h = self.image_size(right[0])
+        self.assertLessEqual(abs(left_w * 2 - full_w), 2)
+        self.assertLessEqual(abs(right_w * 2 - full_w), 2)
+        self.assertLessEqual(abs(left_h - full_h), 1)
+        self.assertNotEqual(left[0], whole[0])
+        self.assertNotEqual(left[0], right[0])
+        self.assertTrue(left[0].exists())
+        self.assertTrue(right[0].exists())
+
+    def test_unknown_half_uses_the_full_page_cache(self):
+        whole = reading.annotated_page_at("TEST-1", 1, dpi=72)
+        weird = reading.annotated_page_at("TEST-1", 1, dpi=72, half="../bad")
+        self.assertEqual(whole[0], weird[0])
+        self.assertEqual(weird[0].parent, reading.PAGE_CACHE / "TEST-1")
+
+    def test_stop_page_accepts_half(self):
+        rendered = reading.annotated_page("TEST-1", "t-1", dpi=72, half="left")
+        self.assertIsNotNone(rendered)
+        self.assertIn("_l.png", rendered[0].name)
 
 
 class ReadingProgressTest(unittest.TestCase):
