@@ -309,10 +309,50 @@ def record(store, code_key, stop_id, status, seconds=0, note=""):
 
 
 HALVES = ("left", "right")
+_LAYOUT_CACHE = {}
 
 
 def _clean_half(half):
     return half if half in HALVES else ""
+
+
+def _is_two_up(code_key, path):
+    """True when the scan really stores two copies side by side.
+
+    Most annotated books are landscape 2-up spreads, but GB 50011 is a plain
+    portrait scan.  Cropping that book would cut away half of the only copy,
+    so the layout is detected from the PDF page rectangles and cached per file.
+    """
+    stamp = _mtime(path)
+    key = (str(path), stamp)
+    with _PAGE_LOCK:
+        if key in _LAYOUT_CACHE:
+            return _LAYOUT_CACHE[key]
+    two_up = False
+    try:
+        doc = fitz.open(path)
+        try:
+            count = doc.page_count
+            samples = sorted({
+                1,
+                max(1, count // 4),
+                max(1, count // 2),
+                max(1, (count * 3) // 4),
+                count,
+            })
+            landscape = 0
+            for number in samples:
+                rect = doc[number - 1].rect
+                if rect.width > rect.height * 1.1:
+                    landscape += 1
+            two_up = landscape * 2 > len(samples)
+        finally:
+            doc.close()
+    except Exception:  # noqa: BLE001 - an unreadable PDF falls back to no crop
+        two_up = False
+    with _PAGE_LOCK:
+        _LAYOUT_CACHE[key] = two_up
+    return two_up
 
 
 def _cache_path(code_key, page, dpi, half=""):
@@ -341,6 +381,8 @@ def annotated_page_at(code_key, page, dpi=140, half=""):
     if page < 1 or (count and page > count):
         return None
     half = _clean_half(half)
+    if half and not _is_two_up(code_key, path):
+        half = ""
     cache = _cache_path(code_key, page, int(dpi), half)
     cache.parent.mkdir(parents=True, exist_ok=True)
     try:

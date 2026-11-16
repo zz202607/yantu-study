@@ -142,6 +142,12 @@ class AnnotatedPageCropTest(unittest.TestCase):
         page.insert_text((440, 100), "RIGHT COPY", fontsize=30)
         doc.save(pdf)
         doc.close()
+        single = folder / "single.pdf"
+        doc = fitz.open()
+        page = doc.new_page(width=600, height=800)
+        page.insert_text((40, 100), "SINGLE PAGE", fontsize=30)
+        doc.save(single)
+        doc.close()
         (folder / "annotated_index.json").write_text(json.dumps({
             "built_at": "2026-11-16",
             "folder": str(folder),
@@ -150,7 +156,12 @@ class AnnotatedPageCropTest(unittest.TestCase):
                     "file": "two-up.pdf",
                     "page_count": 1,
                     "stops": {"t-1": 1},
-                }
+                },
+                "TEST-2": {
+                    "file": "single.pdf",
+                    "page_count": 1,
+                    "stops": {"t-2": 1},
+                },
             },
         }), encoding="utf-8")
         self.folder = folder
@@ -163,12 +174,14 @@ class AnnotatedPageCropTest(unittest.TestCase):
         reading.ANNOTATED_DIR = folder
         reading.PAGE_CACHE = folder / "cache"
         reading._ANNOTATED_CACHE.update(mtime=None, data=None)
+        reading._LAYOUT_CACHE.clear()
 
     def tearDown(self):
         (reading.ANNOTATED_INDEX_PATH,
          reading.ANNOTATED_DIR,
          reading.PAGE_CACHE) = self.saved
         reading._ANNOTATED_CACHE.update(mtime=None, data=None)
+        reading._LAYOUT_CACHE.clear()
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     @staticmethod
@@ -202,6 +215,17 @@ class AnnotatedPageCropTest(unittest.TestCase):
         rendered = reading.annotated_page("TEST-1", "t-1", dpi=72, half="left")
         self.assertIsNotNone(rendered)
         self.assertIn("_l.png", rendered[0].name)
+
+    def test_portrait_book_ignores_half_and_keeps_the_full_page(self):
+        full = reading.annotated_page_at("TEST-2", 1, dpi=72)
+        half = reading.annotated_page_at("TEST-2", 1, dpi=72, half="left")
+        self.assertEqual(full[0], half[0])
+        width, height = self.image_size(half[0])
+        self.assertEqual((width, height), (600, 800))
+        self.assertEqual(reading._LAYOUT_CACHE[
+            (str(self.folder / "single.pdf"),
+             reading._mtime(self.folder / "single.pdf"))
+        ], False)
 
 
 class ReadingProgressTest(unittest.TestCase):

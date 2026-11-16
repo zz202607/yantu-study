@@ -310,21 +310,24 @@
     无头 Chrome：打印 10 题 → 标错/错因 → 归档；DB 错题 1 条、练习 10/9；
     复习 3 题集成：C3-11 → 7 天、C4-12 → 1 天、跳过保持；真实库未写入
 - **伴读精读模式（11-16）**：规范页字太小、全屏也只是放大双联图的问题解决
-  - 根因：标注版每页是**同一印刷页的左右两联**（2-up）；行内 760px 栏宽再对半缩，
+  - 根因：多数标注版每页是**同一印刷页的左右两联**（2-up）；行内 760px 栏宽再对半缩，
     正文只有 6–10px；旧「全屏看」只把整张双联图塞进弹层。
   - **服务端**：`/api/reading/{code}/{stop}/page` 新增 `half=left|right`，
     用 PyMuPDF `clip` 只渲染一联（不是裁图后缩），dpi 上限 200 → 300；
     页缓存按 `p<页>_<dpi>_l.png` 分开；干净版回退忽略 `half`。
+  - **版式自动判断**：9 本里 8 本是横版 2-up，**GB 50011 是竖版单页**；
+    服务端按 PDF 页面宽高比检测（按文件 mtime 缓存），竖版忽略 `half`，
+    修掉了「抗震 20 页以后只有左半页」的问题。
   - **行内页**：默认 160 dpi 单联（字号约翻倍）；点图或「全屏精读」进入精读模式。
   - **精读模式**（`#readRoom`）：左侧目录 + 要点（站下拉 / 为什么读 / 先看这些 /
     条文 / 最容易错 / 自检 / 同类题 / 笔记 / 两个状态），右侧标注版原页
     （220 dpi 单联、默认按宽度铺满、整页切换、+− 缩放、拖动平移、双击放大）；
     上下页/跳页/`← →`/`PgUp PgDn`，上下站，`Esc` 退出；预取前后页；
     手机 <900px 左栏变「要点」抽屉；精读里保存后直接进下一站，未保存笔记带回行内。
-  - 验证：**pytest 347 条全绿**（新增 3 条：单联宽度/缓存/未知 half 拒绝）；
+  - 验证：**pytest 348 条全绿**（新增 3 条单联裁切 + 1 条竖版不裁切）；
     CDP 1440×900 + 390×844：行内 936×1292、精读 1287×1776（220 dpi），
     翻页 p22→p23、缩放 125%、整页、抽屉、退出均通过，0 JS 异常；
-    首次渲染一页 220 dpi 单联 ~0.24 s。
+    GB 50011 p20 精读页为 1287×1819 整页；首次渲染一页 220 dpi 单联 ~0.24 s。
 - **下一步（基线后 6 周）**：
   1. 本周先把 16 道放弃题分流；5 道超时题走「限时拆解 · 会但慢」
   2. 每天 1 组认题卡（8 题 × 30 秒），优先弱项原型；错的原型回原型卡
@@ -661,7 +664,7 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `app/settings.py` | **M5 设置**：考试日期/名称/每日目标/基线日 → `data/settings.json`（原子写、校验） |
 | `app/analytics.py` | **M5 统计**：倒计时、连续天数、九大类/70 节、错因、活动、里程碑、证据型鼓励、基线解析 |
 | `app/standards.py` | **M5 规范/手册**：规范库扫描与编号匹配、安全取文件、手册全文索引/搜索/页图；**M6 章节索引/条文定位/规范页图** |
-| `app/reading.py` | **M10 规范伴读**：路线/进度/推荐、标注版页图（2-up 单联裁切）、干净版回退 |
+| `app/reading.py` | **M10 规范伴读**：路线/进度/推荐、标注版页图（按版式自动裁单联）、干净版回退 |
 | `app/reading_data.json` | **M10 阅读路线**：9 本核心规范、67 站（为什么考/先看什么/易错/自检/练习题号） |
 | `app/clauses.py` | **M11/M12 条文**：题目 → 条文推荐（解析依据/原型/关键词）；反向 `reverse()` 生成考前依据清单 |
 | `tools/build_annotated_index.py` | **M10 标注版页索引**：页脚 OCR → 正文起点 → 锚点插值 → 站页校验 |
@@ -693,7 +696,7 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `tools/import_old_photos.py` | 旧照片导入 CLI（预览 / `--apply`） |
 | `tools/backup_wrongbook.py` | 备份 / 恢复 CLI（恢复需 `--yes`） |
 | `data/` | **用户数据唯一位置**：`wrongbook.db` + `attachments/` + `backups/` + `reports/` |
-| `tests/` | 单元测试 347 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
+| `tests/` | 单元测试 348 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
 | `.github/workflows/ci.yml` | GitHub Actions：最小依赖 → compileall → pytest（PR / push main） |
 | `requirements-ci.txt` | CI 最小依赖（不含 OCR/ONNX/FastAPI） |
 | `.cache/crops/` | 裁图缓存（可随时删，自动重建） |
