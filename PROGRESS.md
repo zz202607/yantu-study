@@ -318,13 +318,16 @@
   - **版式自动判断**：9 本里 8 本是横版 2-up，**GB 50011 是竖版单页**；
     服务端按 PDF 页面宽高比检测（按文件 mtime 缓存），竖版忽略 `half`，
     修掉了「抗震 20 页以后只有左半页」的问题。
+  - **旧图缓存击穿**：页图 24h 缓存且 URL 未变，服务端修好后浏览器仍用旧半页图；
+    `/api/reading/{code}` 增加 `annotated.two_up`，前端只对横版书带 `half=left`，
+    竖版 URL 变化后旧缓存自动失效（实测带旧缓存的 profile 显示整页）。
   - **行内页**：默认 160 dpi 单联（字号约翻倍）；点图或「全屏精读」进入精读模式。
   - **精读模式**（`#readRoom`）：左侧目录 + 要点（站下拉 / 为什么读 / 先看这些 /
     条文 / 最容易错 / 自检 / 同类题 / 笔记 / 两个状态），右侧标注版原页
     （220 dpi 单联、默认按宽度铺满、整页切换、+− 缩放、拖动平移、双击放大）；
     上下页/跳页/`← →`/`PgUp PgDn`，上下站，`Esc` 退出；预取前后页；
     手机 <900px 左栏变「要点」抽屉；精读里保存后直接进下一站，未保存笔记带回行内。
-  - 验证：**pytest 348 条全绿**（新增 3 条单联裁切 + 1 条竖版不裁切）；
+  - 验证：**pytest 349 条全绿**（新增 3 条单联裁切 + 1 条竖版不裁切 + 1 条版式标记）；
     CDP 1440×900 + 390×844：行内 936×1292、精读 1287×1776（220 dpi），
     翻页 p22→p23、缩放 125%、整页、抽屉、退出均通过，0 JS 异常；
     GB 50011 p20 精读页为 1287×1819 整页；首次渲染一页 220 dpi 单联 ~0.24 s。
@@ -696,7 +699,7 @@ PYTHONIOENCODING=utf-8 py -3 tools/backup_wrongbook.py restore data/backups/<名
 | `tools/import_old_photos.py` | 旧照片导入 CLI（预览 / `--apply`） |
 | `tools/backup_wrongbook.py` | 备份 / 恢复 CLI（恢复需 `--yes`） |
 | `data/` | **用户数据唯一位置**：`wrongbook.db` + `attachments/` + `backups/` + `reports/` |
-| `tests/` | 单元测试 348 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
+| `tests/` | 单元测试 349 条：`PYTHONIOENCODING=utf-8 py -3 -m pytest -q` |
 | `.github/workflows/ci.yml` | GitHub Actions：最小依赖 → compileall → pytest（PR / push main） |
 | `requirements-ci.txt` | CI 最小依赖（不含 OCR/ONNX/FastAPI） |
 | `.cache/crops/` | 裁图缓存（可随时删，自动重建） |

@@ -62,6 +62,9 @@
 3. **页图接口**：`GET /api/reading/{code}/{stop}/page?dpi=220&half=left&p=22`。
    `half` 只作用于横版 2-up 标注版；竖版单页（GB 50011）与干净版回退都会忽略 `half`，
    不会把正常单页裁掉。版式按 PDF 页面宽高比检测，并按文件 mtime 缓存。
+   - `/api/reading/{code}` 的 `annotated.two_up` 把同一判断返回给前端；
+     前端只对 `two_up=true` 的书带 `half=left`。竖版书的 URL 因此不带该参数，
+     旧版本缓存的「半页图」（同 URL、24h 缓存）会被自然击穿，不用用户清缓存。
    dpi 上限从 200 提到 300；页缓存按 `p<页>_<dpi>_<l|r>.png` 分开。
 
 ## 数据文件

@@ -5387,7 +5387,10 @@ function readingCodeKey(codeKey) {
 function readingPageUrl(data, stop, page, options) {
   const opts = options || {};
   const dpi = Number(opts.dpi) || 160;
-  const half = opts.full ? "" : "&half=left";
+  // Only landscape 2-up scans get cropped. Portrait books (GB 50011) use a
+  // URL without half= so an old cropped copy in the browser cache is bypassed.
+  const twoUp = !!(data && data.annotated && data.annotated.two_up);
+  const half = !opts.full && twoUp ? "&half=left" : "";
   return "/api/reading/" + readingCodeKey(data.code_key) + "/"
     + readingCodeKey(stop.id) + "/page?dpi=" + dpi + half
     + (page ? "&p=" + Number(page) : "");

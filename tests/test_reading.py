@@ -227,6 +227,11 @@ class AnnotatedPageCropTest(unittest.TestCase):
              reading._mtime(self.folder / "single.pdf"))
         ], False)
 
+    def test_entry_layout_flag_matches_the_pdf(self):
+        self.assertTrue(reading._entry_two_up("TEST-1", {"file": "two-up.pdf"}))
+        self.assertFalse(reading._entry_two_up("TEST-2", {"file": "single.pdf"}))
+        self.assertFalse(reading._entry_two_up("TEST-3", None))
+
 
 class ReadingProgressTest(unittest.TestCase):
     def setUp(self):

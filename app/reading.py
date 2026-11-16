@@ -154,6 +154,12 @@ def _decorate_stops(guide_row, progress, annotated):
     return stops
 
 
+def _entry_two_up(code_key, entry):
+    if not entry or not entry.get("file"):
+        return False
+    return _is_two_up(code_key, ANNOTATED_DIR / entry["file"])
+
+
 def detail(code_key, progress=None):
     guide_row = guide(code_key)
     if not guide_row:
@@ -181,6 +187,9 @@ def detail(code_key, progress=None):
             "file": entry.get("file"),
             "page_count": entry.get("page_count"),
             "coverage": sum(1 for stop in stops if stop["annotated_page"]),
+            # False means the client must not ask for half=left: the scan is
+            # a single portrait page and cropping would remove content.
+            "two_up": _entry_two_up(code_key, entry),
         },
     }
     return payload
