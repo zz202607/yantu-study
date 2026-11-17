@@ -21,7 +21,7 @@ try:  # PyMuPDF 1.24+ exposes the modern package name
 except ImportError:  # pragma: no cover - older environments
     import fitz
 
-from app import standards
+from app import exam_refs, standards
 
 ROOT = Path(__file__).resolve().parent.parent
 GUIDES_PATH = ROOT / "app" / "reading_data.json"
@@ -154,6 +154,12 @@ def _decorate_stops(guide_row, progress, annotated):
     return stops
 
 
+def _entry_two_up(code_key, entry):
+    if not entry or not entry.get("file"):
+        return False
+    return _is_two_up(code_key, ANNOTATED_DIR / entry["file"])
+
+
 def detail(code_key, progress=None):
     guide_row = guide(code_key)
     if not guide_row:
@@ -161,6 +167,11 @@ def detail(code_key, progress=None):
     progress = progress or {}
     annotated = annotated_entry(code_key) or {}
     stops = _decorate_stops(guide_row, progress, annotated)
+    refs = exam_refs.for_standard(code_key)
+    by_stop = exam_refs.for_stops(stops, code_key, refs=refs)
+    for stop in stops:
+        stop["exam_refs"] = by_stop.get(stop["id"], [])
+        stop["exam_count"] = len(stop["exam_refs"])
     entry = annotated_entry(code_key) or {}
     payload = {
         "code_key": guide_row["code_key"],
@@ -176,11 +187,20 @@ def detail(code_key, progress=None):
         "exam_evidence": guide_row.get("exam_evidence"),
         "stops": stops,
         "summary": _summary(guide_row, stops, progress),
+        "exam": {
+            "count": len(refs),
+            "refs": refs,
+            "coverage": exam_refs.summary(),
+            "note": "只收录解析或题面明确引用本规范的真题；没写规范号的题不在内。",
+        },
         "annotated": {
             "available": bool(entry.get("file")),
             "file": entry.get("file"),
             "page_count": entry.get("page_count"),
             "coverage": sum(1 for stop in stops if stop["annotated_page"]),
+            # False means the client must not ask for half=left: the scan is
+            # a single portrait page and cropping would remove content.
+            "two_up": _entry_two_up(code_key, entry),
         },
     }
     return payload
@@ -200,6 +220,7 @@ def overview(store, now=None):
     now = now or datetime.now().astimezone()
     progress = store.reading_progress()
     guides = sorted(load_guides()["standards"], key=lambda row: row.get("order", 99))
+    exam_counts = exam_refs.counts_by_standard()
     summaries = []
     by_code = {}
     for guide_row in guides:
@@ -219,6 +240,7 @@ def overview(store, now=None):
             "summary": summary,
             "next_stop": nxt,
             "annotated": bool((annotated_entry(guide_row["code_key"]) or {}).get("file")),
+            "exam_count": exam_counts.get(guide_row["code_key"], 0),
         }
         summaries.append(by_code[guide_row["code_key"]])
 
@@ -294,6 +316,7 @@ def overview(store, now=None):
         },
         "standards": summaries,
         "recommendation": recommendation,
+        "exam": exam_refs.summary(),
     }
 
 
@@ -308,12 +331,65 @@ def record(store, code_key, stop_id, status, seconds=0, note=""):
     )
 
 
-def _cache_path(code_key, page, dpi):
-    return PAGE_CACHE / code_key / ("p%d_%d.png" % (page, dpi))
+HALVES = ("left", "right")
+_LAYOUT_CACHE = {}
 
 
-def annotated_page_at(code_key, page, dpi=140):
-    """Render any page of the annotated PDF for this standard."""
+def _clean_half(half):
+    return half if half in HALVES else ""
+
+
+def _is_two_up(code_key, path):
+    """True when the scan really stores two copies side by side.
+
+    Most annotated books are landscape 2-up spreads, but GB 50011 is a plain
+    portrait scan.  Cropping that book would cut away half of the only copy,
+    so the layout is detected from the PDF page rectangles and cached per file.
+    """
+    stamp = _mtime(path)
+    key = (str(path), stamp)
+    with _PAGE_LOCK:
+        if key in _LAYOUT_CACHE:
+            return _LAYOUT_CACHE[key]
+    two_up = False
+    try:
+        doc = fitz.open(path)
+        try:
+            count = doc.page_count
+            samples = sorted({
+                1,
+                max(1, count // 4),
+                max(1, count // 2),
+                max(1, (count * 3) // 4),
+                count,
+            })
+            landscape = 0
+            for number in samples:
+                rect = doc[number - 1].rect
+                if rect.width > rect.height * 1.1:
+                    landscape += 1
+            two_up = landscape * 2 > len(samples)
+        finally:
+            doc.close()
+    except Exception:  # noqa: BLE001 - an unreadable PDF falls back to no crop
+        two_up = False
+    with _PAGE_LOCK:
+        _LAYOUT_CACHE[key] = two_up
+    return two_up
+
+
+def _cache_path(code_key, page, dpi, half=""):
+    suffix = ("_" + half[0]) if half else ""
+    return PAGE_CACHE / code_key / ("p%d_%d%s.png" % (page, dpi, suffix))
+
+
+def annotated_page_at(code_key, page, dpi=140, half=""):
+    """Render any page of the annotated PDF for this standard.
+
+    The annotated scans are 2-up: every PDF page holds the same printed page
+    twice, side by side.  `half="left"|"right"` renders just one copy, which
+    doubles the on-screen text size without any loss of content.
+    """
     entry = annotated_entry(code_key)
     if not entry or not entry.get("file"):
         return None
@@ -327,7 +403,10 @@ def annotated_page_at(code_key, page, dpi=140):
     count = int(entry.get("page_count") or 0)
     if page < 1 or (count and page > count):
         return None
-    cache = _cache_path(code_key, page, int(dpi))
+    half = _clean_half(half)
+    if half and not _is_two_up(code_key, path):
+        half = ""
+    cache = _cache_path(code_key, page, int(dpi), half)
     cache.parent.mkdir(parents=True, exist_ok=True)
     try:
         fresh = cache.exists() and cache.stat().st_mtime >= path.stat().st_mtime
@@ -338,14 +417,24 @@ def annotated_page_at(code_key, page, dpi=140):
             if not (cache.exists() and cache.stat().st_mtime >= path.stat().st_mtime):
                 doc = fitz.open(path)
                 try:
-                    pix = doc[page - 1].get_pixmap(dpi=int(dpi))
+                    source = doc[page - 1]
+                    clip = None
+                    if half:
+                        rect = source.rect
+                        middle = rect.x0 + rect.width / 2.0
+                        clip = (
+                            fitz.Rect(rect.x0, rect.y0, middle, rect.y1)
+                            if half == "left"
+                            else fitz.Rect(middle, rect.y0, rect.x1, rect.y1)
+                        )
+                    pix = source.get_pixmap(dpi=int(dpi), clip=clip)
                     pix.save(cache)
                 finally:
                     doc.close()
     return cache, page, count
 
 
-def annotated_page(code_key, stop_id, dpi=140):
+def annotated_page(code_key, stop_id, dpi=140, half=""):
     """Render the page mapped to one reading stop."""
     entry = annotated_entry(code_key)
     if not entry:
@@ -353,7 +442,7 @@ def annotated_page(code_key, stop_id, dpi=140):
     page = (entry.get("stops") or {}).get(stop_id)
     if not page:
         return None
-    return annotated_page_at(code_key, page, dpi=dpi)
+    return annotated_page_at(code_key, page, dpi=dpi, half=half)
 
 
 def fallback_page(code, pdf_page, dpi=120):

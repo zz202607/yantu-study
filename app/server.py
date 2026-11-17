@@ -888,16 +888,21 @@ def reading_record(code_key: str, stop_id: str, payload: dict = Body(...)):
 
 
 @app.get("/api/reading/{code_key}/{stop_id}/page")
-def reading_page(code_key: str, stop_id: str, dpi: int = 140, p: int = 0):
-    """Annotated page image; `p` flips within the scanned standard."""
+def reading_page(code_key: str, stop_id: str, dpi: int = 140, p: int = 0, half: str = ""):
+    """Annotated page image; `p` flips within the scanned standard.
+
+    `half=left|right` crops one side of the 2-up annotated scan so the same
+    printed page fills the screen instead of being halved by its duplicate.
+    """
     try:
-        dpi = max(80, min(int(dpi), 200))
+        dpi = max(80, min(int(dpi), 300))
     except (TypeError, ValueError):
         dpi = 140
+    half = half if half in ("left", "right") else ""
     if p:
-        rendered = reading_app.annotated_page_at(code_key, p, dpi=dpi)
+        rendered = reading_app.annotated_page_at(code_key, p, dpi=dpi, half=half)
     else:
-        rendered = reading_app.annotated_page(code_key, stop_id, dpi=dpi)
+        rendered = reading_app.annotated_page(code_key, stop_id, dpi=dpi, half=half)
     source = "annotated"
     if rendered is None:
         fallback = reading_app.fallback_for(code_key, stop_id)
