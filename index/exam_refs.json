@@ -1,0 +1,7340 @@
+{
+ "version": 1,
+ "built_at": "2026-11-17T11:16:24",
+ "source": "OCR of the 2012-2025 case answer/stem crops; 2025 from text",
+ "questions": {
+  "A2025-A-1": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 1,
+   "evidence": "text",
+   "refs": []
+  },
+  "A2025-A-2": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 2,
+   "evidence": "text",
+   "refs": []
+  },
+  "A2025-A-3": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 3,
+   "evidence": "text",
+   "refs": []
+  },
+  "A2025-A-4": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 4,
+   "evidence": "text",
+   "refs": []
+  },
+  "A2025-A-5": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 5,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-A-6": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 6,
+   "evidence": "text",
+   "refs": []
+  },
+  "A2025-A-7": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 7,
+   "evidence": "text",
+   "refs": []
+  },
+  "A2025-A-8": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 8,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-A-9": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 9,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-A-10": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 10,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-A-11": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 11,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "JTG3363-2019",
+     "code": "JTG 3363-2019",
+     "title": "公路桥涵地基与基础设计规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-A-12": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 12,
+   "evidence": "text",
+   "refs": []
+  },
+  "A2025-A-13": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 13,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "GB50025-2018",
+     "code": "GB 50025-2018",
+     "title": "湿陷性黄土地区建筑标准",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-A-14": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 14,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-A-15": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 15,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-A-16": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 16,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "TB10025-2019",
+     "code": "TB 10025-2019",
+     "title": "铁路路基支挡结构设计规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-A-17": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 17,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "TB10025-2019",
+     "code": "TB 10025-2019",
+     "title": "铁路路基支挡结构设计规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-A-18": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 18,
+   "evidence": "text",
+   "refs": []
+  },
+  "A2025-A-19": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 19,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-A-20": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 20,
+   "evidence": "text",
+   "refs": []
+  },
+  "A2025-A-21": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 21,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "GBT50942-2014",
+     "code": "GBT 50942-2014",
+     "title": "盐渍土地区建筑技术规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-A-22": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 22,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "TB10093-2017",
+     "code": "TB 10093-2017",
+     "title": "铁路桥涵地基和基础设计规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-A-23": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 23,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-A-24": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 24,
+   "evidence": "text",
+   "refs": []
+  },
+  "A2025-A-25": {
+   "done": true,
+   "year": 2025,
+   "session": "A",
+   "num": 25,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "GBT50269-2015",
+     "code": "GBT 50269-2015",
+     "title": "地基动力特性测试规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-P-1": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 1,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-P-2": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 2,
+   "evidence": "text",
+   "refs": []
+  },
+  "A2025-P-3": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 3,
+   "evidence": "text",
+   "refs": []
+  },
+  "A2025-P-4": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 4,
+   "evidence": "text",
+   "refs": []
+  },
+  "A2025-P-5": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 5,
+   "evidence": "text",
+   "refs": []
+  },
+  "A2025-P-6": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 6,
+   "evidence": "text",
+   "refs": []
+  },
+  "A2025-P-7": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 7,
+   "evidence": "text",
+   "refs": []
+  },
+  "A2025-P-8": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 8,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-P-9": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 9,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "GB50025-2018",
+     "code": "GB 50025-2018",
+     "title": "湿陷性黄土地区建筑标准",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-P-10": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 10,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-P-11": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 11,
+   "evidence": "text",
+   "refs": []
+  },
+  "A2025-P-12": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 12,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-P-13": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 13,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-P-14": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 14,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-P-15": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 15,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-P-16": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 16,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-P-17": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 17,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-P-18": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 18,
+   "evidence": "text",
+   "refs": []
+  },
+  "A2025-P-19": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 19,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "GB50025-2018",
+     "code": "GB 50025-2018",
+     "title": "湿陷性黄土地区建筑标准",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-P-20": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 20,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "TB10038-2022",
+     "code": "TB 10038-2022",
+     "title": "铁路工程特殊岩土勘察规程",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-P-21": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 21,
+   "evidence": "text",
+   "refs": []
+  },
+  "A2025-P-22": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 22,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "GB50112-2013",
+     "code": "GB 50112-2013",
+     "title": "膨胀土地区建筑技术规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-P-23": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 23,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "GB18306-2015",
+     "code": "GB 18306-2015",
+     "title": "中国地震动参数区划图",
+     "clauses": [],
+     "evidence": "text"
+    },
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-P-24": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 24,
+   "evidence": "text",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [],
+     "evidence": "text"
+    }
+   ]
+  },
+  "A2025-P-25": {
+   "done": true,
+   "year": 2025,
+   "session": "P",
+   "num": 25,
+   "evidence": "text",
+   "refs": []
+  },
+  "A2019-A-1": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 1,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50123-2019",
+     "code": "GBT50123-2019",
+     "title": "土工试验方法标准",
+     "clauses": [
+      "41.2"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-A-2": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 2,
+   "evidence": "",
+   "refs": []
+  },
+  "A2024-A-1": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 1,
+   "evidence": "question",
+   "refs": [
+    {
+     "code_key": "JGJT72-2017",
+     "code": "JGJT 72-2017",
+     "title": "高层建筑岩土工程勘察标准",
+     "clauses": [],
+     "evidence": "question"
+    }
+   ]
+  },
+  "A2024-A-2": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 2,
+   "evidence": "",
+   "refs": []
+  },
+  "A2024-A-3": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 3,
+   "evidence": "",
+   "refs": []
+  },
+  "A2024-A-4": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 4,
+   "evidence": "",
+   "refs": []
+  },
+  "A2024-A-5": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 5,
+   "evidence": "",
+   "refs": []
+  },
+  "A2024-A-6": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 6,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.7"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-A-7": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 7,
+   "evidence": "",
+   "refs": []
+  },
+  "A2024-A-8": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 8,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.7"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-A-9": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 9,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.3.5",
+      "5.3.12",
+      "5.4.6"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-A-10": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 10,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.7.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-A-11": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 11,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.1.110"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-A-12": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 12,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "5.2.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-A-13": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 13,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-A-14": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 14,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "5.2.12"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-A-15": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 15,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-A-16": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 16,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "TB10025-2019",
+     "code": "TB 10025-2019",
+     "title": "铁路路基支挡结构设计规范",
+     "clauses": [
+      "12.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-A-17": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 17,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "附录A"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-A-18": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 18,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [
+      "3.4.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-A-19": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 19,
+   "evidence": "question",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [],
+     "evidence": "question"
+    }
+   ]
+  },
+  "A2024-A-20": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 20,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50025-2018",
+     "code": "GB 50025-2018",
+     "title": "湿陷性黄土地区建筑标准",
+     "clauses": [
+      "附录D"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-A-21": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 21,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "14.2.1",
+      "附录A"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-A-22": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 22,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50021-2001",
+     "code": "GB 50021-2001(2009年版)",
+     "title": "岩土工程勘察规范",
+     "clauses": [
+      "6.9.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-A-23": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 23,
+   "evidence": "question",
+   "refs": [
+    {
+     "code_key": "GB18306-2015",
+     "code": "GB 18306-2015",
+     "title": "中国地震动参数区划图",
+     "clauses": [],
+     "evidence": "question"
+    }
+   ]
+  },
+  "A2024-A-24": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 24,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [
+      "5.1.4",
+      "5.2.1",
+      "5.3.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-A-25": {
+   "done": true,
+   "year": 2024,
+   "session": "A",
+   "num": 25,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ106-2014",
+     "code": "JGJ 106-2014",
+     "title": "建筑基桩检测技术规范",
+     "clauses": [
+      "4.3.7",
+      "4.4.2",
+      "4.4.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-P-1": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 1,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50266-2013",
+     "code": "GBT 50266-2013",
+     "title": "工程岩体试验方法标准",
+     "clauses": [
+      "2.7.10"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "TB10012-2019",
+     "code": "TB 10012-2019",
+     "title": "铁路工程地质勘察规范",
+     "clauses": [
+      "4.3.7"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-P-2": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 2,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50307-2012",
+     "code": "GB 50307-2012",
+     "title": "城市轨道交通岩土工程勘察规范",
+     "clauses": [
+      "10.3.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-P-3": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 3,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50218-2014",
+     "code": "GBT 50218-2014",
+     "title": "工程岩体分级标准",
+     "clauses": [
+      "3.3.2",
+      "3.3.4",
+      "附录B"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-P-4": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 4,
+   "evidence": "",
+   "refs": []
+  },
+  "A2024-P-5": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 5,
+   "evidence": "",
+   "refs": []
+  },
+  "A2024-P-6": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 6,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "NBT10872-2021",
+     "code": "NBT 10872-2021",
+     "title": "碾压式土石坝设计规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-P-7": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 7,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.3.5",
+      "6.2.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-P-8": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 8,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "8.2.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-P-9": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 9,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.4.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-P-10": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 10,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.35",
+      "5.3.10"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-P-11": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 11,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50290-2014",
+     "code": "GBT 50290-2014",
+     "title": "土工合成材料应用技术规范",
+     "clauses": [
+      "7.6.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-P-12": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 12,
+   "evidence": "question",
+   "refs": [
+    {
+     "code_key": "GB50025-2018",
+     "code": "GB 50025-2018",
+     "title": "湿陷性黄土地区建筑标准",
+     "clauses": [],
+     "evidence": "question"
+    },
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [],
+     "evidence": "question"
+    }
+   ]
+  },
+  "A2024-P-13": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 13,
+   "evidence": "",
+   "refs": []
+  },
+  "A2024-P-14": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 14,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "6.2.4",
+      "6.2.6",
+      "11.2.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-P-15": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 15,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "TB10025-2019",
+     "code": "TB 10025-2019",
+     "title": "铁路路基支挡结构设计规范",
+     "clauses": [
+      "15.2.2",
+      "15.2.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-P-16": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 16,
+   "evidence": "question",
+   "refs": [
+    {
+     "code_key": "TB10025-2019",
+     "code": "TB 10025-2019",
+     "title": "铁路路基支挡结构设计规范",
+     "clauses": [],
+     "evidence": "question"
+    }
+   ]
+  },
+  "A2024-P-17": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 17,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JTG33701-2018",
+     "code": "JTG 3370.1-2018",
+     "title": "公路隧道设计规范 第一册土建工程",
+     "clauses": [
+      "3.6.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-P-18": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 18,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [
+      "4.8.8"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "GB50010-2010",
+     "code": "GB 50010-2010",
+     "title": "混凝土结构设计规范",
+     "clauses": [
+      "附录A"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-P-19": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 19,
+   "evidence": "",
+   "refs": []
+  },
+  "A2024-P-20": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 20,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50021-2001",
+     "code": "GB 50021-2001(2009年版)",
+     "title": "岩土工程勘察规范",
+     "clauses": [
+      "6.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-P-21": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 21,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50123-2019",
+     "code": "GBT50123-2019",
+     "title": "土工试验方法标准",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-P-22": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 22,
+   "evidence": "",
+   "refs": []
+  },
+  "A2024-P-23": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 23,
+   "evidence": "question",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [],
+     "evidence": "question"
+    }
+   ]
+  },
+  "A2024-P-24": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 24,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [
+      "4.1.3",
+      "4.1.6"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2024-P-25": {
+   "done": true,
+   "year": 2024,
+   "session": "P",
+   "num": 25,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50025-2018",
+     "code": "GB 50025-2018",
+     "title": "湿陷性黄土地区建筑标准",
+     "clauses": [
+      "8.2.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-A-1": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 1,
+   "evidence": "",
+   "refs": []
+  },
+  "A2023-A-2": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 2,
+   "evidence": "",
+   "refs": []
+  },
+  "A2023-A-3": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 3,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50021-2001",
+     "code": "GB 50021-2001(2009年版)",
+     "title": "岩土工程勘察规范",
+     "clauses": [
+      "10.2.3",
+      "10.2.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-A-4": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 4,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JTS133-2013",
+     "code": "JTS 133-2013",
+     "title": "水运工程岩土勘察规范",
+     "clauses": [
+      "9.8.2.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-A-5": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 5,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "TB10093-2017",
+     "code": "TB 10093-2017",
+     "title": "铁路桥涵地基和基础设计规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-A-6": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 6,
+   "evidence": "question",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [],
+     "evidence": "question"
+    }
+   ]
+  },
+  "A2023-A-7": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 7,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-A-8": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 8,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50010-2010",
+     "code": "GB 50010-2010",
+     "title": "混凝土结构设计规范",
+     "clauses": [
+      "4.1.4",
+      "4.2.3",
+      "8.3.1"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "8.2.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-A-9": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 9,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "TB10093-2017",
+     "code": "TB 10093-2017",
+     "title": "铁路桥涵地基和基础设计规范",
+     "clauses": [
+      "6.2.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-A-10": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 10,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.4.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-A-11": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 11,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50009-2012",
+     "code": "GB 50009-2012",
+     "title": "建筑结构荷载规范",
+     "clauses": [
+      "3.1.1"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.7.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-A-12": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 12,
+   "evidence": "",
+   "refs": []
+  },
+  "A2023-A-13": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 13,
+   "evidence": "",
+   "refs": []
+  },
+  "A2023-A-14": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 14,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "4.2.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-A-15": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 15,
+   "evidence": "",
+   "refs": []
+  },
+  "A2023-A-16": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 16,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "10.2.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-A-17": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 17,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50290-2014",
+     "code": "GBT 50290-2014",
+     "title": "土工合成材料应用技术规范",
+     "clauses": [
+      "7.3.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-A-18": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 18,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JTG33701-2018",
+     "code": "JTG 3370.1-2018",
+     "title": "公路隧道设计规范 第一册土建工程",
+     "clauses": [
+      "6.2.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-A-19": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 19,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [
+      "3.4.2",
+      "3.4.7"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-A-20": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 20,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50025-2018",
+     "code": "GB 50025-2018",
+     "title": "湿陷性黄土地区建筑标准",
+     "clauses": [
+      "4.3.2"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "GBT50123-2019",
+     "code": "GBT50123-2019",
+     "title": "土工试验方法标准",
+     "clauses": [
+      "18.2.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-A-21": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 21,
+   "evidence": "",
+   "refs": []
+  },
+  "A2023-A-22": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 22,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50266-2013",
+     "code": "GBT 50266-2013",
+     "title": "工程岩体试验方法标准",
+     "clauses": [
+      "2.7.10"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "JTG33701-2018",
+     "code": "JTG 3370.1-2018",
+     "title": "公路隧道设计规范 第一册土建工程",
+     "clauses": [
+      "14.8.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-A-23": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 23,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [
+      "4.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-A-24": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 24,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-A-25": {
+   "done": true,
+   "year": 2023,
+   "session": "A",
+   "num": 25,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ106-2014",
+     "code": "JGJ 106-2014",
+     "title": "建筑基桩检测技术规范",
+     "clauses": [
+      "10.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-P-1": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 1,
+   "evidence": "",
+   "refs": []
+  },
+  "A2023-P-2": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 2,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50123-2019",
+     "code": "GBT50123-2019",
+     "title": "土工试验方法标准",
+     "clauses": [
+      "7.3.7",
+      "13.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-P-3": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 3,
+   "evidence": "",
+   "refs": []
+  },
+  "A2023-P-4": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 4,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50487-2008",
+     "code": "GB 50487-2008(2022年版)",
+     "title": "水利水电工程地质勘察规范",
+     "clauses": [
+      "附录N"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-P-5": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 5,
+   "evidence": "",
+   "refs": []
+  },
+  "A2023-P-6": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 6,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-P-7": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 7,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "8.2.8"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-P-8": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 8,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.3.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-P-9": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 9,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JTG3363-2019",
+     "code": "JTG 3363-2019",
+     "title": "公路桥涵地基与基础设计规范",
+     "clauses": [
+      "7.3.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-P-10": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 10,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.2.2",
+      "5.3.6"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-P-11": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 11,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "7.1.5",
+      "7.1.6"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-P-12": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 12,
+   "evidence": "",
+   "refs": []
+  },
+  "A2023-P-13": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 13,
+   "evidence": "",
+   "refs": []
+  },
+  "A2023-P-14": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 14,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "6.2.4",
+      "6.2.6",
+      "6.2.7"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-P-15": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 15,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "8.2.6"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-P-16": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 16,
+   "evidence": "",
+   "refs": []
+  },
+  "A2023-P-17": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 17,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [
+      "4.2.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-P-18": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 18,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "TB10003-2016",
+     "code": "TB 10003-2016",
+     "title": "铁路隧道设计规范",
+     "clauses": [
+      "附录J"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-P-19": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 19,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50021-2001",
+     "code": "GB 50021-2001(2009年版)",
+     "title": "岩土工程勘察规范",
+     "clauses": [
+      "5.2.8"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-P-20": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 20,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.1.7",
+      "5.1.8",
+      "附录G"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-P-21": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 21,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50021-2001",
+     "code": "GB 50021-2001(2009年版)",
+     "title": "岩土工程勘察规范",
+     "clauses": [
+      "附录C"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-P-22": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 22,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50112-2013",
+     "code": "GB 50112-2013",
+     "title": "膨胀土地区建筑技术规范",
+     "clauses": [
+      "5.2.7",
+      "5.2.8"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-P-23": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 23,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [
+      "4.3.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2023-P-24": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 24,
+   "evidence": "question",
+   "refs": [
+    {
+     "code_key": "GB18306-2015",
+     "code": "GB 18306-2015",
+     "title": "中国地震动参数区划图",
+     "clauses": [],
+     "evidence": "question"
+    }
+   ]
+  },
+  "A2023-P-25": {
+   "done": true,
+   "year": 2023,
+   "session": "P",
+   "num": 25,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [
+      "4.1.9",
+      "附录A"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-A-1": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 1,
+   "evidence": "",
+   "refs": []
+  },
+  "A2022-A-2": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 2,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJT72-2017",
+     "code": "JGJT 72-2017",
+     "title": "高层建筑岩土工程勘察标准",
+     "clauses": [
+      "附录B"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-A-3": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 3,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.3.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-A-4": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 4,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50218-2014",
+     "code": "GBT 50218-2014",
+     "title": "工程岩体分级标准",
+     "clauses": [
+      "3.2.1",
+      "3.2.3",
+      "4.1.1",
+      "附录B"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-A-5": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 5,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-A-6": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 6,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-A-7": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 7,
+   "evidence": "",
+   "refs": []
+  },
+  "A2022-A-8": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 8,
+   "evidence": "question",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [],
+     "evidence": "question"
+    }
+   ]
+  },
+  "A2022-A-9": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 9,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JTG3363-2019",
+     "code": "JTG 3363-2019",
+     "title": "公路桥涵地基与基础设计规范",
+     "clauses": [
+      "6.2.6",
+      "附录N"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-A-10": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 10,
+   "evidence": "question",
+   "refs": [
+    {
+     "code_key": "JGJT72-2017",
+     "code": "JGJT 72-2017",
+     "title": "高层建筑岩土工程勘察标准",
+     "clauses": [],
+     "evidence": "question"
+    }
+   ]
+  },
+  "A2022-A-11": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 11,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.2.2",
+      "5.4.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-A-12": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 12,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "7.1.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-A-13": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 13,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [
+      "4.3.6"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "7.2.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-A-14": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 14,
+   "evidence": "",
+   "refs": []
+  },
+  "A2022-A-15": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 15,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "附录A"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-A-16": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 16,
+   "evidence": "question",
+   "refs": [
+    {
+     "code_key": "TB10025-2019",
+     "code": "TB 10025-2019",
+     "title": "铁路路基支挡结构设计规范",
+     "clauses": [],
+     "evidence": "question"
+    }
+   ]
+  },
+  "A2022-A-17": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 17,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50290-2014",
+     "code": "GBT 50290-2014",
+     "title": "土工合成材料应用技术规范",
+     "clauses": [
+      "7.3.2",
+      "7.5.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-A-18": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 18,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [
+      "附录E"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-A-19": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 19,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "TB10003-2016",
+     "code": "TB 10003-2016",
+     "title": "铁路隧道设计规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-A-20": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 20,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "附录A"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-A-21": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 21,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50112-2013",
+     "code": "GB 50112-2013",
+     "title": "膨胀土地区建筑技术规范",
+     "clauses": [
+      "5.2.7"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-A-22": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 22,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50021-2001",
+     "code": "GB 50021-2001(2009年版)",
+     "title": "岩土工程勘察规范",
+     "clauses": [
+      "6.10.12",
+      "14.2.2"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "GBT50123-2019",
+     "code": "GBT50123-2019",
+     "title": "土工试验方法标准",
+     "clauses": [
+      "附录A"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-A-23": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 23,
+   "evidence": "question",
+   "refs": [
+    {
+     "code_key": "NBT35047-2015",
+     "code": "NBT 35047-2015",
+     "title": "水电工程水工建筑物抗震设计规范",
+     "clauses": [],
+     "evidence": "question"
+    }
+   ]
+  },
+  "A2022-A-24": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 24,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-A-25": {
+   "done": true,
+   "year": 2022,
+   "session": "A",
+   "num": 25,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ106-2014",
+     "code": "JGJ 106-2014",
+     "title": "建筑基桩检测技术规范",
+     "clauses": [
+      "7.5.3",
+      "7.6.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-P-1": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 1,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50585-2019",
+     "code": "GBT 50585-2019",
+     "title": "岩土工程勘察安全标准",
+     "clauses": [
+      "附录A"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-P-2": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 2,
+   "evidence": "",
+   "refs": []
+  },
+  "A2022-P-3": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 3,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50218-2014",
+     "code": "GBT 50218-2014",
+     "title": "工程岩体分级标准",
+     "clauses": [
+      "2.13",
+      "3.3.1",
+      "3.3.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-P-4": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 4,
+   "evidence": "",
+   "refs": []
+  },
+  "A2022-P-5": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 5,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-P-6": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 6,
+   "evidence": "",
+   "refs": []
+  },
+  "A2022-P-7": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 7,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.3.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-P-8": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 8,
+   "evidence": "",
+   "refs": []
+  },
+  "A2022-P-9": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 9,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.9.10"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-P-10": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 10,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.3.9"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "GBT50266-2013",
+     "code": "GBT 50266-2013",
+     "title": "工程岩体试验方法标准",
+     "clauses": [
+      "2.7.10"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-P-11": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 11,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-P-12": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 12,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "4.2.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-P-13": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 13,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "7.9.6"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-P-14": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 14,
+   "evidence": "question",
+   "refs": [
+    {
+     "code_key": "TB10001-2016",
+     "code": "TB 10001-2016",
+     "title": "铁路路基设计规范",
+     "clauses": [],
+     "evidence": "question"
+    }
+   ]
+  },
+  "A2022-P-15": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 15,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "6.2.4",
+      "附录B"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-P-16": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 16,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "TB10001-2016",
+     "code": "TB 10001-2016",
+     "title": "铁路路基设计规范",
+     "clauses": [
+      "3.3.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-P-17": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 17,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [
+      "4.1.8"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-P-18": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 18,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [
+      "6.1.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-P-19": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 19,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50025-2018",
+     "code": "GB 50025-2018",
+     "title": "湿陷性黄土地区建筑标准",
+     "clauses": [
+      "附录D",
+      "5.6.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-P-20": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 20,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50112-2013",
+     "code": "GB 50112-2013",
+     "title": "膨胀土地区建筑技术规范",
+     "clauses": [
+      "4.3.5",
+      "5.2.7",
+      "5.2.12",
+      "5.5.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-P-21": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 21,
+   "evidence": "",
+   "refs": []
+  },
+  "A2022-P-22": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 22,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50021-2001",
+     "code": "GB 50021-2001(2009年版)",
+     "title": "岩土工程勘察规范",
+     "clauses": [
+      "3.3.11",
+      "6.9.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-P-23": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 23,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.4"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [
+      "4.2.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-P-24": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 24,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [
+      "4.3.4",
+      "4.4.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2022-P-25": {
+   "done": true,
+   "year": 2022,
+   "session": "P",
+   "num": 25,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ106-2014",
+     "code": "JGJ 106-2014",
+     "title": "建筑基桩检测技术规范",
+     "clauses": [
+      "4.4.2",
+      "5.4.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-A-1": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 1,
+   "evidence": "",
+   "refs": []
+  },
+  "A2021-A-2": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 2,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50487-2008",
+     "code": "GB 50487-2008(2022年版)",
+     "title": "水利水电工程地质勘察规范",
+     "clauses": [
+      "附录G"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-A-3": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 3,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50218-2014",
+     "code": "GBT 50218-2014",
+     "title": "工程岩体分级标准",
+     "clauses": [
+      "4.2",
+      "5.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-A-4": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 4,
+   "evidence": "",
+   "refs": []
+  },
+  "A2021-A-5": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 5,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "TB10093-2017",
+     "code": "TB 10093-2017",
+     "title": "铁路桥涵地基和基础设计规范",
+     "clauses": [
+      "附录G"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-A-6": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 6,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "4.1.7",
+      "5.1.4",
+      "5.2.1",
+      "5.2.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-A-7": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 7,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-A-8": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 8,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "8.2.8"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-A-9": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 9,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.8.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-A-10": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 10,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.4.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-A-11": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 11,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.4.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-A-12": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 12,
+   "evidence": "",
+   "refs": []
+  },
+  "A2021-A-13": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 13,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "7.1.5",
+      "7.8.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-A-14": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 14,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50025-2018",
+     "code": "GB 50025-2018",
+     "title": "湿陷性黄土地区建筑标准",
+     "clauses": [
+      "4.4.4",
+      "6.1.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-A-15": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 15,
+   "evidence": "",
+   "refs": []
+  },
+  "A2021-A-16": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 16,
+   "evidence": "",
+   "refs": []
+  },
+  "A2021-A-17": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 17,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "4.3.1",
+      "4.3.2",
+      "附录A"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-A-18": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 18,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [
+      "7.3.11",
+      "7.3.15",
+      "附录C",
+      "附录E"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-A-19": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 19,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [
+      "3.4.2",
+      "4.12.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-A-20": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 20,
+   "evidence": "",
+   "refs": []
+  },
+  "A2021-A-21": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 21,
+   "evidence": "",
+   "refs": []
+  },
+  "A2021-A-22": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 22,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50942-2014",
+     "code": "GBT 50942-2014",
+     "title": "盐渍土地区建筑技术规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-A-23": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 23,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [
+      "3.10.3",
+      "4.1.6",
+      "5.1.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-A-24": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 24,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [
+      "4.1.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-A-25": {
+   "done": true,
+   "year": 2021,
+   "session": "A",
+   "num": 25,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ106-2014",
+     "code": "JGJ 106-2014",
+     "title": "建筑基桩检测技术规范",
+     "clauses": [
+      "9.3.2",
+      "9.4.3",
+      "9.4.8"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-P-1": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 1,
+   "evidence": "",
+   "refs": []
+  },
+  "A2021-P-2": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 2,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50021-2001",
+     "code": "GB 50021-2001(2009年版)",
+     "title": "岩土工程勘察规范",
+     "clauses": [
+      "3.3.2",
+      "6.4.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-P-3": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 3,
+   "evidence": "question",
+   "refs": [
+    {
+     "code_key": "GB50021-2001",
+     "code": "GB 50021-2001(2009年版)",
+     "title": "岩土工程勘察规范",
+     "clauses": [],
+     "evidence": "question"
+    }
+   ]
+  },
+  "A2021-P-4": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 4,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50123-2019",
+     "code": "GBT50123-2019",
+     "title": "土工试验方法标准",
+     "clauses": [
+      "16.1.3",
+      "16.3.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-P-5": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 5,
+   "evidence": "question",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [],
+     "evidence": "question"
+    }
+   ]
+  },
+  "A2021-P-6": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 6,
+   "evidence": "",
+   "refs": []
+  },
+  "A2021-P-7": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 7,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.4.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-P-8": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 8,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.3.9"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "GBT50123-2019",
+     "code": "GBT50123-2019",
+     "title": "土工试验方法标准",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-P-9": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 9,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "3.3.3",
+      "3.4.6",
+      "5.2.2",
+      "5.3.5",
+      "5.3.12"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-P-10": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 10,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.2.2",
+      "5.3.9",
+      "5.4.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-P-11": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 11,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "7.1.5",
+      "7.3.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-P-12": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 12,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "7.1.5",
+      "7.1.7"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-P-13": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 13,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "5.2.11"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-P-14": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 14,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "8.2.1",
+      "8.2.3",
+      "8.2.4",
+      "8.4.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-P-15": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 15,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50290-2014",
+     "code": "GBT 50290-2014",
+     "title": "土工合成材料应用技术规范",
+     "clauses": [
+      "7.6.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-P-16": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 16,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "3.2.1",
+      "5.3.1",
+      "附录A"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-P-17": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 17,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [
+      "4.7.2",
+      "4.7.4",
+      "4.7.6",
+      "4.7.9"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-P-18": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 18,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JTG33701-2018",
+     "code": "JTG 3370.1-2018",
+     "title": "公路隧道设计规范 第一册土建工程",
+     "clauses": [
+      "6.2.2",
+      "附录D"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-P-19": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 19,
+   "evidence": "",
+   "refs": []
+  },
+  "A2021-P-20": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 20,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50112-2013",
+     "code": "GB 50112-2013",
+     "title": "膨胀土地区建筑技术规范",
+     "clauses": [
+      "5.2.7",
+      "5.2.14"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-P-21": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 21,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "TB10012-2019",
+     "code": "TB 10012-2019",
+     "title": "铁路工程地质勘察规范",
+     "clauses": [
+      "6.6.6",
+      "附录C"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-P-22": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 22,
+   "evidence": "",
+   "refs": []
+  },
+  "A2021-P-23": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 23,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [
+      "4.3.3",
+      "4.3.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2021-P-24": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 24,
+   "evidence": "",
+   "refs": []
+  },
+  "A2021-P-25": {
+   "done": true,
+   "year": 2021,
+   "session": "P",
+   "num": 25,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "附录B"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-A-1": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 1,
+   "evidence": "",
+   "refs": []
+  },
+  "A2020-A-2": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 2,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50021-2001",
+     "code": "GB 50021-2001(2009年版)",
+     "title": "岩土工程勘察规范",
+     "clauses": [
+      "10.6.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-A-3": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 3,
+   "evidence": "",
+   "refs": []
+  },
+  "A2020-A-4": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 4,
+   "evidence": "",
+   "refs": []
+  },
+  "A2020-A-5": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 5,
+   "evidence": "",
+   "refs": []
+  },
+  "A2020-A-6": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 6,
+   "evidence": "question",
+   "refs": [
+    {
+     "code_key": "JTG3363-2019",
+     "code": "JTG 3363-2019",
+     "title": "公路桥涵地基与基础设计规范",
+     "clauses": [],
+     "evidence": "question"
+    }
+   ]
+  },
+  "A2020-A-7": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 7,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.7"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-A-8": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 8,
+   "evidence": "",
+   "refs": []
+  },
+  "A2020-A-9": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 9,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.4.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-A-10": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 10,
+   "evidence": "question",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [],
+     "evidence": "question"
+    }
+   ]
+  },
+  "A2020-A-11": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 11,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "8.5.3",
+      "8.5.5",
+      "8.5.6",
+      "8.5.11"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-A-12": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 12,
+   "evidence": "",
+   "refs": []
+  },
+  "A2020-A-13": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 13,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "7.2.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-A-14": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 14,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "7.3.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-A-15": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 15,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50290-2014",
+     "code": "GBT 50290-2014",
+     "title": "土工合成材料应用技术规范",
+     "clauses": [
+      "7.3.2",
+      "7.3.5",
+      "7.3.6"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-A-16": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 16,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "附录A"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-A-17": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 17,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "6.2.4",
+      "11.2.3",
+      "附录A"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-A-18": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 18,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [
+      "3.4.8"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-A-19": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 19,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [
+      "3.1.14",
+      "3.4.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-A-20": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 20,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50025-2018",
+     "code": "GB 50025-2018",
+     "title": "湿陷性黄土地区建筑标准",
+     "clauses": [
+      "2.1.12",
+      "3.0.1",
+      "4.44",
+      "4.4.6",
+      "6.1.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-A-21": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 21,
+   "evidence": "question",
+   "refs": [
+    {
+     "code_key": "GB50112-2013",
+     "code": "GB 50112-2013",
+     "title": "膨胀土地区建筑技术规范",
+     "clauses": [],
+     "evidence": "question"
+    }
+   ]
+  },
+  "A2020-A-22": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 22,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "TB10038-2022",
+     "code": "TB 10038-2022",
+     "title": "铁路工程特殊岩土勘察规程",
+     "clauses": [
+      "7.1.4",
+      "7.5.4",
+      "7.5.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-A-23": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 23,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [
+      "4.3.3",
+      "4.3.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-A-24": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 24,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50487-2008",
+     "code": "GB 50487-2008(2022年版)",
+     "title": "水利水电工程地质勘察规范",
+     "clauses": [
+      "附录P"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-A-25": {
+   "done": true,
+   "year": 2020,
+   "session": "A",
+   "num": 25,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-P-1": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 1,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50123-2019",
+     "code": "GBT50123-2019",
+     "title": "土工试验方法标准",
+     "clauses": [
+      "49.4.6"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "GB50021-2001",
+     "code": "GB 50021-2001(2009年版)",
+     "title": "岩土工程勘察规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-P-2": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 2,
+   "evidence": "",
+   "refs": []
+  },
+  "A2020-P-3": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 3,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50487-2008",
+     "code": "GB 50487-2008(2022年版)",
+     "title": "水利水电工程地质勘察规范",
+     "clauses": [
+      "附录N",
+      "附录Q"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-P-4": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 4,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50123-2019",
+     "code": "GBT50123-2019",
+     "title": "土工试验方法标准",
+     "clauses": [
+      "9.2.3"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "GB50021-2001",
+     "code": "GB 50021-2001(2009年版)",
+     "title": "岩土工程勘察规范",
+     "clauses": [
+      "3.3.2",
+      "3.3.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-P-5": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 5,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.3.11"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-P-6": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 6,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "8.2.8"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-P-7": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 7,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-P-8": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 8,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-P-9": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 9,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "4.2.1",
+      "5.4.5",
+      "5.4.6"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-P-10": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 10,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "3.3.3",
+      "5.2.1",
+      "5.3.5",
+      "5.9.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-P-11": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 11,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "4.2.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-P-12": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 12,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "7.1.7",
+      "7.1.8"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-P-13": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 13,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "7.9.6"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-P-14": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 14,
+   "evidence": "",
+   "refs": []
+  },
+  "A2020-P-15": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 15,
+   "evidence": "",
+   "refs": []
+  },
+  "A2020-P-16": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 16,
+   "evidence": "",
+   "refs": []
+  },
+  "A2020-P-17": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 17,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [
+      "4.9.10"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-P-18": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 18,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "TB10003-2016",
+     "code": "TB 10003-2016",
+     "title": "铁路隧道设计规范",
+     "clauses": [
+      "5.1.7"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-P-19": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 19,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50112-2013",
+     "code": "GB 50112-2013",
+     "title": "膨胀土地区建筑技术规范",
+     "clauses": [
+      "4.3.4",
+      "附录D"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "GBT50123-2019",
+     "code": "GBT50123-2019",
+     "title": "土工试验方法标准",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-P-20": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 20,
+   "evidence": "",
+   "refs": []
+  },
+  "A2020-P-21": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 21,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "附录A"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-P-22": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 22,
+   "evidence": "",
+   "refs": []
+  },
+  "A2020-P-23": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 23,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [
+      "4.1.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-P-24": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 24,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2020-P-25": {
+   "done": true,
+   "year": 2020,
+   "session": "P",
+   "num": 25,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ340-2015",
+     "code": "JGJ 340-2015",
+     "title": "建筑地基检测技术规范",
+     "clauses": [
+      "4.2.6",
+      "5.1.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-A-3": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 3,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "6.6.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-A-4": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 4,
+   "evidence": "",
+   "refs": []
+  },
+  "A2019-A-5": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 5,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.3.6"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-A-6": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 6,
+   "evidence": "",
+   "refs": []
+  },
+  "A2019-A-7": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 7,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-A-8": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 8,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-A-9": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 9,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "TB10093-2017",
+     "code": "TB 10093-2017",
+     "title": "铁路桥涵地基和基础设计规范",
+     "clauses": [
+      "9.3.7"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-A-10": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 10,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.3.6",
+      "5.8.2",
+      "5.8.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-A-11": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 11,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.5.8"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-A-12": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 12,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "7.5.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-A-13": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 13,
+   "evidence": "question",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [],
+     "evidence": "question"
+    }
+   ]
+  },
+  "A2019-A-14": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 14,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "3.0.5",
+      "7.1.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-A-15": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 15,
+   "evidence": "",
+   "refs": []
+  },
+  "A2019-A-16": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 16,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "TB10025-2019",
+     "code": "TB 10025-2019",
+     "title": "铁路路基支挡结构设计规范",
+     "clauses": [
+      "9.2.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-A-17": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 17,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "5.3.1",
+      "附录A"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-A-18": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 18,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "TB10003-2016",
+     "code": "TB 10003-2016",
+     "title": "铁路隧道设计规范",
+     "clauses": [
+      "附录D",
+      "附录E"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-A-19": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 19,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [
+      "6.1.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-A-20": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 20,
+   "evidence": "",
+   "refs": []
+  },
+  "A2019-A-21": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 21,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50112-2013",
+     "code": "GB 50112-2013",
+     "title": "膨胀土地区建筑技术规范",
+     "clauses": [
+      "5.2.2",
+      "5.2.4",
+      "5.2.11"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-A-22": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 22,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50025-2018",
+     "code": "GB 50025-2018",
+     "title": "湿陷性黄土地区建筑标准",
+     "clauses": [
+      "4.4.4",
+      "5.2.4",
+      "附录A"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-A-23": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 23,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "NBT35047-2015",
+     "code": "NBT 35047-2015",
+     "title": "水电工程水工建筑物抗震设计规范",
+     "clauses": [
+      "4.1.2",
+      "4.1.3",
+      "5.3.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-A-24": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 24,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.7.2",
+      "5.7.5"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-A-25": {
+   "done": true,
+   "year": 2019,
+   "session": "A",
+   "num": 25,
+   "evidence": "",
+   "refs": []
+  },
+  "A2019-P-1": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 1,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "TB10012-2019",
+     "code": "TB 10012-2019",
+     "title": "铁路工程地质勘察规范",
+     "clauses": [
+      "附录C"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-P-2": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 2,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50021-2001",
+     "code": "GB 50021-2001(2009年版)",
+     "title": "岩土工程勘察规范",
+     "clauses": [
+      "附录F"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-P-3": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 3,
+   "evidence": "",
+   "refs": []
+  },
+  "A2019-P-4": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 4,
+   "evidence": "",
+   "refs": []
+  },
+  "A2019-P-5": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 5,
+   "evidence": "",
+   "refs": []
+  },
+  "A2019-P-6": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 6,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.7"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-P-7": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 7,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.1",
+      "5.2.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-P-8": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 8,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.1",
+      "8.1.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-P-9": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 9,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.3.5"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [
+      "4.4.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-P-10": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 10,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.8.2",
+      "5.8.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-P-11": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 11,
+   "evidence": "",
+   "refs": []
+  },
+  "A2019-P-12": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 12,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "7.1.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-P-13": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 13,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50290-2014",
+     "code": "GBT 50290-2014",
+     "title": "土工合成材料应用技术规范",
+     "clauses": [
+      "4.1.5",
+      "4.2.2",
+      "4.2.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-P-14": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 14,
+   "evidence": "",
+   "refs": []
+  },
+  "A2019-P-15": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 15,
+   "evidence": "",
+   "refs": []
+  },
+  "A2019-P-16": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 16,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "13.2.8"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-P-17": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 17,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JTG33701-2018",
+     "code": "JTG 3370.1-2018",
+     "title": "公路隧道设计规范 第一册土建工程",
+     "clauses": [
+      "3.6.1",
+      "3.6.2",
+      "3.6.4",
+      "附录A"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-P-18": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 18,
+   "evidence": "",
+   "refs": []
+  },
+  "A2019-P-19": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 19,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "5.2.6"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-P-20": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 20,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "3.2.1",
+      "5.3.2",
+      "附录A"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-P-21": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 21,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50942-2014",
+     "code": "GBT 50942-2014",
+     "title": "盐渍土地区建筑技术规范",
+     "clauses": [
+      "4.2.4",
+      "4.2.5",
+      "附录D"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-P-22": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 22,
+   "evidence": "",
+   "refs": []
+  },
+  "A2019-P-23": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 23,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-P-24": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 24,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50123-2019",
+     "code": "GBT50123-2019",
+     "title": "土工试验方法标准",
+     "clauses": [
+      "29.4.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2019-P-25": {
+   "done": true,
+   "year": 2019,
+   "session": "P",
+   "num": 25,
+   "evidence": "",
+   "refs": []
+  },
+  "A2018-A-1": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 1,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50021-2001",
+     "code": "GB 50021-2001(2009年版)",
+     "title": "岩土工程勘察规范",
+     "clauses": [
+      "12.2.1",
+      "附录G"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-A-2": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 2,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50218-2014",
+     "code": "GBT 50218-2014",
+     "title": "工程岩体分级标准",
+     "clauses": [
+      "3.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-A-3": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 3,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50123-2019",
+     "code": "GBT50123-2019",
+     "title": "土工试验方法标准",
+     "clauses": [
+      "5.2",
+      "9.5.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-A-4": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 4,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50266-2013",
+     "code": "GBT 50266-2013",
+     "title": "工程岩体试验方法标准",
+     "clauses": [
+      "2.7.3",
+      "2.7.10"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-A-5": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 5,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-A-6": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 6,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JTG3363-2019",
+     "code": "JTG 3363-2019",
+     "title": "公路桥涵地基与基础设计规范",
+     "clauses": [
+      "4.3.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-A-7": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 7,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.3.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-A-8": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 8,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.1",
+      "8.1.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-A-9": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 9,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.2.5"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-A-10": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 10,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.7.2",
+      "5.7.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-A-11": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 11,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JTG3363-2019",
+     "code": "JTG 3363-2019",
+     "title": "公路桥涵地基与基础设计规范",
+     "clauses": [
+      "6.3.7"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-A-12": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 12,
+   "evidence": "",
+   "refs": []
+  },
+  "A2018-A-13": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 13,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "7.1.7",
+      "7.1.8"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "附录K"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-A-14": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 14,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "5.2.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-A-15": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 15,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "6.2.10"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-A-16": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 16,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "附录A"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-A-17": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 17,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "8.2.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-A-18": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 18,
+   "evidence": "",
+   "refs": []
+  },
+  "A2018-A-19": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 19,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "TB10003-2016",
+     "code": "TB 10003-2016",
+     "title": "铁路隧道设计规范",
+     "clauses": [
+      "附录G"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-A-20": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 20,
+   "evidence": "",
+   "refs": []
+  },
+  "A2018-A-21": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 21,
+   "evidence": "",
+   "refs": []
+  },
+  "A2018-A-22": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 22,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50112-2013",
+     "code": "GB 50112-2013",
+     "title": "膨胀土地区建筑技术规范",
+     "clauses": [
+      "5.2.11"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-A-23": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 23,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [
+      "4.1.4",
+      "4.1.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-A-24": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 24,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB18306-2015",
+     "code": "GB 18306-2015",
+     "title": "中国地震动参数区划图",
+     "clauses": [
+      "6.2.2",
+      "附录E"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-A-25": {
+   "done": true,
+   "year": 2018,
+   "session": "A",
+   "num": 25,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ340-2015",
+     "code": "JGJ 340-2015",
+     "title": "建筑地基检测技术规范",
+     "clauses": [
+      "12.4.1",
+      "12.4.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-P-1": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 1,
+   "evidence": "",
+   "refs": []
+  },
+  "A2018-P-2": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 2,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50218-2014",
+     "code": "GBT 50218-2014",
+     "title": "工程岩体分级标准",
+     "clauses": [
+      "5.3.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-P-3": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 3,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "附录H"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-P-4": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 4,
+   "evidence": "",
+   "refs": []
+  },
+  "A2018-P-5": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 5,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.1",
+      "5.2.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-P-6": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 6,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.7"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-P-7": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 7,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.1",
+      "5.2.2",
+      "5.2.4",
+      "5.4.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-P-8": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 8,
+   "evidence": "",
+   "refs": []
+  },
+  "A2018-P-9": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 9,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.3.4",
+      "5.3.12"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-P-10": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 10,
+   "evidence": "",
+   "refs": []
+  },
+  "A2018-P-11": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 11,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "7.3.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-P-12": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 12,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-P-13": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 13,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "7.3.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-P-14": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 14,
+   "evidence": "question",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [],
+     "evidence": "question"
+    }
+   ]
+  },
+  "A2018-P-15": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 15,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "TB10025-2019",
+     "code": "TB 10025-2019",
+     "title": "铁路路基支挡结构设计规范",
+     "clauses": [
+      "3.3.2",
+      "6.2.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-P-16": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 16,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "6.2.3",
+      "11.2.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-P-17": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 17,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [
+      "4.7.4",
+      "4.7.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-P-18": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 18,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [
+      "7.3.11",
+      "7.3.15",
+      "7.3.16",
+      "附录E"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-P-19": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 19,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50942-2014",
+     "code": "GBT 50942-2014",
+     "title": "盐渍土地区建筑技术规范",
+     "clauses": [
+      "附录D"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-P-20": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 20,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.1.7",
+      "附录G"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-P-21": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 21,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "6.4.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-P-22": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 22,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50025-2018",
+     "code": "GB 50025-2018",
+     "title": "湿陷性黄土地区建筑标准",
+     "clauses": [
+      "2.1.7",
+      "4.3.4",
+      "4.4.1",
+      "4.4.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-P-23": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 23,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [
+      "4.3.3",
+      "4.3.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-P-24": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 24,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [
+      "5.1.4",
+      "5.1.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2018-P-25": {
+   "done": true,
+   "year": 2018,
+   "session": "P",
+   "num": 25,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ340-2015",
+     "code": "JGJ 340-2015",
+     "title": "建筑地基检测技术规范",
+     "clauses": [
+      "14.4.3",
+      "14.4.4"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "GBT50269-2015",
+     "code": "GBT 50269-2015",
+     "title": "地基动力特性测试规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-1": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 1,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50021-2001",
+     "code": "GB 50021-2001(2009年版)",
+     "title": "岩土工程勘察规范",
+     "clauses": [
+      "3.3.8",
+      "附录B"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-2": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 2,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50307-2012",
+     "code": "GB 50307-2012",
+     "title": "城市轨道交通岩土工程勘察规范",
+     "clauses": [
+      "4.3.5",
+      "15.6.8"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-3": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 3,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50123-2019",
+     "code": "GBT50123-2019",
+     "title": "土工试验方法标准",
+     "clauses": [
+      "19.8.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-4": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 4,
+   "evidence": "",
+   "refs": []
+  },
+  "A2017-A-5": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 5,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-6": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 6,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.4",
+      "附录C"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-7": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 7,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.7"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-8": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 8,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-9": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 9,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2",
+      "5.3.5",
+      "附录K"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-10": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 10,
+   "evidence": "question",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [],
+     "evidence": "question"
+    }
+   ]
+  },
+  "A2017-A-11": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 11,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.6.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-12": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 12,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.1.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-13": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 13,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.9.10"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-14": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 14,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50290-2014",
+     "code": "GBT 50290-2014",
+     "title": "土工合成材料应用技术规范",
+     "clauses": [
+      "3.1.3",
+      "7.3.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-15": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 15,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "7.1.7",
+      "7.1.8"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-16": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 16,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "7.1.5",
+      "7.2.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-17": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 17,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "7.1.5",
+      "7.3.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-18": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 18,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "11.2.3"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "6.7.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-19": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 19,
+   "evidence": "",
+   "refs": []
+  },
+  "A2017-A-20": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 20,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "附录A",
+      "5.2.6"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-21": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 21,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-22": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 22,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "附录V"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-23": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 23,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "TB10003-2016",
+     "code": "TB 10003-2016",
+     "title": "铁路隧道设计规范",
+     "clauses": [
+      "5.1.7"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-24": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 24,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50021-2001",
+     "code": "GB 50021-2001(2009年版)",
+     "title": "岩土工程勘察规范",
+     "clauses": [
+      "6.1.5",
+      "6.1.6"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-25": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 25,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "附录G"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-26": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 26,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "3.2.1",
+      "5.3.2",
+      "附录A"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-27": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 27,
+   "evidence": "",
+   "refs": []
+  },
+  "A2017-A-28": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 28,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [
+      "4.2.3",
+      "4.2.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-29": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 29,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [
+      "4.2.1",
+      "4.3.3",
+      "4.3.4",
+      "4.3.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-A-30": {
+   "done": true,
+   "year": 2017,
+   "session": "A",
+   "num": 30,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "附录D"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-P-1": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 1,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50123-2019",
+     "code": "GBT50123-2019",
+     "title": "土工试验方法标准",
+     "clauses": [
+      "16.2.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-P-2": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 2,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50021-2001",
+     "code": "GB 50021-2001(2009年版)",
+     "title": "岩土工程勘察规范",
+     "clauses": [
+      "9.4.1"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-P-3": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 3,
+   "evidence": "",
+   "refs": []
+  },
+  "A2017-P-4": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 4,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50021-2001",
+     "code": "GB 50021-2001(2009年版)",
+     "title": "岩土工程勘察规范",
+     "clauses": [
+      "10.6.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-P-5": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 5,
+   "evidence": "",
+   "refs": []
+  },
+  "A2017-P-6": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 6,
+   "evidence": "",
+   "refs": []
+  },
+  "A2017-P-7": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 7,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.2"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-P-8": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 8,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.3.6"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-P-9": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 9,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50007-2011",
+     "code": "GB 50007-2011",
+     "title": "建筑地基基础设计规范",
+     "clauses": [
+      "5.2.1",
+      "5.2.2",
+      "5.2.4"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-P-10": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 10,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.3.8"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-P-11": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 11,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.3.5"
+     ],
+     "evidence": "answer"
+    },
+    {
+     "code_key": "GB50011-2010",
+     "code": "GB 50011-2010(2016年版)",
+     "title": "建筑抗震设计规范",
+     "clauses": [
+      "4.4.2",
+      "4.4.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-P-12": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 12,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ94-2008",
+     "code": "JGJ 94-2008",
+     "title": "建筑桩基技术规范",
+     "clauses": [
+      "5.4.5",
+      "5.4.6"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-P-13": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 13,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "5.2.3",
+      "5.2.5"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-P-14": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 14,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "7.1.5",
+      "附录B"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-P-15": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 15,
+   "evidence": "",
+   "refs": []
+  },
+  "A2017-P-16": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 16,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ79-2012",
+     "code": "JGJ 79-2012",
+     "title": "建筑地基处理技术规范",
+     "clauses": [
+      "8.2.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-P-17": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 17,
+   "evidence": "",
+   "refs": []
+  },
+  "A2017-P-18": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 18,
+   "evidence": "",
+   "refs": []
+  },
+  "A2017-P-19": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 19,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "11.2.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-P-20": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 20,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GB50330-2013",
+     "code": "GB 50330-2013",
+     "title": "建筑边坡工程技术规范",
+     "clauses": [
+      "附录A"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-P-21": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 21,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "GBT50218-2014",
+     "code": "GBT 50218-2014",
+     "title": "工程岩体分级标准",
+     "clauses": [
+      "4.5.3",
+      "附录E"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  },
+  "A2017-P-22": {
+   "done": true,
+   "year": 2017,
+   "session": "P",
+   "num": 22,
+   "evidence": "answer",
+   "refs": [
+    {
+     "code_key": "JGJ120-2012",
+     "code": "JGJ 120-2012",
+     "title": "建筑基坑支护技术规程",
+     "clauses": [
+      "6.2.3"
+     ],
+     "evidence": "answer"
+    }
+   ]
+  }
+ },
+ "coverage": {
+  "total": 700,
+  "done": 452,
+  "with_refs": 346,
+  "standards": 35
+ }
+}

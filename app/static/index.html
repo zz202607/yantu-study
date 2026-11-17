@@ -1043,6 +1043,77 @@
   .rr-hint { flex: 0 0 auto; padding: 4px 10px 6px; background: #f7f9fa; border-top: 1px solid var(--line); font-size: 11px; text-align: center; }
   .rr-backdrop { display: none; }
 
+  /* page flipping: a floating pager + edge targets, so the eye never has to
+     travel back to the top toolbar while reading in full screen */
+  .rr-body { flex: 1; min-height: 0; display: flex; }
+  .rr-canvas { position: relative; flex: 1; min-width: 0; display: flex; }
+  .rr-canvas .rr-page { flex: 1; padding-bottom: 76px; }
+  .rr-edge {
+    position: absolute; top: 50%; z-index: 3; transform: translateY(-50%);
+    width: 46px; height: 76px; border: 0; border-radius: 12px;
+    background: rgba(15,42,63,.10); color: #0f2a3f;
+    font-size: 28px; line-height: 1; cursor: pointer;
+    opacity: 0; transition: opacity .15s ease, background .15s ease;
+  }
+  .rr-canvas:hover .rr-edge { opacity: .55; }
+  .rr-edge:hover { background: rgba(15,42,63,.24); }
+  .rr-edge:disabled { display: none; }
+  .rr-edge.left { left: 8px; }
+  .rr-edge.right { right: 8px; }
+  .rr-pager {
+    position: absolute; left: 50%; bottom: 16px; z-index: 4;
+    transform: translateX(-50%);
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; border-radius: 999px;
+    background: rgba(15,42,63,.86); color: #fff;
+    box-shadow: 0 6px 22px rgba(15,42,63,.32);
+    backdrop-filter: blur(6px);
+  }
+  .rr-pager button {
+    width: 44px; height: 38px; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.32);
+    background: rgba(255,255,255,.14); color: #fff;
+    font-size: 20px; line-height: 1; font-family: inherit; cursor: pointer;
+  }
+  .rr-pager button:active { background: rgba(255,255,255,.28); }
+  .rr-pager button:disabled { opacity: .3; }
+  .rr-pager span {
+    min-width: 72px; text-align: center; font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
+  }
+  .rr-rail {
+    flex: 0 0 158px; width: 158px; overflow: auto;
+    background: #fff; border-left: 1px solid var(--line);
+    padding: 10px 9px 16px;
+  }
+  .rr-rail h4 { margin: 0 0 6px; font-size: 11.5px; color: var(--muted); font-weight: 600; }
+  .rr-rail .ref-chip { display: block; width: 100%; text-align: left; margin-bottom: 5px; }
+  .rr-rail .ref-chip small { display: block; margin-top: 1px; }
+  .rr-rail .ref-more { margin-top: 8px; font-size: 11px; color: var(--muted); }
+
+  /* past-exam markers */
+  .ref-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .ref-chip {
+    border: 1px solid rgba(166,61,25,.26); background: rgba(166,61,25,.07);
+    color: #8c3a12; border-radius: 999px; padding: 3px 8px;
+    font-family: inherit; font-size: 11.5px; cursor: pointer;
+  }
+  .ref-chip:hover { background: rgba(166,61,25,.14); }
+  .ref-chip small { margin-left: 4px; color: var(--muted); font-size: 10px; }
+  .ref-note { margin: 6px 0 0; font-size: 11px; line-height: 1.5; color: var(--muted); }
+  .ref-group { margin-top: 6px; }
+  .ref-group b { font-size: 11px; color: var(--muted); font-weight: 600; margin-right: 5px; }
+  .ref-empty { font-size: 12px; color: var(--muted); }
+  .ref-badge {
+    display: inline-block; margin-left: 4px; padding: 1px 6px;
+    border-radius: 999px; background: rgba(166,61,25,.09);
+    color: #8c3a12; font-size: 10.5px; vertical-align: 1px;
+  }
+  .read-stop-row .body .ref-badge { margin-left: 0; }
+  details.ref-all { margin-top: 8px; }
+  details.ref-all summary { font-size: 11.5px; color: var(--accent); cursor: pointer; }
+  details.ref-all .ref-chips { margin-top: 6px; }
+
   @media (max-width: 900px) {
     .rr-tips { display: inline-block; }
     .rr-side {
@@ -1059,6 +1130,12 @@
     }
     .read-room.side-open .rr-backdrop { opacity: 1; pointer-events: auto; }
     .rr-keys, .rr-hint { display: none; }
+    .rr-rail { display: none; }
+    .rr-canvas .rr-page { padding-bottom: 66px; }
+    .rr-edge { display: none; }
+    .rr-pager { bottom: 10px; }
+    .rr-pager button { width: 52px; height: 44px; }
+    .rr-pager span { min-width: 84px; font-size: 13px; }
   }
   @media (max-width: 620px) {
     .rr-bar { gap: 5px; padding: 7px 8px; flex-wrap: wrap; }
@@ -1068,6 +1145,7 @@
     .rr-tools { gap: 4px; padding: 6px; }
     .rr-tools .ghost { padding: 6px 8px; font-size: 12px; }
     .rr-page { padding: 4px; }
+    #rrPagePrev, #rrPageNext, #rrPageInfo { display: none; }
   }
 
   @media (max-width: 520px) {
@@ -1838,11 +1916,23 @@
         <button id="rrFit" type="button" class="ghost small">整页</button>
         <button id="rrPdf" type="button" class="ghost small">原 PDF</button>
       </div>
-      <div id="rrPage" class="rr-page">
-        <img id="rrPageImg" alt="规范原页" draggable="false">
-        <div id="rrPageError" class="rr-error hidden">这一页没有渲染出来：标注版可能不在线，可以点「原 PDF」。</div>
+      <div class="rr-body">
+        <div class="rr-canvas">
+          <div id="rrPage" class="rr-page">
+            <img id="rrPageImg" alt="规范原页" draggable="false">
+            <div id="rrPageError" class="rr-error hidden">这一页没有渲染出来：标注版可能不在线，可以点「原 PDF」。</div>
+          </div>
+          <button id="rrEdgePrev" type="button" class="rr-edge left" aria-label="上一页">‹</button>
+          <button id="rrEdgeNext" type="button" class="rr-edge right" aria-label="下一页">›</button>
+          <div id="rrPager" class="rr-pager hidden">
+            <button id="rrFlipPrev" type="button" aria-label="上一页">‹</button>
+            <span id="rrFlipInfo">p — / —</span>
+            <button id="rrFlipNext" type="button" aria-label="下一页">›</button>
+          </div>
+        </div>
+        <aside id="rrExamRail" class="rr-rail hidden" aria-label="真题参考"></aside>
       </div>
-      <p class="rr-hint hint">← → 翻页 · 拖动平移 · + / − 缩放 · 双击放大 · Esc 退出</p>
+      <p class="rr-hint hint">← → / PgUp PgDn 翻页 · 滚到页底继续滚翻页 · 手机左右滑 · 拖动平移 · + / − 缩放 · Esc 退出</p>
     </section>
   </div>
 </div>
@@ -1965,6 +2055,8 @@ const state = {
     room: false,
     zoom: 1,
     fit: "width",
+    flipAt: 0,
+    flipAcc: 0,
   },
   baseline: {
     data: null,      // /api/baseline payload
@@ -5396,6 +5488,64 @@ function readingPageUrl(data, stop, page, options) {
     + (page ? "&p=" + Number(page) : "");
 }
 
+// Past-exam markers: every chip opens the question viewer.  The list is
+// evidence-only (the solution or stem names this standard), never inferred.
+function readingExamChips(refs, compact) {
+  return (refs || []).map((ref) => {
+    const clause = (ref.clauses || []).join("、");
+    const title = [ref.long_label,
+      clause ? "引用第" + clause + "条" : "",
+      ref.evidence_label].filter(Boolean).join(" · ");
+    return '<button type="button" class="ref-chip" data-read-exam="'
+      + escapeHtml(ref.qid) + '" title="' + escapeHtml(title) + '">'
+      + escapeHtml(compact ? (ref.short_label || ref.label) : ref.label)
+      + (clause && !compact ? "<small>" + escapeHtml(clause) + "</small>" : "")
+      + "</button>";
+  }).join("");
+}
+
+// A marker must not cost the reader their place: on desktop the question
+// opens in a second tab; on phones the room closes and the in-app viewer opens.
+function openReadingExamRef(qid) {
+  if (!qid) return;
+  if (window.matchMedia("(max-width: 900px)").matches) {
+    if (state.reading.room) closeReadingRoom();
+    openViewer(qid, true);
+    return;
+  }
+  window.open("/?qid=" + encodeURIComponent(qid), "_blank", "noopener");
+}
+
+function readingExamBlock(data, stop) {
+  const exam = data.exam || {};
+  const all = exam.refs || [];
+  if (!all.length) return "";
+  const local = stop.exam_refs || [];
+  const cov = exam.coverage || {};
+  const coverageText = cov.total
+    ? "已索引 " + (cov.done || 0) + "/" + cov.total + " 道案例真题。"
+    : "";
+  const localHtml = local.length
+    ? '<div class="ref-chips">' + readingExamChips(local) + "</div>"
+    : '<p class="ref-empty">本站没有能精确归位的真题：只有解析写出条文号的题才会落到某一站。'
+      + "下面是整本规范的足迹。</p>";
+  const groups = {};
+  all.forEach((ref) => {
+    const year = String(ref.year || "");
+    (groups[year] = groups[year] || []).push(ref);
+  });
+  const allHtml = Object.keys(groups)
+    .sort((a, b) => Number(b) - Number(a))
+    .map((year) => '<div class="ref-group"><b>' + escapeHtml(year) + "</b>"
+      + '<span class="ref-chips">' + readingExamChips(groups[year], true) + "</span></div>")
+    .join("");
+  return '<div class="read-block"><h3>真题足迹 <span class="ref-badge">'
+    + (exam.count || all.length) + " 题</span></h3>" + localHtml
+    + '<details class="ref-all"><summary>本规范历年真题 · 点题号看原题</summary>'
+    + '<p class="ref-note">' + escapeHtml(coverageText + (exam.note || "")) + "</p>"
+    + allHtml + "</details></div>";
+}
+
 function formatClock(seconds) {
   const total = Math.max(0, Math.floor(seconds || 0));
   const m = Math.floor(total / 60);
@@ -5464,6 +5614,9 @@ function renderReadingHome() {
   const rec = data.recommendation;
   const standards = data.standards || [];
   const note = data.note || "";
+  const exam = data.exam || {};
+  const examNote = exam.total && exam.done < exam.total
+    ? " · 真题索引 " + (exam.done || 0) + "/" + exam.total : "";
   const cta = rec
     ? '<button type="button" class="read-cta" data-read-open="' + escapeHtml(rec.code_key)
       + '" data-read-open-stop="' + escapeHtml(rec.stop_id) + '">'
@@ -5484,7 +5637,8 @@ function renderReadingHome() {
       + "<p>" + escapeHtml(row.tagline || "") + "</p>"
       + '<span class="read-track"><span style="width:' + pct + '%"></span></span>'
       + '<span class="meta"><span>' + (summary.done || 0) + "/" + (summary.total || 0)
-      + " 站 · " + (summary.minutes_done || 0) + "/" + (summary.minutes_total || 0) + " 分钟</span>"
+      + " 站 · " + (summary.minutes_done || 0) + "/" + (summary.minutes_total || 0) + " 分钟"
+      + (row.exam_count ? " · 真题 " + row.exam_count : "") + "</span>"
       + "<span>" + (next ? "下一站 " + escapeHtml(next.section || "") + " "
         + escapeHtml(next.title || "") : "已读完") + "</span></span></button>";
   }).join("");
@@ -5498,7 +5652,8 @@ function renderReadingHome() {
     + "<span><b>" + (stats.stops_review || 0) + "</b> 站待回看</span>"
     + "</div>" + cta + "</div>"
     + '<div class="section-head"><h2>按考试顺序读</h2><span class="hint">'
-    + (data.annotated_available ? "标注版原页" : "标注版不在线 · 退回干净版") + "</span></div>"
+    + (data.annotated_available ? "标注版原页" : "标注版不在线 · 退回干净版")
+    + examNote + "</span></div>"
     + '<div class="read-list">' + rows + "</div>";
   box.querySelectorAll("[data-read-open]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -5550,7 +5705,9 @@ function renderReadingStandard() {
       + escapeHtml(stop.title || "") + "</b><span>p" + (stop.page || "—")
       + " · " + (stop.minutes || 0) + " 分钟"
       + (stop.annotated_page ? " · 标注版 p" + stop.annotated_page
-        + (stop.annotated_estimated ? "（估）" : "") : "") + "</span></span>"
+        + (stop.annotated_estimated ? "（估）" : "") : "")
+      + (stop.exam_count ? '<span class="ref-badge">真题 ' + stop.exam_count + "</span>" : "")
+      + "</span></span>"
       + '<span class="side">' + label + "</span></button>";
   }).join("");
   box.innerHTML =
@@ -5559,7 +5716,8 @@ function renderReadingStandard() {
     + '<p class="hint">' + escapeHtml(data.code) + " · " + escapeHtml(data.category || "")
     + " · 案例 " + (data.weight || 0) + " 题 · " + (summary.done || 0) + "/"
     + (summary.total || 0) + " 站 · " + (summary.minutes_done || 0) + "/"
-    + (summary.minutes_total || 0) + " 分钟</p>"
+    + (summary.minutes_total || 0) + " 分钟"
+    + ((data.exam || {}).count ? " · 真题 " + data.exam.count + " 题" : "") + "</p>"
     + '<p class="read-why">' + escapeHtml(data.why_read || "") + "</p>"
     + '<p class="hint">' + escapeHtml(data.exam_evidence || "") + "</p>"
     + (next ? '<button type="button" class="read-cta" data-read-stop="' + escapeHtml(next.id)
@@ -5651,6 +5809,7 @@ function renderReadingStop() {
     + (next ? '<button type="button" class="ghost small" id="readNext">下一站 ›</button>' : "")
     + "</div>"
     + '<p class="read-why"><b>为什么读：</b>' + escapeHtml(stop.why || "") + "</p>"
+    + readingExamBlock(data, stop)
     + '<div class="read-block"><h3>先看这些</h3><ul>' + look + "</ul>"
     + (clauses ? '<div class="read-clauses">' + clauses + "</div>" : "") + "</div>"
     + '<div class="read-block"><h3>最容易错</h3><div class="read-pit">'
@@ -5714,6 +5873,9 @@ function renderReadingStop() {
   }
   box.querySelectorAll("[data-read-status]").forEach((button) => {
     button.addEventListener("click", () => recordReading(button.dataset.readStatus));
+  });
+  box.querySelectorAll("[data-read-exam]").forEach((button) => {
+    button.addEventListener("click", () => openReadingExamRef(button.dataset.readExam));
   });
   startReadingTimer();
 }
@@ -5951,6 +6113,7 @@ function loadReadingRoomPage(page) {
   $("rrPageInfo").textContent = "标注版 p" + next + " / " + max;
   $("rrPageInput").value = next;
   $("rrPageInput").max = max;
+  renderReadingPager(next, max, true);
 }
 
 function renderReadingSide(data, stop, stops, index) {
@@ -5985,6 +6148,7 @@ function renderReadingSide(data, stop, stops, index) {
     + "</span><span>" + status + "</span></div>"
     + "<h2>" + escapeHtml(stop.section || "") + " " + escapeHtml(stop.title || "") + "</h2>"
     + '<p class="read-why"><b>为什么读：</b>' + escapeHtml(stop.why || "") + "</p>"
+    + readingExamBlock(data, stop)
     + '<div class="read-block"><h3>先看这些</h3><ul>' + look + "</ul>"
     + (clauses ? '<div class="read-clauses">' + clauses + "</div>" : "") + "</div>"
     + '<div class="read-block"><h3>最容易错</h3><div class="read-pit">'
@@ -5996,7 +6160,53 @@ function renderReadingSide(data, stop, stops, index) {
     + escapeHtml(stop.note || "") + "</textarea></div>"
     + '<div class="read-actions"><button type="button" class="ghost" data-rr-status="review">需回看</button>'
     + '<button type="button" class="primary" data-rr-status="done">看完了 · 下一站</button></div>'
-    + '<p class="rr-keys hint">← → 翻页 · 拖动平移 · + / − 缩放 · 双击放大 · Esc 退出</p>';
+    + '<p class="rr-keys hint">← → / Space 翻页 · 滚轮到底翻页 · 手机左右滑 · 拖动平移 · + / − 缩放 · Esc 退出</p>';
+}
+
+// The rail sits beside the scan: question numbers that prove this section was
+// tested, always in view while reading.  It falls back to the standard-wide
+// list when no citation carries a clause number.
+function renderExamRail(data, stop) {
+  const rail = $("rrExamRail");
+  if (!rail) return;
+  const exam = data.exam || {};
+  const all = exam.refs || [];
+  const local = stop.exam_refs || [];
+  if (!all.length) {
+    rail.classList.add("hidden");
+    rail.innerHTML = "";
+    return;
+  }
+  rail.classList.remove("hidden");
+  if (local.length) {
+    rail.innerHTML = '<h4>本站真题 · ' + local.length + " 题</h4>"
+      + '<div class="ref-chips">' + readingExamChips(local) + "</div>"
+      + '<p class="ref-more">按解析条文号归位 · 点题号看原题</p>';
+  } else {
+    rail.innerHTML = '<h4>本规范真题 · ' + all.length + " 题</h4>"
+      + '<div class="ref-chips">' + readingExamChips(all.slice(0, 8)) + "</div>"
+      + '<p class="ref-more">本站没有写条文号的题；「要点」里有全部年份</p>';
+  }
+}
+
+function renderReadingPager(page, max, canFlip) {
+  const pager = $("rrPager");
+  if (!pager) return;
+  pager.classList.toggle("hidden", !canFlip);
+  $("rrFlipPrev").disabled = !canFlip || page <= 1;
+  $("rrFlipNext").disabled = !canFlip || page >= max;
+  $("rrFlipInfo").textContent = canFlip ? "p " + page + " / " + max : "";
+  $("rrEdgePrev").disabled = !canFlip || page <= 1;
+  $("rrEdgeNext").disabled = !canFlip || page >= max;
+}
+
+function flipReadingPage(delta) {
+  const max = readingRoomPageCount();
+  const page = Number(state.reading.page) || 0;
+  if (!state.reading.room || !max || !page) return;
+  const target = page + delta;
+  if (target < 1 || target > max) return;
+  loadReadingRoomPage(target);
 }
 
 function renderReadingRoom(reset) {
@@ -6050,6 +6260,8 @@ function renderReadingRoom(reset) {
   $("rrPageInput").max = max || 1;
   $("rrPageInput").disabled = !canFlip;
   $("rrPageGo").disabled = !canFlip;
+  renderReadingPager(page, max, canFlip);
+  renderExamRail(data, stop);
 }
 
 // one-time wiring for the reading room
@@ -6062,6 +6274,10 @@ $("rrPagePrev").addEventListener("click", () =>
   loadReadingRoomPage((Number(state.reading.page) || 1) - 1));
 $("rrPageNext").addEventListener("click", () =>
   loadReadingRoomPage((Number(state.reading.page) || 1) + 1));
+$("rrFlipPrev").addEventListener("click", () => flipReadingPage(-1));
+$("rrFlipNext").addEventListener("click", () => flipReadingPage(1));
+$("rrEdgePrev").addEventListener("click", () => flipReadingPage(-1));
+$("rrEdgeNext").addEventListener("click", () => flipReadingPage(1));
 $("rrPageGo").addEventListener("click", () =>
   loadReadingRoomPage(Number($("rrPageInput").value)));
 $("rrPageInput").addEventListener("keydown", (event) => {
@@ -6096,6 +6312,11 @@ $("rrPageImg").addEventListener("dblclick", () => {
 });
 $("rrSide").addEventListener("click", (event) => {
   const data = state.reading.standard;
+  const examRef = event.target.closest("[data-read-exam]");
+  if (examRef) {
+    openReadingExamRef(examRef.dataset.readExam);
+    return;
+  }
   const clause = event.target.closest("[data-rr-clause]");
   if (clause && data) {
     openStandardClause(data.code, clause.dataset.rrClause);
@@ -6116,10 +6337,20 @@ $("rrSide").addEventListener("click", (event) => {
 $("rrSide").addEventListener("change", (event) => {
   if (event.target.id === "rrStopSelect") openReadingStop(event.target.value);
 });
+$("rrExamRail").addEventListener("click", (event) => {
+  const ref = event.target.closest("[data-read-exam]");
+  if (ref) openReadingExamRef(ref.dataset.readExam);
+});
 
 let readingDrag = null;
+let readingTouch = null;
 $("rrPage").addEventListener("pointerdown", (event) => {
-  if (!state.reading.room || event.pointerType === "touch" || event.button !== 0) return;
+  if (!state.reading.room) return;
+  if (event.pointerType === "touch") {
+    readingTouch = { x: event.clientX, y: event.clientY, box: $("rrPage") };
+    return;
+  }
+  if (event.button !== 0) return;
   const box = $("rrPage");
   if (box.scrollWidth <= box.clientWidth + 2
       && box.scrollHeight <= box.clientHeight + 2) return;
@@ -6136,15 +6367,63 @@ window.addEventListener("pointermove", (event) => {
   box.scrollLeft = readingDrag.left - (event.clientX - readingDrag.x);
   box.scrollTop = readingDrag.top - (event.clientY - readingDrag.y);
 });
-window.addEventListener("pointerup", () => {
+window.addEventListener("pointerup", (event) => {
+  if (readingTouch && event.pointerType === "touch") {
+    const dx = event.clientX - readingTouch.x;
+    const dy = event.clientY - readingTouch.y;
+    const box = readingTouch.box;
+    // A swipe only flips when the page is not panned sideways; otherwise the
+    // gesture belongs to horizontal panning of a zoomed page.
+    if (box && box.scrollWidth <= box.clientWidth + 4
+        && Math.abs(dx) > 56 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+      flipReadingPage(dx < 0 ? 1 : -1);
+    }
+    readingTouch = null;
+  }
   if (!readingDrag) return;
   readingDrag = null;
   $("rrPage").classList.remove("dragging");
 });
+window.addEventListener("pointercancel", () => {
+  readingTouch = null;
+  readingDrag = null;
+  $("rrPage").classList.remove("dragging");
+});
 $("rrPage").addEventListener("wheel", (event) => {
-  if (!event.ctrlKey) return;
+  if (event.ctrlKey) {
+    event.preventDefault();
+    stepReadingZoom(event.deltaY < 0 ? 1 : -1);
+    return;
+  }
+  if (!state.reading.room) return;
+  const max = readingRoomPageCount();
+  const page = Number(state.reading.page) || 0;
+  if (!max || !page) return;
+  const box = $("rrPage");
+  // Trackpads report horizontal swipes as deltaX; treat that as a page turn
+  // only when the scan is not panned sideways (zoomed pages scroll instead).
+  if (Math.abs(event.deltaX) > Math.abs(event.deltaY) * 1.2
+      && box.scrollWidth <= box.clientWidth + 4) {
+    if (Math.abs(event.deltaX) < 16) return;
+    event.preventDefault();
+    flipReadingPage(event.deltaX > 0 ? 1 : -1);
+    return;
+  }
+  const scrollable = box.scrollHeight > box.clientHeight + 4;
+  const atBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 4;
+  const atTop = box.scrollTop <= 4;
+  const down = event.deltaY > 0;
+  // Inside a tall width-fit page, the wheel scrolls first; only the extra
+  // scroll past either end turns the page.
+  if (scrollable && ((down && !atBottom) || (!down && !atTop))) return;
   event.preventDefault();
-  stepReadingZoom(event.deltaY < 0 ? 1 : -1);
+  const now = Date.now();
+  if (now - (state.reading.flipAt || 0) < 650) return;
+  state.reading.flipAcc = (state.reading.flipAcc || 0) + event.deltaY;
+  if (Math.abs(state.reading.flipAcc) < 50) return;
+  state.reading.flipAcc = 0;
+  state.reading.flipAt = now;
+  flipReadingPage(down ? 1 : -1);
 }, { passive: false });
 window.addEventListener("resize", () => {
   if (state.reading.room) applyReadingZoom(true);
@@ -6164,7 +6443,10 @@ document.addEventListener("keydown", (event) => {
   if (openSheet) return;
   const tag = (event.target.tagName || "").toLowerCase();
   if (["input", "textarea", "select"].includes(tag)) return;
-  if (event.key === "ArrowRight" || event.key === "PageDown") {
+  if (event.key === " " || event.key === "Spacebar") {
+    event.preventDefault();
+    flipReadingPage(event.shiftKey ? -1 : 1);
+  } else if (event.key === "ArrowRight" || event.key === "PageDown") {
     event.preventDefault();
     loadReadingRoomPage((Number(state.reading.page) || 1) + 1);
   } else if (event.key === "ArrowLeft" || event.key === "PageUp") {

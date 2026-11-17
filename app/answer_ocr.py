@@ -27,7 +27,7 @@ CACHE_VERSION = 3
 # 规范》`) visible.  Whitespace is dropped for the same reason.
 TITLE_RE = re.compile(r"[《〈]([^》〉]{2,40})[》〉]")
 CODE_RE = re.compile(
-    r"(?<![A-Z])([A-Z]{2,4}(?:/[A-Z])?(?:\d{2,6})(?:[-—–]\d{2,4})?)"
+    r"(?<![A-Z])([A-Z]{2,4}(?:/[A-Z])?\s?\d{2,6}(?:[-—–]\d{2,4})?)"
 )
 CLAUSE_TOKEN = re.compile(
     r"(?:第)?(\d{1,3}(?:\.\d{1,3}){1,3})(?:条|款)?"

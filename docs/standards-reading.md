@@ -1,6 +1,6 @@
 # 规范伴读
 
-状态：M10 · 2026-11-03
+状态：M10 · 2026-11-03（2026-11-17 增手边翻页与真题足迹）
 
 ## 目标
 
@@ -57,8 +57,46 @@
      「整页」切全局视野；可 `+ / −` 缩放、拖动平移、双击放大；
    - 翻页：`← / →`、`PgUp / PgDn`、工具栏上下页和跳页；翻的是整本标注版，
      不局限于一站；
+   - **手边翻页（11-17）**：页面底部常驻浮动翻页条（44px `‹ / ›` + 页码），
+     桌面 hover 页面两侧出边缘热区；宽度铺满时滚轮先滚页、到页底继续滚才翻页，
+     触控板横向滑动直接翻；手机左右滑，`Space / Shift+Space` 也可翻。
+     顶栏页控件在 <620px 收起，避免和翻页条重复；
    - 上下站：顶部 `‹ / ›` 或左栏下拉；`Esc` 退出精读。
-   - 手机（<900px）：左栏变成「要点」抽屉，页面占满宽度，字号与桌面一致。
+   - 手机（<900px）：左栏变成「要点」抽屉，页面占满宽度，字号与桌面一致；
+     右侧真题栏隐藏，题号仍出现在「要点」抽屉里。
+
+## 真题足迹（2026-11-17）
+
+伴读站、精读右栏和阅读路线行都会标出**真题考察的年份和题号**，例如
+`2024上午6 · 2024 年上午第 6 题 · 引用第5.2.7条 · 答案解析`。
+
+数据不是人工回忆，而是离线 OCR 索引：
+
+- `tools/build_exam_refs.py` 遍历 `lookup.json` 里有题面页与答案页的案例真题
+  （A 族，2012–2025；2015 年停考）；先 OCR 答案解析（解析会写依据规范），
+  解析没有引用时再 OCR 题面；2025 两卷直接读 `index/tags/` 的机器文本。
+- 只收录能在本机 50 本规范索引里精确解析的《规范》标题/标准号；条文号能读出来
+  就保留，读不出就只记到规范级。**解析不出来的不猜、不补。**
+- 输出 `index/exam_refs.json`，按题存；断点续跑，每 10 题原子落盘：
+
+```bash
+PYTHONIOENCODING=utf-8 py -3 tools/build_exam_refs.py            # 全量续跑
+PYTHONIOENCODING=utf-8 py -3 tools/build_exam_refs.py --year 2024,2025
+PYTHONIOENCODING=utf-8 py -3 tools/build_exam_refs.py --limit 6   # 试跑
+```
+
+展示规则：
+
+| 位置 | 内容 | 归位依据 |
+|---|---|---|
+| 站页「真题足迹」 | 本站命中 + 可展开的整本历年真题 | 条文号落在本站条文/节 |
+| 精读右栏 | 本站题号；本站无条文号时显示整本最近 8 题 | 同上 |
+| 阅读路线行 | `真题 n` 徽标 | 同上 |
+
+- 没有条文号的引用只出现在**规范级**，不会被塞进某一节。
+- 点题号：桌面新开 `/?qid=A2024-A-6` 标签页（精读不关闭），手机走应用内查看器。
+- 区块里写明「只收录解析或题面明确引用的真题」与索引覆盖率；没查到 ≠ 没考过。
+- 只索引案例真题；知识真题 K 族与模拟题尚未进索引。
 3. **页图接口**：`GET /api/reading/{code}/{stop}/page?dpi=220&half=left&p=22`。
    `half` 只作用于横版 2-up 标注版；竖版单页（GB 50011）与干净版回退都会忽略 `half`，
    不会把正常单页裁掉。版式按 PDF 页面宽高比检测，并按文件 mtime 缓存。
@@ -75,6 +113,8 @@
 | `index/annotated_index.json` | 标注版 PDF：文件、页码锚点、每站 PDF 页、估算标记 | 是（小文件） |
 | `tools/build_annotated_index.py` | 从标注版 footer OCR 建立页码映射 | 是 |
 | `.cache/reading_pages/` | 标注版页图缓存 | 否（可删） |
+| `index/exam_refs.json` | 真题 → 规范/条文引用（OCR 索引） | 是（小文件） |
+| `.cache/exam_refs/` | 建索引时的 OCR 中间结果（可断点续跑） | 否（可删） |
 | `data/wrongbook.db` | `reading_progress` / `reading_log` 用户进度 | 否（随备份） |
 
 ### 标注版为什么需要单独建索引
@@ -115,8 +155,8 @@ PYTHONIOENCODING=utf-8 py -3 tools/build_annotated_index.py --force
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET | `/api/reading` | 路线、进度、本周统计、下一站推荐 |
-| GET | `/api/reading/{code_key}` | 单本规范路线 + 每站状态/标注版页 |
+| GET | `/api/reading` | 路线、进度、本周统计、下一站推荐、每本真题数 + 索引覆盖率 |
+| GET | `/api/reading/{code_key}` | 单本规范路线 + 每站状态/标注版页 + 每站真题足迹 |
 | POST | `/api/reading/{code_key}/{stop_id}` | `{status, seconds, note}` 保存一站 |
 | GET | `/api/reading/{code_key}/{stop_id}/page` | 标注版页图；`p` 翻页、`dpi=80..300`、`half=left|right` 裁单联；缺页时回退干净版（忽略 `half`） |
 | GET | `/api/reading/{code_key}/file` | 打开标注版 PDF |

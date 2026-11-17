@@ -21,7 +21,7 @@ try:  # PyMuPDF 1.24+ exposes the modern package name
 except ImportError:  # pragma: no cover - older environments
     import fitz
 
-from app import standards
+from app import exam_refs, standards
 
 ROOT = Path(__file__).resolve().parent.parent
 GUIDES_PATH = ROOT / "app" / "reading_data.json"
@@ -167,6 +167,11 @@ def detail(code_key, progress=None):
     progress = progress or {}
     annotated = annotated_entry(code_key) or {}
     stops = _decorate_stops(guide_row, progress, annotated)
+    refs = exam_refs.for_standard(code_key)
+    by_stop = exam_refs.for_stops(stops, code_key, refs=refs)
+    for stop in stops:
+        stop["exam_refs"] = by_stop.get(stop["id"], [])
+        stop["exam_count"] = len(stop["exam_refs"])
     entry = annotated_entry(code_key) or {}
     payload = {
         "code_key": guide_row["code_key"],
@@ -182,6 +187,12 @@ def detail(code_key, progress=None):
         "exam_evidence": guide_row.get("exam_evidence"),
         "stops": stops,
         "summary": _summary(guide_row, stops, progress),
+        "exam": {
+            "count": len(refs),
+            "refs": refs,
+            "coverage": exam_refs.summary(),
+            "note": "只收录解析或题面明确引用本规范的真题；没写规范号的题不在内。",
+        },
         "annotated": {
             "available": bool(entry.get("file")),
             "file": entry.get("file"),
@@ -209,6 +220,7 @@ def overview(store, now=None):
     now = now or datetime.now().astimezone()
     progress = store.reading_progress()
     guides = sorted(load_guides()["standards"], key=lambda row: row.get("order", 99))
+    exam_counts = exam_refs.counts_by_standard()
     summaries = []
     by_code = {}
     for guide_row in guides:
@@ -228,6 +240,7 @@ def overview(store, now=None):
             "summary": summary,
             "next_stop": nxt,
             "annotated": bool((annotated_entry(guide_row["code_key"]) or {}).get("file")),
+            "exam_count": exam_counts.get(guide_row["code_key"], 0),
         }
         summaries.append(by_code[guide_row["code_key"]])
 
@@ -303,6 +316,7 @@ def overview(store, now=None):
         },
         "standards": summaries,
         "recommendation": recommendation,
+        "exam": exam_refs.summary(),
     }
 
 
