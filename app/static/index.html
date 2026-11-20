@@ -1716,7 +1716,7 @@
       <h3 id="handTitle">补单题手写</h3>
       <span class="hint" id="handDay"></span>
     </div>
-    <p class="hint" id="handLead">给已在错题本里的题补过程照片。和复习页的「拍手写过程」是同一位置：那里是边评边拍，这里是事后补。</p>
+    <p class="hint" id="handLead">给已在错题本里的题补过程照片。和复习页的「拍手写过程」是同一位置：那里是边评边拍，这里是事后补；刚核对过的今日卷也会列在这里。</p>
     <div class="hand-new">
       <button id="handNewWrong" class="primary" type="button">拍新错题 · 识别题号后入本</button>
       <p class="hint">照片随错题一起保存。下面的列表只用于给已入本的题补过程照片。</p>
@@ -9080,7 +9080,8 @@ function renderHandList() {
     return;
   }
   $("handLead").textContent =
-    "点一道题，拍下纸上的手写过程；和复习页的「拍手写过程」存到同一位置，同一题再拍会覆盖上一张。";
+    "点一道题，拍下纸上的手写过程；今天到期的复习、今天新错的题、"
+    + "刚核对过的今日卷都在这里。和复习页的「拍手写过程」存同一位置，再拍会覆盖。";
   box.innerHTML = "";
   for (const item of items) {
     const row = document.createElement("div");

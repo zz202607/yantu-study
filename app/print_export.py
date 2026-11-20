@@ -401,6 +401,12 @@ def export_pdf(qids=None, out_path=None, title="", tmp_dir=None, engine=None,
                 answer_page_count += len(sheet.pages)
         _stamp(doc, title, answer_from, skip_pages=cover_pages)
         Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+        # The header font is a full 20 MB CJK collection; subsetting keeps a
+        # 30-question sheet small enough to spool quickly at 300 dpi.
+        try:
+            doc.subset_fonts()
+        except Exception:  # noqa: BLE001 - a subset failure must not kill the print
+            pass
         doc.save(str(out_path), garbage=4)
         return {
             "questions": question_count,

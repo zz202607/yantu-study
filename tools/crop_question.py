@@ -279,57 +279,11 @@ def _clean_page(im):
         height, width = arr.shape
         dark = arr < 120
 
-    # scan crease: a thin, near-vertical line that survives thresholding. Remove
-    # only the pixels where nothing else is printed beside them, so text that
-    # crosses the line stays intact.
-    colfrac = dark.mean(axis=0)
-    threshold = max(0.12, float(np.median(colfrac)) * 4)
-    suspect = np.where(colfrac > threshold)[0]
-    if len(suspect):
-        groups, run = [], [suspect[0]]
-        for x in suspect[1:]:
-            if x - run[-1] <= 2:
-                run.append(x)
-            else:
-                groups.append(run)
-                run = [x]
-        groups.append(run)
-        for group in groups:
-            if not (2 <= len(group) <= 14):
-                continue
-            x0, x1 = int(group[0]), int(group[-1])
-            for x in range(max(0, x0 - 3), min(width, x1 + 4)):
-                # Only wipe pixels that are (a) isolated left and right -- not
-                # part of a glyph's body -- and (b) inside a vertical run at
-                # least 120 px long. A character stroke is ~40 px; a scan crease
-                # runs through the gaps between lines for hundreds of pixels.
-                # This is what keeps `1`, `+` and `【` intact.
-                col = arr[:, x] < 210
-                if not col.any():
-                    continue
-                # look past the line's own anti-aliased fringe (about 6 px each side)
-                l0, l1 = max(0, x - 20), max(0, x - 6)
-                r0, r1 = min(width, x + 7), min(width, x + 21)
-                left = arr[:, l0:l1].min(axis=1) if l1 > l0 else np.full(height, 255)
-                right = arr[:, r0:r1].min(axis=1) if r1 > r0 else np.full(height, 255)
-                cand = col & (left > 210) & (right > 210)
-                ys = np.where(cand)[0]
-                if len(ys) == 0:
-                    continue
-                start = prev = ys[0]
-                runs = []
-                for y in ys[1:]:
-                    if y == prev + 1:
-                        prev = y
-                    else:
-                        runs.append((start, prev))
-                        start = prev = y
-                runs.append((start, prev))
-                for a, b in runs:
-                    if b - a + 1 >= 70:
-                        arr[a:b + 1, x] = 255
-        im = Image.fromarray(arr)
-        dark = arr < 120
+    # No scan-crease removal.  A detector for thin, isolated vertical runs was
+    # tried and reverted: across all 4,920 scanned pages the only long runs it
+    # could find were chart axes, table borders and dimension lines (C3-40 lost
+    # the foundation outline and its dashed centreline), while no real crease
+    # ever qualified.  Wiping those runs cost figure content and bought nothing.
 
     # page number: a short band near the bottom, separated by a real gap
     counts = dark.sum(axis=1)

@@ -1252,12 +1252,28 @@ class Store:
             conn.close()
 
     def handwriting_targets(self, day=None):
-        """Questions a paper sheet can attach work to: today's queue, then new."""
+        """Questions a paper sheet can attach work to: today's queue, then new.
+
+        The sheet checked today is added last.  Checking reschedules every
+        review item out of today's queue, so without this group the paper just
+        finished would vanish from the handwriting panel; new correct answers
+        have no wrong-book row and cannot carry a photo.
+        """
         queue = self.review_queue()
         seen = {item["id"] for item in queue}
-        return queue + [
-            item for item in self.today_attempts(day) if item["id"] not in seen
-        ]
+        out = list(queue)
+        for item in self.today_attempts(day):
+            if item["id"] not in seen:
+                seen.add(item["id"])
+                out.append(item)
+        pack = self.latest_closed_day_pack(day)
+        if pack:
+            for item in pack.get("items") or []:
+                attempt = self.get_attempt_by_qid(item["qid"])
+                if attempt and attempt["id"] not in seen:
+                    seen.add(attempt["id"])
+                    out.append(attempt)
+        return out
 
     # -- day packs --------------------------------------------------------
 
@@ -1378,6 +1394,29 @@ class Store:
         finally:
             conn.close()
         return self._day_pack_dict(row)
+
+    def latest_closed_day_pack(self, day=None):
+        """The sheet actually checked on `day`, if any.
+
+        Superseded sheets (an unprinted older pack replaced by a newer print)
+        are skipped: they carry closure timestamps but were never done.
+        """
+        day = day or _local_day()
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                "SELECT * FROM day_packs WHERE closed_at IS NOT NULL"
+                " AND substr(closed_at, 1, 10) = ?"
+                " ORDER BY closed_at DESC, id DESC",
+                (day,),
+            ).fetchall()
+        finally:
+            conn.close()
+        for row in rows:
+            pack = self._day_pack_dict(row)
+            if not (pack.get("summary") or {}).get("superseded"):
+                return pack
+        return None
 
     def close_day_pack(self, pack_id, results, photo_id=None, summary=None):
         """Merge per-question results into a pack and close it once."""
