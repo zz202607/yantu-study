@@ -330,7 +330,8 @@ def home():
         "minutes": minutes_for(overview["count"], new_quota),
     }
     data["day_pack"] = {
-        "open": _pack_view(store.open_day_pack()),
+        "today": time.strftime("%Y-%m-%d"),
+        "open": _pack_view(store.latest_open_day_pack()),
         "latest": _pack_view(store.latest_day_pack()),
     }
     try:
@@ -1502,8 +1503,8 @@ def review_today():
 
 @app.get("/api/day-pack")
 def get_day_pack():
-    """The open printed sheet for today, ready to be checked."""
-    pack = store.open_day_pack()
+    """The newest printed sheet still unchecked, from any day."""
+    pack = store.latest_open_day_pack()
     return {"day": time.strftime("%Y-%m-%d"), "pack": _pack_view(pack)}
 
 

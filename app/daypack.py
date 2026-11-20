@@ -83,6 +83,14 @@ def apply_results(store, pack, results, photo_sha=None, now=None):
         "practice_id": None,
     }
 
+    # A sheet can be checked days after printing; anything already graded in
+    # the app since then must not be rescheduled a second time.
+    review_qids = [
+        item["qid"] for item in merged if item["role"] == "review"
+    ]
+    already = store.reviewed_since(review_qids, pack.get("created_at"))
+    graded_qids = []
+
     for item in merged:
         qid, role, result = item["qid"], item["role"], item["result"]
         if role == "review":
@@ -90,6 +98,12 @@ def apply_results(store, pack, results, photo_sha=None, now=None):
             if result == "skipped":
                 summary["review"]["skipped"] += 1
                 continue
+            if qid in already:
+                summary["review"]["skipped"] += 1
+                summary["warnings"].append(
+                    "%s：打印后已在 App 里评过，这次不改排期" % qid)
+                continue
+            graded_qids.append(qid)
             grade = "correct" if result in ("correct", "overtime") else "wrong"
             summary["review"]["correct" if grade == "correct" else "wrong"] += 1
             session_id = pack.get("session_id")
@@ -155,4 +169,11 @@ def apply_results(store, pack, results, photo_sha=None, now=None):
         photo_id=photo["id"] if photo else None,
         summary=summary,
     )
+    # Queues built from the pre-check schedule must not ask these questions
+    # again; unstarted ones are dropped outright.
+    try:
+        store.prune_review_sessions(
+            graded_qids, keep_session_id=pack.get("session_id"))
+    except Exception:  # noqa: BLE001 - the sheet is closed; cleanup is extra
+        pass
     return {"pack": closed, "summary": summary}

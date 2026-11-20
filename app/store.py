@@ -1338,6 +1338,23 @@ class Store:
             conn.close()
         return self._day_pack_dict(row)
 
+    def latest_open_day_pack(self):
+        """Newest printed sheet still waiting to be checked, from any day.
+
+        A paper does not expire at midnight: the 11-17 sheet stays checkable
+        on 11-20.  Looking across all days keeps a finished paper from
+        disappearing when the home card rolls over to a new day.
+        """
+        conn = self._connect()
+        try:
+            row = conn.execute(
+                "SELECT * FROM day_packs WHERE closed_at IS NULL"
+                " ORDER BY day DESC, id DESC LIMIT 1"
+            ).fetchone()
+        finally:
+            conn.close()
+        return self._day_pack_dict(row)
+
     def close_day_pack(self, pack_id, results, photo_id=None, summary=None):
         """Merge per-question results into a pack and close it once."""
         pack = self.day_pack(pack_id)
@@ -1378,6 +1395,83 @@ class Store:
                         "SELECT * FROM day_packs WHERE id = ?", (int(pack_id),)
                     ).fetchone()
                 return self._day_pack_dict(row)
+            finally:
+                conn.close()
+
+    def reviewed_since(self, qids, since):
+        """Which of these questions already got a verdict at or after `since`."""
+        qids = [str(q).strip().upper() for q in qids or () if str(q).strip()]
+        if not qids or not since:
+            return set()
+        marks = ",".join("?" for _ in qids)
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                "SELECT DISTINCT qid FROM review_log WHERE at >= ?"
+                " AND qid IN (%s)" % marks,
+                [str(since)] + qids,
+            ).fetchall()
+        finally:
+            conn.close()
+        return {row["qid"] for row in rows}
+
+    def prune_review_sessions(self, graded_qids, keep_session_id=None):
+        """Reconcile other review queues after a paper reschedules questions.
+
+        Empty queues without a verdict hold no user input and are deleted.
+        Sessions with real verdicts are kept, but the questions this paper
+        just scheduled are removed so they cannot be graded twice.
+        """
+        qids = {str(q).strip().upper() for q in graded_qids or ()
+                if str(q).strip()}
+        keep = int(keep_session_id) if keep_session_id else None
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    sql = ("DELETE FROM review_sessions WHERE finished_at IS NULL"
+                           " AND NOT EXISTS (SELECT 1 FROM review_log"
+                           " WHERE review_log.session_id = review_sessions.id)")
+                    args = []
+                    if keep:
+                        sql += " AND id != ?"
+                        args.append(keep)
+                    removed = conn.execute(sql, args).rowcount
+                    if not qids:
+                        return removed
+                    rows = conn.execute(
+                        "SELECT id, queue, cursor FROM review_sessions"
+                        " WHERE finished_at IS NULL"
+                        + (" AND id != ?" if keep else ""),
+                        ([keep] if keep else []),
+                    ).fetchall()
+                    stamp = now_iso()
+                    for row in rows:
+                        queue = json.loads(row["queue"])
+                        left = [qid for qid in queue if qid not in qids]
+                        if len(left) == len(queue):
+                            continue
+                        removed += 1
+                        if not left:
+                            conn.execute(
+                                "UPDATE review_sessions SET queue = ?, cursor = 0,"
+                                " finished_at = COALESCE(finished_at, ?)"
+                                " WHERE id = ?",
+                                (json.dumps(left, ensure_ascii=False), stamp,
+                                 row["id"]),
+                            )
+                            continue
+                        cut = sum(
+                            1 for index, qid in enumerate(queue)
+                            if index < row["cursor"] and qid in qids
+                        )
+                        conn.execute(
+                            "UPDATE review_sessions SET queue = ?, cursor = ?"
+                            " WHERE id = ?",
+                            (json.dumps(left, ensure_ascii=False),
+                             max(0, row["cursor"] - cut), row["id"]),
+                        )
+                return removed
             finally:
                 conn.close()
 

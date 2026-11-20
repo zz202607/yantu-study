@@ -147,6 +147,84 @@ class DayPackTest(unittest.TestCase):
         self.assertTrue(old["closed"])
         self.assertEqual(old["summary"], {"superseded": True})
 
+    def old_session(self, qids, days=3):
+        """An attempt due, and a frozen queue, `days` in the past."""
+        now = datetime.now().astimezone()
+        old = now - timedelta(days=days)
+        self.store.add_attempts([
+            {"qid": qid, "family": qid[0], "source": "batch",
+             "at": (old - timedelta(days=1)).isoformat(timespec="seconds")}
+            for qid in qids
+        ])
+        session = self.store.start_session(now=old)
+        self.assertEqual(sorted(session["queue"]), sorted(qids))
+        return old, session
+
+    def test_a_sheet_printed_earlier_stays_checkable(self):
+        old, session = self.old_session(["C3-11"])
+        pack = self.store.save_day_pack(
+            [{"qid": "C3-11", "role": "review"}],
+            day=old.strftime("%Y-%m-%d"), session_id=session["id"])
+        self.assertIsNone(self.store.open_day_pack())   # today has no sheet
+        self.assertIsNone(self.store.latest_day_pack())
+        found = self.store.latest_open_day_pack()
+        self.assertEqual(found["id"], pack["id"])
+        self.assertEqual(found["day"], old.strftime("%Y-%m-%d"))
+
+    def test_checking_an_old_sheet_drops_the_queue_started_since(self):
+        old, session = self.old_session(["C3-11"])
+        pack = self.store.save_day_pack(
+            [{"qid": "C3-11", "role": "review"}],
+            day=old.strftime("%Y-%m-%d"), session_id=session["id"])
+        fresh = self.store.start_session()              # today's auto queue
+        self.assertIsNotNone(fresh["id"])
+        self.assertNotEqual(fresh["id"], session["id"])
+
+        apply_results(self.store, pack,
+                      [{"qid": "C3-11", "result": "correct"}])
+
+        self.assertIsNone(self.store.session()["id"])
+        self.assertEqual(self.store.get_attempt_by_qid("C3-11")["streak"], 1)
+        self.assertTrue(self.store.session(session["id"])["finished"])
+
+    def test_started_queue_keeps_verdicts_but_loses_checked_questions(self):
+        old, old_session = self.old_session(["C3-11", "C3-12"])
+        fresh = self.store.start_session()              # today: [C3-11, C3-12]
+        self.store.grade(fresh["id"], "C3-11", "correct")
+        pack = self.store.save_day_pack(
+            [{"qid": "C3-12", "role": "review"}],
+            day=old.strftime("%Y-%m-%d"), session_id=old_session["id"])
+
+        apply_results(self.store, pack,
+                      [{"qid": "C3-12", "result": "correct"}])
+
+        today = self.store.session()
+        self.assertEqual(today["id"], fresh["id"])
+        self.assertEqual(today["queue"], ["C3-11"])
+        self.assertEqual(today["graded"], {"C3-11": "correct"})
+        self.assertEqual(self.store.get_attempt_by_qid("C3-12")["streak"], 1)
+
+    def test_question_graded_since_the_print_is_not_graded_twice(self):
+        self.store.add_attempts([
+            {"qid": "C3-11", "family": "C", "source": "batch"}])
+        session = self.store.start_session()
+        pack = self.store.save_day_pack(
+            [{"qid": "C3-11", "role": "review"}], session_id=session["id"])
+        later = datetime.now().astimezone() + timedelta(seconds=5)
+        self.store.grade(session["id"], "C3-11", "correct", now=later)
+        before = self.store.get_attempt_by_qid("C3-11")
+
+        outcome = apply_results(
+            self.store, pack,
+            [{"qid": "C3-11", "result": "wrong", "tags": ["calc"]}],
+            now=later)
+
+        self.assertEqual(outcome["summary"]["review"]["skipped"], 1)
+        self.assertTrue(outcome["summary"]["warnings"])
+        after = self.store.get_attempt_by_qid("C3-11")
+        self.assertEqual(after["interval_days"], before["interval_days"])
+        self.assertEqual(after["reviews"], before["reviews"])
+
 
 if __name__ == "__main__":
     unittest.main()

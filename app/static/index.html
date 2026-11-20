@@ -1217,7 +1217,7 @@
 
     <div class="today-card" id="todayCard">
       <div class="today-head">
-        <h2>今天的卷</h2>
+        <h2 id="todayTitle">今天的卷</h2>
         <span class="hint" id="todayCount">—</span>
       </div>
       <p class="today-lead" id="todayLead">正在读取今天的安排…</p>
@@ -3577,6 +3577,12 @@ function renderTodayPath() {
   const packInfo = (state.home && state.home.day_pack) || {};
   const open = packInfo.open;
   const latest = packInfo.latest;
+  const todayKey = packInfo.today || "";
+  const openOld = !!(open && todayKey && open.day && open.day !== todayKey);
+  const openLabel = openOld && open.day
+    ? open.day.slice(5).replace("-", "/") + " 的卷" : "今天的卷";
+  const title = $("todayTitle");
+  if (title) title.textContent = openOld ? "还没核对的卷" : "今天的卷";
   const newDaily = dailyNewTarget();
   const planned = review.count || newDaily;
   const plannedMinutes = review.count * 2 + newDaily * 9;
@@ -3596,15 +3602,20 @@ function renderTodayPath() {
   primary.className = "today-main";
 
   if (open) {
-    status.innerHTML = "<span>已打印：" + escapeHtml(packCounts(open))
+    status.innerHTML = "<span>" + escapeHtml(openLabel) + "已打印："
+      + escapeHtml(packCounts(open))
       + "</span><span>" + open.items.length + " 题</span>";
     if (lead) {
-      lead.textContent =
-        "做完这张卷，回来点「核对归档」：只标没做对的题和错因，其他自动处理。";
+      lead.textContent = openOld
+        ? "这张卷是 " + open.day
+          + " 打印的，做完补上核对：只标没做对的题和错因，其余自动归档。"
+        : "做完这张卷，回来点「核对归档」：只标没做对的题和错因，其他自动处理。";
     }
-    primary.textContent = "做完核对（" + open.items.length + " 题）";
+    primary.textContent = "核对" + (openOld ? " " + openLabel : "")
+      + "（" + open.items.length + " 题）";
     primary.addEventListener("click", openDayPackSheet);
-    if (count) count.textContent = "待核对";
+    if (count) count.textContent = openOld
+      ? open.day.slice(5).replace("-", "/") + " · 待核对" : "待核对";
   } else if (latest && latest.closed && !(latest.summary || {}).superseded) {
     const summary = latest.summary || {};
     status.innerHTML = "<span>今天的卷已归档</span><span>错 "
@@ -3722,7 +3733,14 @@ async function openDayPackSheet() {
     photoSha: null,
     busy: false,
   };
-  $("packHint").textContent = packCounts(pack);
+  const todayPack = (state.home && state.home.day_pack
+    && state.home.day_pack.today) || "";
+  const oldPack = !!(todayPack && pack.day && pack.day !== todayPack);
+  $("packTitle").textContent = oldPack
+    ? "核对 " + pack.day.slice(5).replace("-", "/") + " 的卷"
+    : "核对今天的卷";
+  $("packHint").textContent = packCounts(pack)
+    + (oldPack ? " · " + pack.day + " 打印" : "");
   $("packPhotoPreview").classList.add("hidden");
   $("packPhotoPreview").removeAttribute("src");
   $("packPhotoState").textContent = "照片会随错题一起保存";
