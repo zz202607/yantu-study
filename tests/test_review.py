@@ -318,11 +318,16 @@ def test_existing_m2_database_migrates_in_place(tmp_path):
             "SELECT name FROM sqlite_master WHERE type = 'table'"
             " AND name = 'day_packs'"
         ).fetchone()
-    assert version == "10"
+        qa = check.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table'"
+            " AND name = 'qa_messages'"
+        ).fetchone()
+    assert version == "11"
     assert triage == ("baseline_triage",)
     assert drill == ("drill_sessions",)
     assert reading == ("reading_progress",)
     assert packs == ("day_packs",)
+    assert qa == ("qa_messages",)
 
 
 def test_remark_wrong_resets_a_mastered_question(tmp_path):

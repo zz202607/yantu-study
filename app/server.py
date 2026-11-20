@@ -38,7 +38,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 import crop_question as CQ  # noqa: E402
 import recognize_qid as RQ  # noqa: E402
-from app import analytics, baseline as baseline_app, briefing as briefing_app, clauses as clauses_app, daypack as daypack_app, drill as drill_app, plan as study_plan, reading as reading_app, report as report_app, standards  # noqa: E402
+from app import analytics, baseline as baseline_app, briefing as briefing_app, clauses as clauses_app, daypack as daypack_app, drill as drill_app, plan as study_plan, qa as qa_app, reading as reading_app, report as report_app, standards  # noqa: E402
 from app.answer_ocr import analyze_crop  # noqa: E402
 from app.net import lan_ip  # noqa: E402
 from app.catalog import Catalog  # noqa: E402
@@ -55,6 +55,7 @@ from app.store import PRACTICE_SOURCES, PROCESS_LABELS, Store, TAGS  # noqa: E40
 INDEX = ROOT / "index"
 CACHE = ROOT / ".cache" / "crops"
 ANSWER_OCR = ROOT / ".cache" / "answer_ocr"
+QA_CACHE = ROOT / ".cache" / "qa"
 STATIC = Path(__file__).resolve().parent / "static"
 # YANTU_DATA lets tests point at a scratch database; production uses data/.
 DATA = Path(os.environ.get("YANTU_DATA", str(ROOT / "data")))
@@ -1526,6 +1527,77 @@ def submit_day_pack(pack_id: int, payload: dict = Body(...)):
         "pack": _pack_view(outcome["pack"]),
         "summary": outcome["summary"],
     }
+
+
+def _qa_key(qid):
+    key = normalize_qid(qid, "C")
+    if not key or not qid_exists(key):
+        raise HTTPException(404, "题号不存在")
+    return key
+
+
+@app.get("/api/qa/{qid}")
+def qa_state(qid: str):
+    """History, quota and clause preview; no OCR and no paid call."""
+    key = _qa_key(qid)
+    error = ""
+    try:
+        config = qa_app.load_config(DATA)
+    except qa_app.QAError as exc:
+        config = {}
+        error = str(exc)
+    try:
+        hints = clauses_app.hints(key).get("hints") or []
+    except Exception:  # noqa: BLE001 - preview only, the ask still works
+        hints = []
+    return {
+        "qid": key,
+        "config": qa_app.public_config(config),
+        "error": error,
+        "used_today": store.qa_calls_today(),
+        "thread": store.qa_history(key),
+        "hints": hints,
+    }
+
+
+@app.post("/api/qa/{qid}/ask")
+def qa_ask(qid: str, payload: dict = Body(...)):
+    """One grounded question about one question.  Costs one DeepSeek call."""
+    key = _qa_key(qid)
+    try:
+        config = qa_app.load_config(DATA)
+    except qa_app.QAError as exc:
+        raise HTTPException(500, str(exc))
+    question = str(payload.get("question") or "").strip()
+    if not question:
+        raise HTTPException(400, "先写下你的问题")
+    try:
+        question_path = build_crop(key, False)
+        answer_path = build_crop(key, True)
+        context = qa_app.build_context(
+            key, question_path, answer_path,
+            engine=RQ.engine(), ocr_lock=_ocr_lock, cache_dir=QA_CACHE,
+        )
+        result = qa_app.ask(store, key, question, context, config)
+    except qa_app.QANotConfigured as exc:
+        raise HTTPException(400, str(exc))
+    except qa_app.QALimit as exc:
+        raise HTTPException(429, str(exc))
+    except qa_app.QAError as exc:
+        raise HTTPException(502, str(exc))
+    except HTTPException:
+        raise
+    except Exception as exc:  # noqa: BLE001 - one bad crop must not 500 the UI
+        raise HTTPException(500, "AI 问答失败：%s" % exc)
+    result["config"] = qa_app.public_config(config)
+    return result
+
+
+@app.delete("/api/qa/{qid}")
+def qa_delete(qid: str):
+    """Forget this question's AI thread (the key and quota stay)."""
+    key = _qa_key(qid)
+    return {"ok": store.qa_clear(key)}
 
 
 @app.get("/api/handwriting/targets")
