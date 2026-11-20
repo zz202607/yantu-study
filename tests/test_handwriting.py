@@ -5,6 +5,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -40,6 +41,33 @@ class HandwritingTargetsTest(unittest.TestCase):
             [item["id"] for item in targets[:20]],
             [item["id"] for item in queue],
         )
+
+    def test_checked_sheet_stays_available_for_photos(self):
+        # Checking reschedules review items out of today's queue and leaves
+        # correct new answers without a wrong-book row.  The sheet just done
+        # must still list its wrong-book questions: review items plus wrongs.
+        self.add("C3-11", "C3-9")
+        pack = self.store.save_day_pack([
+            {"qid": "C3-11", "role": "review"},
+            {"qid": "C3-9", "role": "new"},
+            {"qid": "C3-12", "role": "new"},
+        ])
+        self.store.close_day_pack(
+            pack["id"], results=[{"qid": "C3-9", "result": "wrong"}]
+        )
+        with mock.patch.object(self.store, "review_queue", return_value=[]), \
+                mock.patch.object(self.store, "today_attempts", return_value=[]):
+            targets = self.store.handwriting_targets()
+        self.assertEqual([item["qid"] for item in targets], ["C3-11", "C3-9"])
+
+    def test_superseded_sheet_is_not_a_photo_source(self):
+        self.add("C3-11")
+        self.store.save_day_pack([{"qid": "C3-11", "role": "new"}])
+        self.store.save_day_pack([{"qid": "C3-12", "role": "new"}])
+        with mock.patch.object(self.store, "review_queue", return_value=[]), \
+                mock.patch.object(self.store, "today_attempts", return_value=[]):
+            targets = self.store.handwriting_targets()
+        self.assertEqual(targets, [])
 
     def test_uploaded_photo_is_reported_on_the_target(self):
         self.add("C3-11")

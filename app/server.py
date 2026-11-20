@@ -1607,8 +1607,9 @@ def handwriting_targets():
     """Questions today's paper work can be attached to.
 
     Review order first (the printed sheet's order), then questions recorded
-    today that fell outside the 20-item queue, so a freshly marked wrong
-    answer can receive its photo immediately.
+    today that fell outside the 20-item queue, then the sheet checked today.
+    Checking reschedules review items out of the queue, so the last group is
+    what keeps "补单题手写" showing the paper just finished.
     """
     items = store.handwriting_targets()
     return {
