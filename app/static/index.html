@@ -553,6 +553,45 @@
   .hand-new .hint { margin: 6px 0 0; }
   .summary-next { display: grid; gap: 8px; margin-top: 6px; }
   .summary-next button { width: 100%; padding: 12px; font-size: 14px; border-radius: 11px; }
+
+  /* AI Q&A sheet */
+  .sheet-panel.qa-panel {
+    max-height: 90vh; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .qa-sources { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
+  .qa-chip {
+    border: 1px solid var(--line); background: var(--paper); color: var(--accent);
+    border-radius: 999px; padding: 4px 9px; font: inherit; font-size: 11.5px;
+    cursor: pointer; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .qa-chip.muted { color: var(--muted); cursor: default; }
+  .qa-thread {
+    display: flex; flex-direction: column; gap: 8px;
+    flex: 1; min-height: 72px; max-height: 38vh;
+    overflow-y: auto; margin: 8px 0;
+  }
+  .qa-msg { border-radius: 12px; padding: 9px 11px; font-size: 13px; line-height: 1.55; }
+  .qa-msg.user {
+    align-self: flex-end; max-width: 92%;
+    background: rgba(22,103,217,.08); border: 1px solid rgba(22,103,217,.18);
+  }
+  .qa-msg.ai { align-self: stretch; background: var(--paper); border: 1px solid var(--line); }
+  .qa-msg .qa-role {
+    display: block; font-size: 11px; font-weight: 600;
+    color: var(--muted); margin-bottom: 3px;
+  }
+  .qa-msg .qa-cites { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+  .qa-msg .qa-warn { font-size: 11.5px; color: #b3261e; margin-top: 5px; }
+  .qa-empty { font-size: 12.5px; color: var(--muted); padding: 6px 0; }
+  .qa-suggest { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; }
+  .qa-suggest button {
+    border: 1px dashed var(--line); background: #fff; color: var(--muted);
+    border-radius: 999px; padding: 5px 10px; font: inherit; font-size: 12px;
+    cursor: pointer;
+  }
+  .qa-mic { margin: 6px 0 0; font-size: 11.5px; }
   header .head-print {
     flex: 0 0 auto; border: 1px solid rgba(255,255,255,.35);
     background: rgba(255,255,255,.12); color: #fff; border-radius: 8px;
@@ -1217,7 +1256,7 @@
 
     <div class="today-card" id="todayCard">
       <div class="today-head">
-        <h2>今天的卷</h2>
+        <h2 id="todayTitle">今天的卷</h2>
         <span class="hint" id="todayCount">—</span>
       </div>
       <p class="today-lead" id="todayLead">正在读取今天的安排…</p>
@@ -1337,6 +1376,7 @@
       <button id="prev" class="ghost hidden">‹ 上一题</button>
       <button id="next" class="ghost hidden">下一题 ›</button>
       <span class="grow"></span>
+      <button id="viewerAsk" class="ghost">问 AI</button>
       <button id="viewerSpec" class="ghost hidden">规范</button>
       <button id="viewerPrint" class="ghost">打印这题</button>
       <button id="markOne" class="ghost">记错</button>
@@ -1392,6 +1432,7 @@
       <button id="rUndo" class="ghost small">撤销上一题</button>
       <button id="rSkip" class="ghost small">跳过</button>
       <span class="grow"></span>
+      <button id="rAsk" class="ghost small hidden">问 AI</button>
       <button id="rPrint" class="ghost small">打印这卷</button>
       <button id="rExit" class="ghost small">退出</button>
     </div>
@@ -1520,6 +1561,7 @@
     </div>
     <textarea id="dNote" rows="2" placeholder="一句话备注（可不填）"></textarea>
     <div class="toolbar wrap">
+      <button id="dAsk" class="ghost small">问 AI</button>
       <button id="dSpec" class="ghost small">规范定位</button>
       <button id="dHandbook" class="ghost small">手册查这题</button>
       <button id="dPrint" class="ghost small">打印这题</button>
@@ -1643,6 +1685,27 @@
     <div class="sheet-actions">
       <button id="packCancel" class="ghost" type="button">取消</button>
       <button id="packSave" class="primary" type="button">保存，自动归档</button>
+    </div>
+  </div>
+</div>
+
+<div id="qaSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="qaTitle">
+  <div class="sheet-panel brief-panel qa-panel">
+    <div class="sheet-head">
+      <h3 id="qaTitle">问 AI</h3>
+      <span class="hint" id="qaState"></span>
+    </div>
+    <p class="hint" id="qaLead">AI 会读这道题的解析和规范条文；只讲这题，不判分。</p>
+    <div class="qa-sources" id="qaSources"></div>
+    <div class="qa-thread" id="qaThread"></div>
+    <div class="qa-suggest" id="qaSuggest"></div>
+    <textarea id="qaInput" rows="2" maxlength="500" placeholder="写下你的疑问，比如：这一步为什么这么取？"></textarea>
+    <p class="hint qa-mic">手机可直接点键盘上的 🎤 说话；网页内按住说话要等 HTTPS 版。</p>
+    <div class="sheet-actions">
+      <span class="hint" id="qaQuota"></span>
+      <span class="grow"></span>
+      <button id="qaClose" class="ghost" type="button">关闭</button>
+      <button id="qaSend" class="primary" type="button">问 AI</button>
     </div>
   </div>
 </div>
@@ -2015,6 +2078,7 @@ const state = {
   detail: null,
   detailAnswer: 0,
   detailClause: { token: 0, open: false },
+  qa: { qid: null, busy: false, data: null, thread: [] },
   viewerInfo: null,
   importItems: [],
   meta: null,
@@ -3577,6 +3641,12 @@ function renderTodayPath() {
   const packInfo = (state.home && state.home.day_pack) || {};
   const open = packInfo.open;
   const latest = packInfo.latest;
+  const todayKey = packInfo.today || "";
+  const openOld = !!(open && todayKey && open.day && open.day !== todayKey);
+  const openLabel = openOld && open.day
+    ? open.day.slice(5).replace("-", "/") + " 的卷" : "今天的卷";
+  const title = $("todayTitle");
+  if (title) title.textContent = openOld ? "还没核对的卷" : "今天的卷";
   const newDaily = dailyNewTarget();
   const planned = review.count || newDaily;
   const plannedMinutes = review.count * 2 + newDaily * 9;
@@ -3596,15 +3666,20 @@ function renderTodayPath() {
   primary.className = "today-main";
 
   if (open) {
-    status.innerHTML = "<span>已打印：" + escapeHtml(packCounts(open))
+    status.innerHTML = "<span>" + escapeHtml(openLabel) + "已打印："
+      + escapeHtml(packCounts(open))
       + "</span><span>" + open.items.length + " 题</span>";
     if (lead) {
-      lead.textContent =
-        "做完这张卷，回来点「核对归档」：只标没做对的题和错因，其他自动处理。";
+      lead.textContent = openOld
+        ? "这张卷是 " + open.day
+          + " 打印的，做完补上核对：只标没做对的题和错因，其余自动归档。"
+        : "做完这张卷，回来点「核对归档」：只标没做对的题和错因，其他自动处理。";
     }
-    primary.textContent = "做完核对（" + open.items.length + " 题）";
+    primary.textContent = "核对" + (openOld ? " " + openLabel : "")
+      + "（" + open.items.length + " 题）";
     primary.addEventListener("click", openDayPackSheet);
-    if (count) count.textContent = "待核对";
+    if (count) count.textContent = openOld
+      ? open.day.slice(5).replace("-", "/") + " · 待核对" : "待核对";
   } else if (latest && latest.closed && !(latest.summary || {}).superseded) {
     const summary = latest.summary || {};
     status.innerHTML = "<span>今天的卷已归档</span><span>错 "
@@ -3722,7 +3797,14 @@ async function openDayPackSheet() {
     photoSha: null,
     busy: false,
   };
-  $("packHint").textContent = packCounts(pack);
+  const todayPack = (state.home && state.home.day_pack
+    && state.home.day_pack.today) || "";
+  const oldPack = !!(todayPack && pack.day && pack.day !== todayPack);
+  $("packTitle").textContent = oldPack
+    ? "核对 " + pack.day.slice(5).replace("-", "/") + " 的卷"
+    : "核对今天的卷";
+  $("packHint").textContent = packCounts(pack)
+    + (oldPack ? " · " + pack.day + " 打印" : "");
   $("packPhotoPreview").classList.add("hidden");
   $("packPhotoPreview").removeAttribute("src");
   $("packPhotoState").textContent = "照片会随错题一起保存";
@@ -3820,6 +3902,260 @@ $("packPhotoFile").addEventListener("change", async (event) => {
     $("packSave").disabled = false;
   }
 });
+// --- AI Q&A ---------------------------------------------------------------
+
+const QA_PROMPTS = [
+  "这一步为什么这么取？",
+  "规范哪一条？",
+  "我理解的是……，哪里错了？",
+  "和同类题的区别？",
+];
+
+function qaMarkup(text) {
+  let html = escapeHtml(String(text || ""));
+  html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+  return html.split(/\n/).map((line) => {
+    const bullet = line.match(/^\s*[-*]\s+(.*)$/);
+    return bullet ? "• " + bullet[1] : line;
+  }).join("<br>");
+}
+
+function renderQaSources(hints) {
+  const box = $("qaSources");
+  if (!box) return;
+  box.innerHTML = "";
+  const rows = (hints || []).filter((row) => row && row.code);
+  if (!rows.length) {
+    const chip = document.createElement("span");
+    chip.className = "qa-chip muted";
+    chip.textContent = "本题暂无匹配条文，仍会带题面和解析";
+    box.appendChild(chip);
+    return;
+  }
+  for (const hint of rows) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "qa-chip" + (hint.pdf_page ? "" : " muted");
+    button.textContent = clauseHintText(hint);
+    if (hint.pdf_page) {
+      button.addEventListener("click", () => openStandardPage(
+        hint.code, hint.pdf_page,
+        (hint.section || "") + " " + (hint.section_title || ""),
+        hint.page_count));
+    }
+    box.appendChild(button);
+  }
+}
+
+function renderQaThread() {
+  const qa = state.qa;
+  const box = $("qaThread");
+  if (!box || !qa) return;
+  box.innerHTML = "";
+  const thread = qa.thread || [];
+  if (!thread.length) {
+    const note = document.createElement("p");
+    note.className = "qa-empty";
+    note.textContent = "还没有问过这题。AI 会基于解析和规范讲解，不判分。";
+    box.appendChild(note);
+    return;
+  }
+  for (const message of thread) {
+    const bubble = document.createElement("div");
+    bubble.className = "qa-msg " + (message.role === "user" ? "user" : "ai");
+    const role = document.createElement("span");
+    role.className = "qa-role";
+    role.textContent = message.role === "user"
+      ? "你" : ("AI 解读" + (message.cached ? " · 缓存" : ""));
+    bubble.appendChild(role);
+    const body = document.createElement("span");
+    body.innerHTML = qaMarkup(message.content || "");
+    bubble.appendChild(body);
+    const sources = message.sources || {};
+    const cited = sources.cited || [];
+    if (cited.length) {
+      const chips = document.createElement("div");
+      chips.className = "qa-cites";
+      for (const row of cited.slice(0, 5)) {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "qa-chip" + (row.in_hints ? "" : " muted");
+        chip.textContent = "《" + (row.title || "") + "》第" + row.clause + "条"
+          + (row.in_hints ? "" : " · AI 补充");
+        if (row.pdf_page) {
+          chip.addEventListener("click", () => openStandardPage(
+            row.code, row.pdf_page,
+            row.clause + " " + (row.section_title || ""),
+            row.page_count));
+        }
+        chips.appendChild(chip);
+      }
+      bubble.appendChild(chips);
+    }
+    for (const warning of sources.warnings || []) {
+      const line = document.createElement("div");
+      line.className = "qa-warn";
+      line.textContent = warning;
+      bubble.appendChild(line);
+    }
+    box.appendChild(bubble);
+  }
+  box.scrollTop = box.scrollHeight;
+}
+
+function renderQaSuggest() {
+  const box = $("qaSuggest");
+  if (!box) return;
+  box.innerHTML = "";
+  for (const prompt of QA_PROMPTS) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = prompt;
+    button.addEventListener("click", () => {
+      const input = $("qaInput");
+      input.value = prompt.endsWith("哪里错了？") ? "我理解的是：" : prompt;
+      input.focus();
+    });
+    box.appendChild(button);
+  }
+}
+
+async function openQaSheet(qid) {
+  qid = String(qid || "").trim();
+  if (!qid) return;
+  state.qa = { qid, busy: false, data: null, thread: [] };
+  $("qaTitle").textContent = "问 AI · " + qid;
+  $("qaState").textContent = "读取记录…";
+  $("qaLead").textContent = "AI 会读这道题的解析和规范条文；只讲这题，不判分。";
+  $("qaSources").innerHTML = "";
+  $("qaThread").innerHTML = "";
+  $("qaQuota").textContent = "";
+  $("qaInput").value = "";
+  $("qaSend").disabled = true;
+  renderQaSuggest();
+  $("qaSheet").classList.remove("hidden");
+  try {
+    const res = await fetch("/api/qa/" + encodeURIComponent(qid));
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    if (!state.qa || state.qa.qid !== qid) return;
+    state.qa.data = data;
+    state.qa.thread = data.thread || [];
+    renderQaSources(data.hints || []);
+    renderQaThread();
+    const config = data.config || {};
+    const limit = Number(config.daily_limit) || 20;
+    const used = Number(data.used_today) || 0;
+    $("qaQuota").textContent = "今日 AI " + used + "/" + limit;
+    if (data.error) {
+      $("qaState").textContent = "配置有问题";
+      $("qaLead").textContent = data.error;
+      return;
+    }
+    if (!config.configured) {
+      $("qaState").textContent = "未配置";
+      $("qaLead").textContent =
+        "还没配置 DeepSeek key；在电脑 data/llm.json 填好后刷新。";
+      return;
+    }
+    if (used >= limit) {
+      $("qaState").textContent = "额度用完";
+      $("qaLead").textContent = "今天的 AI 提问额度已用完；明天再问。";
+      return;
+    }
+    $("qaState").textContent = config.model || "AI";
+    $("qaLead").textContent = "会带：题面 + 解析 + " + (data.hints || []).length
+      + " 条规范线索；首次问这题要读图，约 10–30 秒。";
+    $("qaSend").disabled = false;
+  } catch (err) {
+    $("qaState").textContent = "读取失败";
+    $("qaLead").textContent = err.message;
+  }
+}
+
+async function sendQa() {
+  const qa = state.qa;
+  if (!qa || qa.busy) return;
+  const input = $("qaInput");
+  const question = input.value.trim();
+  if (!question) {
+    input.focus();
+    return;
+  }
+  qa.busy = true;
+  $("qaSend").disabled = true;
+  $("qaState").textContent = "AI 正在看材料…";
+  qa.thread.push({ role: "user", content: question, sources: {} });
+  input.value = "";
+  renderQaThread();
+  try {
+    const res = await fetch(
+      "/api/qa/" + encodeURIComponent(qa.qid) + "/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    if (!state.qa || state.qa.qid !== qa.qid) return;
+    qa.thread = data.thread || qa.thread;
+    const config = data.config || (qa.data && qa.data.config) || {};
+    const quota = data.quota || {};
+    const limit = Number(quota.limit) || Number(config.daily_limit) || 20;
+    const used = Number(quota.used) || 0;
+    if (qa.data) qa.data.used_today = used;
+    $("qaQuota").textContent = "今日 AI " + used + "/" + limit;
+    $("qaState").textContent = data.cached ? "缓存回答" : (config.model || "AI");
+    renderQaThread();
+    if (data.sources && data.sources.hints) {
+      renderQaSources(data.sources.hints);
+    }
+    if (used >= limit) {
+      $("qaSend").disabled = true;
+      $("qaState").textContent = "额度用完";
+    } else {
+      $("qaSend").disabled = false;
+    }
+  } catch (err) {
+    qa.thread.push({
+      role: "assistant",
+      content: "没答出来：" + err.message,
+      sources: { warnings: [err.message] },
+    });
+    $("qaState").textContent = "失败";
+    input.value = question;
+    renderQaThread();
+    $("qaSend").disabled = false;
+  } finally {
+    qa.busy = false;
+  }
+}
+
+$("qaClose").addEventListener("click", () => {
+  $("qaSheet").classList.add("hidden");
+});
+$("qaSheet").addEventListener("click", (event) => {
+  if (event.target === $("qaSheet")) $("qaSheet").classList.add("hidden");
+});
+$("qaSend").addEventListener("click", sendQa);
+$("qaInput").addEventListener("keydown", (event) => {
+  if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+    event.preventDefault();
+    sendQa();
+  }
+});
+$("viewerAsk").addEventListener("click", () => {
+  if (state.qid) openQaSheet(state.qid);
+});
+$("dAsk").addEventListener("click", () => {
+  if (state.detail) openQaSheet(state.detail.qid);
+});
+$("rAsk").addEventListener("click", () => {
+  const item = currentReviewItem();
+  if (item) openQaSheet(item.qid);
+});
+
 $("packSave").addEventListener("click", async () => {
   const sheet = state.packSheet;
   if (!sheet || sheet.busy || sheet.photoBusy) return;
@@ -8065,6 +8401,7 @@ function renderReview() {
     $("rWrong").classList.add("hidden");
     $("rRight").classList.add("hidden");
     $("rCaseBar").classList.add("hidden");
+    $("rAsk").classList.add("hidden");
   };
   paper.src = cropUrl(item.qid, false, true);
   const answer = $("rAnswer");
@@ -8076,6 +8413,7 @@ function renderReview() {
   reviewSuggest.reset("");
   $("rShowAnswer").classList.remove("hidden");
   $("rShowAnswer").disabled = false;
+  $("rAsk").classList.add("hidden");
   $("rWrong").classList.add("hidden");
   $("rRight").classList.add("hidden");
   $("rWrong").disabled = false;
@@ -8098,11 +8436,13 @@ function showReviewAnswer() {
     $("rWrong").classList.add("hidden");
     $("rRight").classList.add("hidden");
     $("rCaseBar").classList.add("hidden");
+    $("rAsk").classList.add("hidden");
     $("rHint").textContent = "这题的答案遮罩失败，先跳过（不会记分）。";
   };
   answer.src = cropUrl(item.qid, true, true);
   $("rAnswerWrap").classList.remove("hidden");
   $("rShowAnswer").classList.add("hidden");
+  $("rAsk").classList.remove("hidden");
   if (caseItem) {
     $("rWrong").classList.add("hidden");
     $("rRight").classList.add("hidden");
@@ -9035,7 +9375,9 @@ const params = new URLSearchParams(location.search);
 const deep = params.get("qid");
 const tab = params.get("tab");
 if (deep) {
-  openViewer(deep);
+  openViewer(deep).then(() => {
+    if (state.qid && params.get("ask") === "1") openQaSheet(state.qid);
+  });
 } else if (tab === "review") {
   startReview();
 } else if (tab === "lookup") {

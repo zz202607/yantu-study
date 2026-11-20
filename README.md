@@ -11,6 +11,9 @@
 
 - **拍题查题**：手机拍整页 → 题号候选 → 题干/解析裁图；支持整页多题勾选、批量查看、自动入库。
 - **错题本**：一题一行，4 类错因、备注、手写照片；按册/篇/时间/掌握状态过滤；一键备份/恢复。
+- **问 AI（可选）**：对当前题提问；自动带题干 OCR、官方解析 OCR 和匹配规范条文，
+  回答先结论后依据，条号用本机索引复核；不判分、不改排期。默认关闭，
+  在 `data/llm.json` 配 DeepSeek key 后启用；每日 20 次上限、相同问题缓存。
 - **零决策复习**：到期 → 新错 → 顽固，自动排期，每日硬上限 20；可续做、撤销、打印复习卷。
   - 案例题按过程评分（过程对·结果对 / 过程对·结果错 / 过程错 / 没思路），可附过程照片；
     知识题另走客观题判分，不用选项字母判案例。
@@ -73,7 +76,8 @@ Tailscale 提供 HTTPS 后才可以。不要直接把端口映射到公网。
 |---|---|
 | `compressed/` | 12 本扫描题库的唯一副本（约 1.5 GB）；书名需与 `index/books.json` 对应 |
 | `工程地质手册（第五版）.pdf` | 手册原件，放项目根目录（不入库） |
-| `data/` | **唯一用户数据**：`wrongbook.db`、照片、备份、导出、周报快照；首次启动自动建库 |
+| `data/` | **唯一用户数据**：`wrongbook.db`、照片、备份、导出、周报快照、问答记录；首次启动自动建库 |
+| `data/llm.json` | 可选：DeepSeek key/模型/每日上限（不入 git、不进备份）；不配则「问 AI」显示未配置 |
 | `print_samples/` | 打印样张与基线卷 PDF，可由 `tools/print_baseline.py` 重建 |
 | `拍照错题/` | 18 张真实错题照片，仅作 OCR/裁图基准 |
 
@@ -88,6 +92,10 @@ Tailscale 提供 HTTPS 后才可以。不要直接把端口映射到公网。
 | `YANTU_STANDARDS_DIR` | 本机规范库目录 | 50 本电子规范所在目录 |
 | `YANTU_ANNOTATED_DIR` | 标注版核心规范目录 | 9 本伴读路线用到的标注版 PDF |
 | `YANTU_HANDBOOK` | 根目录手册 PDF | 手册路径 |
+| `YANTU_LLM_KEY` | `data/llm.json` 的 key | DeepSeek API key（也可写在配置文件里） |
+| `YANTU_LLM_BASE` | `https://api.deepseek.com/v1` | OpenAI 兼容端点 |
+| `YANTU_LLM_MODEL` | `deepseek-chat` | 模型名 |
+| `YANTU_LLM_LIMIT` | `20` | 每日 AI 提问上限 |
 
 ## 测试
 
@@ -95,7 +103,7 @@ Tailscale 提供 HTTPS 后才可以。不要直接把端口映射到公网。
 PYTHONIOENCODING=utf-8 py -3 -m pytest -q
 ```
 
-- **254 条**单测全绿；GitHub Actions 在 PR / push `main` 时运行 compileall + pytest。
+- **372 条**单测全绿；GitHub Actions 在 PR / push `main` 时运行 compileall + pytest。
 - CI 只装 `requirements-ci.txt`（pytest / pymupdf / pillow / numpy），
   不含 OCR / ONNX / FastAPI 重依赖。
 
@@ -108,6 +116,7 @@ app/
   baseline.py        2025 案例两半：四个数、逐题状态、四象限、必拿分项、考场推演
   plan.py            五阶段计划、周题量、纠偏、任务卷选题
   report.py          自然周/月报告：聚合、对比上期、下一步、Markdown 快照
+  qa.py              AI 问答：本地 OCR + 条文页原文 + DeepSeek，缓存/额度/条号复核
   analytics.py       首页/统计：倒计时、连续天数、九大类、错误型鼓励
   curriculum.py      十篇 / 九大类 / 权重 / 核心规范
   standards.py       规范库与手册：索引、条文定位、页图、全文检索

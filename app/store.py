@@ -295,6 +295,30 @@ CREATE TABLE IF NOT EXISTS review_log (
     process_photo_after INTEGER,
     UNIQUE (session_id, qid)
 );
+-- AI Q&A: one thread per question.  Only excerpts the user chose to send are
+-- stored, never the API key (that lives in data/llm.json, outside backups).
+CREATE TABLE IF NOT EXISTS qa_threads (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    qid TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS qa_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    thread_id INTEGER NOT NULL REFERENCES qa_threads(id) ON DELETE CASCADE,
+    role TEXT NOT NULL,
+    content TEXT NOT NULL,
+    sources TEXT NOT NULL DEFAULT '',
+    cache_key TEXT NOT NULL DEFAULT '',
+    cached INTEGER NOT NULL DEFAULT 0,
+    model TEXT NOT NULL DEFAULT '',
+    prompt_tokens INTEGER NOT NULL DEFAULT 0,
+    completion_tokens INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_qa_messages_thread ON qa_messages(thread_id, id);
+CREATE INDEX IF NOT EXISTS idx_qa_messages_cache ON qa_messages(cache_key);
+CREATE INDEX IF NOT EXISTS idx_qa_messages_day ON qa_messages(created_at);
 INSERT OR IGNORE INTO meta(key, value) VALUES ('schema_version', '4');
 """
 
@@ -480,7 +504,7 @@ class Store:
             " WHERE baseline_half IN ('A', 'P')"
         )
         conn.execute(
-            "UPDATE meta SET value = '10' WHERE key = 'schema_version'"
+            "UPDATE meta SET value = '11' WHERE key = 'schema_version'"
         )
 
     # -- photos -----------------------------------------------------------
@@ -1338,6 +1362,23 @@ class Store:
             conn.close()
         return self._day_pack_dict(row)
 
+    def latest_open_day_pack(self):
+        """Newest printed sheet still waiting to be checked, from any day.
+
+        A paper does not expire at midnight: the 11-17 sheet stays checkable
+        on 11-20.  Looking across all days keeps a finished paper from
+        disappearing when the home card rolls over to a new day.
+        """
+        conn = self._connect()
+        try:
+            row = conn.execute(
+                "SELECT * FROM day_packs WHERE closed_at IS NULL"
+                " ORDER BY day DESC, id DESC LIMIT 1"
+            ).fetchone()
+        finally:
+            conn.close()
+        return self._day_pack_dict(row)
+
     def close_day_pack(self, pack_id, results, photo_id=None, summary=None):
         """Merge per-question results into a pack and close it once."""
         pack = self.day_pack(pack_id)
@@ -1378,6 +1419,83 @@ class Store:
                         "SELECT * FROM day_packs WHERE id = ?", (int(pack_id),)
                     ).fetchone()
                 return self._day_pack_dict(row)
+            finally:
+                conn.close()
+
+    def reviewed_since(self, qids, since):
+        """Which of these questions already got a verdict at or after `since`."""
+        qids = [str(q).strip().upper() for q in qids or () if str(q).strip()]
+        if not qids or not since:
+            return set()
+        marks = ",".join("?" for _ in qids)
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                "SELECT DISTINCT qid FROM review_log WHERE at >= ?"
+                " AND qid IN (%s)" % marks,
+                [str(since)] + qids,
+            ).fetchall()
+        finally:
+            conn.close()
+        return {row["qid"] for row in rows}
+
+    def prune_review_sessions(self, graded_qids, keep_session_id=None):
+        """Reconcile other review queues after a paper reschedules questions.
+
+        Empty queues without a verdict hold no user input and are deleted.
+        Sessions with real verdicts are kept, but the questions this paper
+        just scheduled are removed so they cannot be graded twice.
+        """
+        qids = {str(q).strip().upper() for q in graded_qids or ()
+                if str(q).strip()}
+        keep = int(keep_session_id) if keep_session_id else None
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    sql = ("DELETE FROM review_sessions WHERE finished_at IS NULL"
+                           " AND NOT EXISTS (SELECT 1 FROM review_log"
+                           " WHERE review_log.session_id = review_sessions.id)")
+                    args = []
+                    if keep:
+                        sql += " AND id != ?"
+                        args.append(keep)
+                    removed = conn.execute(sql, args).rowcount
+                    if not qids:
+                        return removed
+                    rows = conn.execute(
+                        "SELECT id, queue, cursor FROM review_sessions"
+                        " WHERE finished_at IS NULL"
+                        + (" AND id != ?" if keep else ""),
+                        ([keep] if keep else []),
+                    ).fetchall()
+                    stamp = now_iso()
+                    for row in rows:
+                        queue = json.loads(row["queue"])
+                        left = [qid for qid in queue if qid not in qids]
+                        if len(left) == len(queue):
+                            continue
+                        removed += 1
+                        if not left:
+                            conn.execute(
+                                "UPDATE review_sessions SET queue = ?, cursor = 0,"
+                                " finished_at = COALESCE(finished_at, ?)"
+                                " WHERE id = ?",
+                                (json.dumps(left, ensure_ascii=False), stamp,
+                                 row["id"]),
+                            )
+                            continue
+                        cut = sum(
+                            1 for index, qid in enumerate(queue)
+                            if index < row["cursor"] and qid in qids
+                        )
+                        conn.execute(
+                            "UPDATE review_sessions SET queue = ?, cursor = ?"
+                            " WHERE id = ?",
+                            (json.dumps(left, ensure_ascii=False),
+                             max(0, row["cursor"] - cut), row["id"]),
+                        )
+                return removed
             finally:
                 conn.close()
 
@@ -2900,6 +3018,137 @@ class Store:
                     conn.execute(
                         "DELETE FROM baseline_triage WHERE year = ? AND half = ?",
                         (int(year), half),
+                    )
+                return cur.rowcount > 0
+            finally:
+                conn.close()
+
+    # -- AI Q&A -----------------------------------------------------------
+
+    @staticmethod
+    def _qa_message_dict(row):
+        try:
+            sources = json.loads(row["sources"]) if row["sources"] else {}
+        except (TypeError, ValueError):
+            sources = {}
+        return {
+            "id": row["id"],
+            "role": row["role"],
+            "content": row["content"],
+            "sources": sources if isinstance(sources, dict) else {},
+            "cached": bool(row["cached"]),
+            "model": row["model"],
+            "prompt_tokens": row["prompt_tokens"],
+            "completion_tokens": row["completion_tokens"],
+            "at": row["created_at"],
+        }
+
+    def qa_history(self, qid):
+        qid = (qid or "").strip().upper()
+        if not qid:
+            return []
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                "SELECT m.* FROM qa_messages m"
+                " JOIN qa_threads t ON t.id = m.thread_id"
+                " WHERE t.qid = ? ORDER BY m.id",
+                (qid,),
+            ).fetchall()
+        finally:
+            conn.close()
+        return [self._qa_message_dict(row) for row in rows]
+
+    def qa_add_exchange(self, qid, question, answer, sources=None,
+                        cache_key="", cached=False, model="",
+                        prompt_tokens=0, completion_tokens=0, now=None):
+        """Append one question/answer pair; returns the whole thread."""
+        qid = (qid or "").strip().upper()
+        if not qid:
+            raise ValueError("缺题号")
+        stamp = now_iso(now)
+        payload = json.dumps(sources or {}, ensure_ascii=False)
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    row = conn.execute(
+                        "SELECT id FROM qa_threads WHERE qid = ?", (qid,)
+                    ).fetchone()
+                    if row:
+                        thread_id = row["id"]
+                        conn.execute(
+                            "UPDATE qa_threads SET updated_at = ? WHERE id = ?",
+                            (stamp, thread_id),
+                        )
+                    else:
+                        cur = conn.execute(
+                            "INSERT INTO qa_threads (qid, created_at, updated_at)"
+                            " VALUES (?, ?, ?)",
+                            (qid, stamp, stamp),
+                        )
+                        thread_id = cur.lastrowid
+                    conn.execute(
+                        "INSERT INTO qa_messages (thread_id, role, content,"
+                        " sources, cache_key, cached, model, created_at)"
+                        " VALUES (?, 'user', ?, '', '', 0, '', ?)",
+                        (thread_id, question, stamp),
+                    )
+                    conn.execute(
+                        "INSERT INTO qa_messages (thread_id, role, content,"
+                        " sources, cache_key, cached, model, prompt_tokens,"
+                        " completion_tokens, created_at)"
+                        " VALUES (?, 'assistant', ?, ?, ?, ?, ?, ?, ?, ?)",
+                        (thread_id, answer, payload, cache_key,
+                         int(bool(cached)), model, int(prompt_tokens or 0),
+                         int(completion_tokens or 0), stamp),
+                    )
+            finally:
+                conn.close()
+        return self.qa_history(qid)
+
+    def qa_cached(self, cache_key, days=30, now=None):
+        """Latest stored answer for the same question + context, if fresh."""
+        if not cache_key:
+            return None
+        moment = now or datetime.now().astimezone()
+        cutoff = (moment - timedelta(days=max(1, int(days or 30)))
+                  ).isoformat(timespec="seconds")
+        conn = self._connect()
+        try:
+            row = conn.execute(
+                "SELECT * FROM qa_messages WHERE role = 'assistant'"
+                " AND cache_key = ? AND created_at >= ?"
+                " ORDER BY id DESC LIMIT 1",
+                (str(cache_key), cutoff),
+            ).fetchone()
+        finally:
+            conn.close()
+        return self._qa_message_dict(row) if row else None
+
+    def qa_calls_today(self, now=None):
+        """Successful paid calls today; cached answers do not count."""
+        day = _local_day(now)
+        conn = self._connect()
+        try:
+            row = conn.execute(
+                "SELECT COUNT(*) AS n FROM qa_messages"
+                " WHERE role = 'assistant' AND cached = 0"
+                " AND created_at LIKE ?",
+                (day + "%",),
+            ).fetchone()
+        finally:
+            conn.close()
+        return int(row["n"] if row else 0)
+
+    def qa_clear(self, qid):
+        qid = (qid or "").strip().upper()
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    cur = conn.execute(
+                        "DELETE FROM qa_threads WHERE qid = ?", (qid,)
                     )
                 return cur.rowcount > 0
             finally:
