@@ -53,7 +53,9 @@ from app.settings import Settings  # noqa: E402
 from app.store import PRACTICE_SOURCES, PROCESS_LABELS, Store, TAGS  # noqa: E402
 
 INDEX = ROOT / "index"
-CACHE = ROOT / ".cache" / "crops"
+# v2: crops rendered before 2026-11-20 still carry the erased figure lines.
+# A versioned folder invalidates them without touching the user's data.
+CACHE = ROOT / ".cache" / "crops" / "v2"
 ANSWER_OCR = ROOT / ".cache" / "answer_ocr"
 QA_CACHE = ROOT / ".cache" / "qa"
 STATIC = Path(__file__).resolve().parent / "static"
@@ -1767,8 +1769,8 @@ def print_questions(
     cover: int = 0,
     per_prototype: int = 5,
     minutes: int = 0,
-    jpeg_dpi: int = 220,
-    jpeg_quality: int = 85,
+    jpeg_dpi: int = 300,
+    jpeg_quality: int = 90,
 ):
     """One-click A4 sheet: question pages first, answers on their own pages."""
     scope = (scope or "filter").lower()
