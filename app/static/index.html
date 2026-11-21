@@ -1795,7 +1795,18 @@
       <div class="toolbar" style="margin:0">
         <button id="extPrint" class="ghost small" type="button">打印未打印</button>
         <button id="extPrintAll" class="ghost small" type="button">重打全部</button>
+        <button id="extExamPrint" class="ghost small hidden" type="button">打印 2026 上午真题</button>
+        <button id="extExamPrintP" class="ghost small hidden" type="button">打印 2026 下午真题</button>
       </div>
+    </div>
+    <div class="toolbar wrap" style="margin:0 0 6px">
+      <select id="extFilter" aria-label="公众号题筛选">
+        <option value="">全部</option>
+        <option value="wechat">每日作业</option>
+        <option value="wechat-exam-2026a">2026 上午真题</option>
+        <option value="wechat-exam-2026p">2026 下午真题</option>
+      </select>
+      <span class="hint" id="extFilterCount"></span>
     </div>
     <div id="extList" class="ext-list"></div>
     <div class="sheet-actions">
@@ -9342,11 +9353,16 @@ function extImageUrl(qid, role, index, thumb) {
 function renderExtList() {
   const box = $("extList");
   if (!box) return;
-  if (!extItems.length) {
-    box.innerHTML = '<div class="ext-empty">还没有导入。选好题目图和答案图，点「识别并入库」。</div>';
+  const filter = $("extFilter").value;
+  const rows = filter
+    ? extItems.filter((item) => item.source === filter)
+    : extItems;
+  $("extFilterCount").textContent = rows.length + " 组";
+  if (!rows.length) {
+    box.innerHTML = '<div class="ext-empty">这个筛选下还没有题。</div>';
     return;
   }
-  box.innerHTML = extItems.map((item) => {
+  box.innerHTML = rows.map((item) => {
     const q = item.question_images || [];
     const a = item.answer_images || [];
     return '<div class="ext-item">'
@@ -9378,6 +9394,12 @@ async function loadExt() {
     $("extStats").textContent = "共 " + (data.total || 0) + " 组 · 未打印 "
       + (data.unprinted || 0) + " 组";
     $("extPrint").textContent = "打印未打印 (" + (data.unprinted || 0) + ")";
+    $("extExamPrint").classList.toggle(
+      "hidden", !extItems.some((item) => item.source === "wechat-exam-2026a")
+    );
+    $("extExamPrintP").classList.toggle(
+      "hidden", !extItems.some((item) => item.source === "wechat-exam-2026p")
+    );
     renderExtList();
   } catch (err) {
     $("extList").innerHTML =
@@ -9466,13 +9488,17 @@ function openExtView(qid) {
   $("extView").classList.remove("hidden");
 }
 
-async function printExt(scope) {
-  const button = scope === "unprinted" ? $("extPrint") : $("extPrintAll");
+async function printExt(scope, source) {
+  const button = source === "wechat-exam-2026a" ? $("extExamPrint")
+    : source === "wechat-exam-2026p" ? $("extExamPrintP")
+    : (scope === "unprinted" ? $("extPrint") : $("extPrintAll"));
   button.disabled = true;
   const old = button.textContent;
   button.textContent = "生成中…";
   try {
-    const res = await fetch("/api/ext/print?scope=" + scope, { cache: "no-store" });
+    const query = "/api/ext/print?scope=" + scope
+      + (source ? "&source=" + encodeURIComponent(source) : "");
+    const res = await fetch(query, { cache: "no-store" });
     if (!res.ok) {
       let message = res.statusText;
       try { message = (await res.json()).detail || message; } catch (err) { /* not JSON */ }
@@ -9511,6 +9537,9 @@ document.addEventListener("paste", handleExtPaste);
 $("extImport").addEventListener("click", importExt);
 $("extPrint").addEventListener("click", () => printExt("unprinted"));
 $("extPrintAll").addEventListener("click", () => printExt("all"));
+$("extExamPrint").addEventListener("click", () => printExt("all", "wechat-exam-2026a"));
+$("extExamPrintP").addEventListener("click", () => printExt("all", "wechat-exam-2026p"));
+$("extFilter").addEventListener("change", renderExtList);
 $("extViewClose").addEventListener("click", () => $("extView").classList.add("hidden"));
 $("extView").addEventListener("click", (event) => {
   if (event.target === $("extView")) $("extView").classList.add("hidden");

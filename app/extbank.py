@@ -176,6 +176,18 @@ def _save_image(src, dest_original, dest_crop, dest_thumb, role, engine,
     return _crop_texts(rows, box)
 
 
+def _save_preserved(src, dest_original, dest_crop, dest_thumb, engine=None,
+                    read_text=True):
+    """Store an already-cropped exam slide without cropping it again."""
+    image = _load_image(src)
+    image.save(dest_original, "PNG")
+    image.save(dest_crop, "PNG")
+    _thumb(image, dest_thumb)
+    if not read_text:
+        return []
+    return [row["text"] for row in _rows(image, engine)]
+
+
 def _save_answer_page(src, dest_original, dest_question, dest_qthumb,
                       dest_answer, dest_athumb, engine, rows=None):
     """Split one answer page into question and answer halves."""
@@ -195,8 +207,13 @@ def _save_answer_page(src, dest_original, dest_question, dest_qthumb,
 
 
 def import_pair(store, data_dir, question_paths, answer_paths,
-                day="", title="", kind="case", engine=None):
-    """Store one question/answer pair and return its ext_questions row."""
+                day="", title="", kind="case", engine=None, source="wechat",
+                preserve=False, read_text=True):
+    """Store one question/answer pair and return its ext_questions row.
+
+    `preserve=True` is for pre-cropped exam slides: store the supplied image
+    as-is instead of running the page-content crop again.
+    """
     question_paths = [Path(path) for path in question_paths or []]
     answer_paths = [Path(path) for path in answer_paths or []]
     if not answer_paths:
@@ -209,15 +226,20 @@ def import_pair(store, data_dir, question_paths, answer_paths,
 
     engine = _engine(engine)
     today = datetime.now().astimezone().date().isoformat()
-    meta_source = question_paths[0] if question_paths else answer_paths[0]
-    meta_image = Image.open(meta_source).convert("RGB")
-    meta_rows = _rows(meta_image, engine)
+    meta_rows = []
+    if read_text:
+        meta_source = question_paths[0] if question_paths else answer_paths[0]
+        meta_image = Image.open(meta_source).convert("RGB")
+        meta_rows = _rows(meta_image, engine)
     day = str(day or "").strip() or today
     if not re.match(r"^\d{4}-\d{2}-\d{2}$", day):
         raise ExtError("日期格式应为 YYYY-MM-DD")
-    day, title = _meta(
-        meta_rows, day, str(title or "").strip()
-    )
+    if read_text:
+        day, title = _meta(
+            meta_rows, day, str(title or "").strip()
+        )
+    else:
+        title = str(title or "").strip() or ("公众号题 · %s" % day)
 
     qid = store.next_ext_qid(day)
     folder = Path(data_dir) / "ext" / qid
@@ -230,18 +252,36 @@ def import_pair(store, data_dir, question_paths, answer_paths,
         if question_paths:
             for index, path in enumerate(question_paths, 1):
                 name = "q%d" % index
-                question_text.extend(_save_image(
-                    path, folder / ("src_%s.png" % name), folder / ("%s.png" % name),
-                    folder / ("%st.png" % name), "question", engine,
-                    rows=meta_rows if index == 1 else None,
-                ))
+                if preserve:
+                    texts = _save_preserved(
+                        path, folder / ("src_%s.png" % name),
+                        folder / ("%s.png" % name), folder / ("%st.png" % name),
+                        engine, read_text=read_text,
+                    )
+                else:
+                    texts = _save_image(
+                        path, folder / ("src_%s.png" % name),
+                        folder / ("%s.png" % name), folder / ("%st.png" % name),
+                        "question", engine,
+                        rows=meta_rows if index == 1 else None,
+                    )
+                question_text.extend(texts)
                 question_images.append("ext/%s/%s.png" % (qid, name))
             for index, path in enumerate(answer_paths, 1):
                 name = "a%d" % index
-                answer_text.extend(_save_image(
-                    path, folder / ("src_%s.png" % name), folder / ("%s.png" % name),
-                    folder / ("%st.png" % name), "answer", engine,
-                ))
+                if preserve:
+                    texts = _save_preserved(
+                        path, folder / ("src_%s.png" % name),
+                        folder / ("%s.png" % name), folder / ("%st.png" % name),
+                        engine, read_text=read_text,
+                    )
+                else:
+                    texts = _save_image(
+                        path, folder / ("src_%s.png" % name),
+                        folder / ("%s.png" % name), folder / ("%st.png" % name),
+                        "answer", engine,
+                    )
+                answer_text.extend(texts)
                 answer_images.append("ext/%s/%s.png" % (qid, name))
         else:
             # Only the answer page was supplied: it contains the question, the
@@ -268,7 +308,7 @@ def import_pair(store, data_dir, question_paths, answer_paths,
             "day": day,
             "title": title,
             "kind": kind or "case",
-            "source": "wechat",
+            "source": source or "wechat",
             "question_images": question_images,
             "answer_images": answer_images,
             "question_text": "\n".join(question_text),
@@ -281,7 +321,7 @@ def import_pair(store, data_dir, question_paths, answer_paths,
 
 
 def _text(page, text, y, size=10, right=False, color=(0.25, 0.25, 0.25)):
-    width = A4[0] - 2 * MARGIN
+    width = page.rect.width - 2 * MARGIN
     box = pymupdf.Rect(MARGIN, y - size - 2, MARGIN + width, y + size + 4)
     kwargs = (
         {"fontname": "msyh", "fontfile": str(FONT)}
@@ -293,42 +333,63 @@ def _text(page, text, y, size=10, right=False, color=(0.25, 0.25, 0.25)):
     )
 
 
-def _image_page(doc, path, label, number, total):
-    page = doc.new_page(width=A4[0], height=A4[1])
+def _image_page(doc, path, label, number, total, page_size=A4,
+                compress=False):
+    page = doc.new_page(width=page_size[0], height=page_size[1])
     _text(page, label, 40, 9)
     _text(page, "%s 第 %d/%d 页" % (
         "答案" if "答案" in label else "题面", number, total), 40, 9, right=True)
     page.draw_line(
         pymupdf.Point(MARGIN, 48),
-        pymupdf.Point(A4[0] - MARGIN, 48),
+        pymupdf.Point(page.rect.width - MARGIN, 48),
         color=(0.6, 0.6, 0.6), width=0.5,
     )
     try:
         with Image.open(path) as image:
             width, height = image.size
+            if compress:
+                image = image.convert("RGB")
+                if image.width > 1800:
+                    width = 1800
+                    height = int(round(image.height * 1800 / image.width))
+                    image = image.resize((width, height), Image.LANCZOS)
+                buffer = io.BytesIO()
+                image.save(buffer, "JPEG", quality=85, optimize=True)
+                payload = buffer.getvalue()
+            else:
+                payload = None
     except Exception as exc:  # noqa: BLE001 - a missing crop must not kill all
         _text(page, "图片读不了：%s" % exc, 80, 10, color=(0.7, 0.2, 0.2))
         return
-    area = pymupdf.Rect(MARGIN, 64, A4[0] - MARGIN, A4[1] - MARGIN)
+    area = pymupdf.Rect(
+        MARGIN, 64, page.rect.width - MARGIN, page.rect.height - MARGIN
+    )
     scale = min(area.width / width, area.height / height)
     draw_w, draw_h = width * scale, height * scale
     x = area.x0 + (area.width - draw_w) / 2
     y = area.y0
-    page.insert_image(
-        pymupdf.Rect(x, y, x + draw_w, y + draw_h), filename=str(path)
-    )
+    rect = pymupdf.Rect(x, y, x + draw_w, y + draw_h)
+    if payload is not None:
+        page.insert_image(rect, stream=payload)
+    else:
+        page.insert_image(rect, filename=str(path))
 
 
-def build_pdf(store, data_dir, scope="unprinted"):
+def build_pdf(store, data_dir, scope="unprinted", source=None):
     """Return (pdf bytes, filename, qids) for the selected ext questions."""
-    items = store.ext_questions(unprinted=(scope == "unprinted"), limit=500)
+    items = store.ext_questions(
+        unprinted=(scope == "unprinted"), limit=500, source=source or None
+    )
     if scope == "all":
-        items = store.ext_questions(limit=500)
+        items = store.ext_questions(limit=500, source=source or None)
     if not items:
         raise ExtError("没有可打印的公众号题")
     doc = pymupdf.open()
     cover = doc.new_page(width=A4[0], height=A4[1])
-    _text(cover, "公众号题 · 每周卷", 80, 20, color=(0.1, 0.16, 0.2))
+    cover_title = "公众号题 · 每周卷"
+    if source and source.startswith("wechat-exam"):
+        cover_title = items[0]["title"].rsplit(" ", 1)[0] + " 真题"
+    _text(cover, cover_title, 80, 20, color=(0.1, 0.16, 0.2))
     _text(cover, "%d 组 · 题面在前，答案封在最后" % len(items), 108, 10,
           color=(0.35, 0.35, 0.35))
     y = 150
@@ -351,11 +412,14 @@ def build_pdf(store, data_dir, scope="unprinted"):
             name = Path(rel).name
             answers.append((item, name, Path(data_dir) / rel))
 
+    exam = bool(source and source.startswith("wechat-exam"))
+    page_size = (A4[1], A4[0]) if exam else A4
     for number, (item, name, path) in enumerate(questions, 1):
         _image_page(doc, path, "%s · %s" % (item["day"], item["title"]),
-                    number, len(questions))
+                    number, len(questions), page_size=page_size, compress=exam)
     for number, (item, name, path) in enumerate(answers, 1):
-        _image_page(doc, path, "%s · 答案" % item["day"], number, len(answers))
+        _image_page(doc, path, "%s · %s · 答案" % (item["day"], item["title"]),
+                    number, len(answers), page_size=page_size, compress=exam)
     try:
         doc.subset_fonts()
     except Exception:  # noqa: BLE001 - subsetting must not kill the weekly paper

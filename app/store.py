@@ -3294,7 +3294,7 @@ class Store:
             conn.close()
         return self._ext_dict(row)
 
-    def ext_questions(self, days=None, limit=200, unprinted=False):
+    def ext_questions(self, days=None, limit=200, unprinted=False, source=None):
         sql = "SELECT * FROM ext_questions WHERE 1 = 1"
         args = []
         if days:
@@ -3302,7 +3302,12 @@ class Store:
             args.append(str(days))
         if unprinted:
             sql += " AND printed_at IS NULL"
-        sql += " ORDER BY day DESC, id DESC LIMIT ?"
+        if source:
+            sql += " AND source = ?"
+            args.append(str(source))
+        # Newest day first, but keep the import order inside one day so a
+        # 25-question paper prints C01 -> C25.
+        sql += " ORDER BY day DESC, id ASC LIMIT ?"
         args.append(max(1, min(int(limit or 200), 1000)))
         conn = self._connect()
         try:
