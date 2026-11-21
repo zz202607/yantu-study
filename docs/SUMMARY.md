@@ -23,6 +23,11 @@
   每日 20 次上限；key 只在 `data/llm.json`。**按住说话（11-21）**：
   浏览器录 16k WAV，本机 SenseVoice int8 转文字，音频不落盘、不出电脑、无 API 费用；
   首次加载 1.9 s、3 秒语音 0.15–0.25 s；识别结果可改字，手机键盘麦克风兜底。
+- **公众号题（11-21）**：微信「每日作业」**只存答案页**一张图即可（题目+解答都在里面），
+  OCR 读日期、裁页眉页脚，并在「解/答」处切成题面/答案两半；也支持 App 内 Ctrl+V
+  粘贴，或 `wechat_watch.py` / `wechat_watch.bat` 监听微信复制/收件箱自动入库。
+  本地外题库 + 周卷（题面在前、答案封后、页码分开），内容只在 `data/ext/`，
+  随备份、不进公开仓库。目前独立外题库，错题本/复习联动下一步。
 - **零决策复习**：今日队列（到期 → 新错 → 顽固，硬上限 20）；自动排期；可续做/撤销；Z 族答案遮罩。
   - **案例题**：看答案后按过程点选「过程对·结果对 / 过程对·结果错 / 过程错 / 没思路」，
     可拍手写过程照片随评分保存；不按选项字母判分。
@@ -129,6 +134,8 @@ FastAPI app/server.py
   │              文件名由 print_filename() 统一生成（卷名 + 秒级时间戳）
   ├── 任务单   → app/briefing.py + store.day_activity()（日志投影，不另存打卡）
   │              周包预测 store.review_forecast()（20 题/天上限 + 顺延）
+  ├── 公众号题 → app/extbank.py + store.ext_questions + data/ext/
+  │              （题/答图对、OCR 裁剪、周卷 PDF）
   └── 接入     → app/net.py + app/phone.py + tools/launch.py + tools/tailscale_setup.py
                  （LAN/Tailscale 地址 / 页内二维码 / 启停 / 自启）
 ```

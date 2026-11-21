@@ -39,7 +39,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 import crop_question as CQ  # noqa: E402
 import recognize_qid as RQ  # noqa: E402
-from app import analytics, asr as asr_app, baseline as baseline_app, briefing as briefing_app, clauses as clauses_app, daypack as daypack_app, drill as drill_app, phone as phone_app, plan as study_plan, qa as qa_app, reading as reading_app, report as report_app, standards  # noqa: E402
+from app import analytics, asr as asr_app, baseline as baseline_app, briefing as briefing_app, clauses as clauses_app, daypack as daypack_app, drill as drill_app, extbank as ext_app, phone as phone_app, plan as study_plan, qa as qa_app, reading as reading_app, report as report_app, standards  # noqa: E402
 from app.answer_ocr import analyze_crop  # noqa: E402
 from app.net import lan_ip  # noqa: E402
 from app.catalog import Catalog  # noqa: E402
@@ -1670,6 +1670,123 @@ async def stt(request: Request):
         raise HTTPException(503, str(exc))
     except asr_app.ASRError as exc:
         raise HTTPException(400, str(exc))
+
+
+@app.get("/api/ext")
+def ext_list(scope: str = "all"):
+    """The local WeChat daily-homework bank; images stay under data/ext."""
+    items = store.ext_questions(
+        unprinted=(scope == "unprinted"), limit=300
+    )
+    return {
+        "items": items,
+        "unprinted": len(store.ext_questions(unprinted=True, limit=1000)),
+        "total": len(store.ext_questions(limit=1000)),
+    }
+
+
+@app.post("/api/ext/import")
+async def ext_import(
+    question: list[UploadFile] | None = File(None),
+    answer: list[UploadFile] | None = File(None),
+    day: str = Form(""),
+    title: str = Form(""),
+    kind: str = Form("case"),
+):
+    """One pair; the answer page alone is enough (it contains the question)."""
+    question = question or []
+    answer = answer or []
+    if not answer:
+        raise HTTPException(400, "至少要有一张答案图；只存答案页也可以")
+    if len(question) > ext_app.MAX_IMAGES or len(answer) > ext_app.MAX_IMAGES:
+        raise HTTPException(400, "一次最多 %d 张图" % ext_app.MAX_IMAGES)
+    tmp = tempfile.TemporaryDirectory(prefix="yantu-ext-")
+    q_paths, a_paths = [], []
+    try:
+        async def save(files, prefix):
+            paths = []
+            for index, upload in enumerate(files):
+                name = "%s%d" % (prefix, index)
+                suffix = Path(upload.filename or "").suffix.lower()
+                if suffix not in (".png", ".jpg", ".jpeg", ".webp"):
+                    suffix = ".png"
+                path = Path(tmp.name) / (name + suffix)
+                size = 0
+                with open(path, "wb") as out:
+                    while True:
+                        chunk = await upload.read(1024 * 1024)
+                        if not chunk:
+                            break
+                        size += len(chunk)
+                        if size > ext_app.MAX_IMAGE_BYTES:
+                            raise HTTPException(413, "单张图片超过 %d MB"
+                                                % (ext_app.MAX_IMAGE_BYTES // 1024 // 1024))
+                        out.write(chunk)
+                paths.append(path)
+            return paths
+
+        q_paths = await save(question, "q") if question else []
+        a_paths = await save(answer, "a")
+
+        def run_import():
+            with _ocr_lock:
+                return ext_app.import_pair(
+                    store, DATA, q_paths, a_paths,
+                    day=day, title=title, kind=kind, engine=RQ.engine(),
+                )
+
+        item = await run_in_threadpool(run_import)
+    except ext_app.ExtError as exc:
+        raise HTTPException(400, str(exc))
+    except HTTPException:
+        raise
+    except Exception as exc:  # noqa: BLE001 - one bad pair must not 500 the app
+        raise HTTPException(500, "导入失败：%s" % exc)
+    finally:
+        tmp.cleanup()
+    return {"item": item, "items": store.ext_questions(limit=300)}
+
+
+@app.get("/api/ext/print")
+def ext_print(scope: str = "unprinted"):
+    try:
+        data, filename, qids = ext_app.build_pdf(store, DATA, scope=scope)
+    except ext_app.ExtError as exc:
+        raise HTTPException(400, str(exc))
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(500, "生成周卷失败：%s" % exc)
+    store.mark_ext_printed(qids)
+    return Response(
+        data,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": "attachment; filename=wechat-weekly.pdf",
+            "X-Print-Filename": quote(filename, safe=""),
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+@app.get("/api/ext/{qid}/image/{role}/{index}")
+def ext_image(qid: str, role: str, index: int, thumb: int = 0):
+    qid = str(qid or "").strip().upper()
+    if not re.match(r"^W\d{4}-\d{2}-\d{2}-\d{1,3}$", qid):
+        raise HTTPException(404, "外题不存在")
+    item = store.ext_question(qid)
+    if not item:
+        raise HTTPException(404, "外题不存在")
+    paths = item["question_images"] if role == "q" else item["answer_images"] if role == "a" else None
+    if not paths or index < 1 or index > len(paths):
+        raise HTTPException(404, "图片不存在")
+    path = DATA / paths[index - 1]
+    if thumb:
+        path = path.with_name(path.stem + "t.png")
+    if not path.is_file():
+        raise HTTPException(404, "图片文件不存在")
+    return FileResponse(
+        path, media_type="image/png",
+        headers={"Cache-Control": "private, max-age=3600"},
+    )
 
 
 @app.get("/api/handwriting/targets")
