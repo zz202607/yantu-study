@@ -609,6 +609,30 @@
     cursor: pointer;
   }
   .qa-mic { margin: 6px 0 0; font-size: 11.5px; }
+  /* WeChat daily-homework pairs */
+  .ext-form { display: grid; gap: 7px; margin: 8px 0; }
+  .ext-file {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    border: 1px dashed var(--line); border-radius: 10px; padding: 9px 10px;
+    font-size: 12.5px; color: var(--muted); background: var(--paper);
+  }
+  .ext-file input { flex: 0 0 auto; max-width: 58%; font-size: 11px; }
+  .ext-paste {
+    border: 1px dashed rgba(22,103,217,.4); background: rgba(22,103,217,.05);
+    border-radius: 10px; padding: 9px 10px; font-size: 12px; color: var(--accent);
+    text-align: center; outline: none;
+  }
+  .ext-paste:focus { border-color: var(--accent); }
+  .ext-list { display: grid; gap: 8px; }
+  .ext-item { border: 1px solid var(--line); border-radius: 12px; padding: 9px 10px; background: #fff; }
+  .ext-item .head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; min-width: 0; }
+  .ext-item .head b { font-size: 13px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ext-item .thumbs { display: flex; gap: 6px; margin-top: 7px; }
+  .ext-item .thumbs img { height: 64px; max-width: 46%; object-fit: cover; border: 1px solid var(--line); border-radius: 7px; background: #fff; }
+  .ext-item .actions { display: flex; gap: 6px; margin-top: 7px; }
+  .ext-item .badge { flex: 0 0 auto; font-size: 10.5px; color: var(--muted); }
+  .ext-view img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; margin: 8px 0; background: #fff; }
+  .ext-empty { padding: 16px; text-align: center; color: var(--muted); font-size: 12px; }
   .qa-voice { display: flex; align-items: center; gap: 8px; margin: 7px 0 2px; }
   #qaPtt { touch-action: none; user-select: none; -webkit-user-select: none; flex: 0 0 auto; }
   #qaPtt.recording {
@@ -1333,6 +1357,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></svg>
         <span>学习设置<small>考试日期 / 目标</small></span>
       </button>
+      <button class="quick" type="button" id="quickExt">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+        <span>公众号题<small>每周题图 → 入库</small></span>
+      </button>
     </div>
 
     <div class="install-card hidden" id="installCard">
@@ -1738,6 +1766,57 @@
       <span class="grow"></span>
       <button id="qaClose" class="ghost" type="button">关闭</button>
       <button id="qaSend" class="primary" type="button">问 AI</button>
+    </div>
+  </div>
+</div>
+
+<div id="extSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="extTitle">
+  <div class="sheet-panel brief-panel">
+    <div class="sheet-head">
+      <h3 id="extTitle">公众号题 · 每周整理</h3>
+      <span class="hint" id="extStats"></span>
+    </div>
+    <p class="hint" id="extLead">每天一对。只存答案页也可以——答案页里已有完整题目和解答；页眉写「YYYY年M月D日作业」的都按案例收。</p>
+    <div class="ext-form">
+      <label class="ext-file">题目图（可多张；只存答案页时可留空）
+        <input id="extQFiles" type="file" accept="image/*" multiple>
+      </label>
+      <label class="ext-file">答案图（可多张；也可直接粘贴）
+        <input id="extAFiles" type="file" accept="image/*" multiple>
+      </label>
+      <div id="extPaste" class="ext-paste" tabindex="0">在微信里复制整页答案图（题目+解答），然后在这里按 Ctrl+V</div>
+      <div class="toolbar wrap" style="margin:4px 0">
+        <button id="extImport" class="primary" type="button">识别并入库</button>
+        <span class="hint" id="extImportState">只存答案页也行；约 6–10 秒/组</span>
+      </div>
+    </div>
+    <div class="section-head">
+      <h2>已整理</h2>
+      <div class="toolbar" style="margin:0">
+        <button id="extPrint" class="ghost small" type="button">打印未打印</button>
+        <button id="extPrintAll" class="ghost small" type="button">重打全部</button>
+      </div>
+    </div>
+    <div id="extList" class="ext-list"></div>
+    <div class="sheet-actions">
+      <span class="hint">内容在 data/ext/，不进公开仓库。</span>
+      <span class="grow"></span>
+      <button id="extClose" class="ghost" type="button">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div id="extView" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="extViewTitle">
+  <div class="sheet-panel brief-panel">
+    <div class="sheet-head">
+      <h3 id="extViewTitle">公众号题</h3>
+      <span class="hint" id="extViewDay"></span>
+    </div>
+    <div id="extViewQ" class="ext-view"></div>
+    <button id="extViewToggle" class="primary" type="button">看答案</button>
+    <div id="extViewA" class="ext-view hidden"></div>
+    <div class="sheet-actions">
+      <button id="extViewClose" class="ghost" type="button">关闭</button>
     </div>
   </div>
 </div>
@@ -9249,6 +9328,198 @@ $("review").addEventListener("touchend", (e) => {
   if (Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
   gradeReview(dx > 0 ? "correct" : "wrong");
 }, { passive: true });
+
+// --- WeChat daily homework (external bank) --------------------------------
+
+let extItems = [];
+let extPasted = [];
+
+function extImageUrl(qid, role, index, thumb) {
+  return "/api/ext/" + encodeURIComponent(qid) + "/image/" + role + "/" + index
+    + (thumb ? "?thumb=1" : "");
+}
+
+function renderExtList() {
+  const box = $("extList");
+  if (!box) return;
+  if (!extItems.length) {
+    box.innerHTML = '<div class="ext-empty">还没有导入。选好题目图和答案图，点「识别并入库」。</div>';
+    return;
+  }
+  box.innerHTML = extItems.map((item) => {
+    const q = item.question_images || [];
+    const a = item.answer_images || [];
+    return '<div class="ext-item">'
+      + '<div class="head"><b>' + escapeHtml(item.day + " · " + (item.title || "公众号题"))
+      + '</b><span class="badge">' + (item.printed_at ? "已打印" : "未打印")
+      + "</span></div>"
+      + '<div class="thumbs">'
+      + (q.length ? '<img src="' + extImageUrl(item.qid, "q", 1, true) + '" alt="题目">' : "")
+      + (a.length ? '<img src="' + extImageUrl(item.qid, "a", 1, true) + '" alt="答案">' : "")
+      + "</div>"
+      + '<div class="actions">'
+      + '<button type="button" class="ghost small" data-ext-view="'
+      + escapeHtml(item.qid) + '">查看题 / 答案</button>'
+      + '<span class="hint" style="align-self:center">题 ' + q.length
+      + " 张 · 答 " + a.length + " 张</span>"
+      + "</div></div>";
+  }).join("");
+  for (const button of box.querySelectorAll("[data-ext-view]")) {
+    button.addEventListener("click", () => openExtView(button.dataset.extView));
+  }
+}
+
+async function loadExt() {
+  try {
+    const res = await fetch("/api/ext?scope=all", { cache: "no-store" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    extItems = data.items || [];
+    $("extStats").textContent = "共 " + (data.total || 0) + " 组 · 未打印 "
+      + (data.unprinted || 0) + " 组";
+    $("extPrint").textContent = "打印未打印 (" + (data.unprinted || 0) + ")";
+    renderExtList();
+  } catch (err) {
+    $("extList").innerHTML =
+      '<div class="ext-empty">读取失败：' + escapeHtml(err.message) + "</div>";
+  }
+}
+
+function openExtSheet() {
+  $("extSheet").classList.remove("hidden");
+  extPasted = [];
+  $("extStats").textContent = "读取中…";
+  extPickHint();
+  loadExt();
+}
+
+function extPickHint() {
+  const q = $("extQFiles").files.length;
+  const a = $("extAFiles").files.length + extPasted.length;
+  $("extImportState").textContent = "题目 " + q + " 张 · 答案 " + a + " 张"
+    + (extPasted.length ? "（含粘贴 " + extPasted.length + " 张）" : "");
+}
+
+function handleExtPaste(event) {
+  if ($("extSheet").classList.contains("hidden")) return;
+  const items = (event.clipboardData && event.clipboardData.items) || [];
+  const files = [];
+  for (const item of items) {
+    if (item.type && item.type.startsWith("image/")) {
+      const file = item.getAsFile();
+      if (file) files.push(file);
+    }
+  }
+  if (!files.length) return;
+  event.preventDefault();
+  extPasted.push(...files);
+  extPickHint();
+  toast("已粘入 " + files.length + " 张答案图，点「识别并入库」");
+}
+
+async function importExt() {
+  const qFiles = [...$("extQFiles").files];
+  const aFiles = [...$("extAFiles").files, ...extPasted];
+  if (!aFiles.length) {
+    toast("至少要有答案图；只存答案页也可以");
+    return;
+  }
+  const button = $("extImport");
+  button.disabled = true;
+  $("extImportState").textContent = "上传并识别中…（约 6–10 秒/组）";
+  const body = new FormData();
+  for (const file of qFiles) body.append("question", file);
+  for (const file of aFiles) body.append("answer", file);
+  try {
+    const res = await fetch("/api/ext/import", { method: "POST", body });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    $("extQFiles").value = "";
+    $("extAFiles").value = "";
+    extPasted = [];
+    extItems = data.items || [];
+    $("extImportState").textContent = "已入库：" + (data.item && data.item.qid
+      ? data.item.qid : "完成");
+    toast("已入库：" + (data.item && data.item.day ? data.item.day : "公众号题"));
+    loadExt();
+  } catch (err) {
+    $("extImportState").textContent = "导入失败：" + err.message;
+    toast("导入失败：" + err.message);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function openExtView(qid) {
+  const item = extItems.find((row) => row.qid === qid);
+  if (!item) return;
+  $("extViewTitle").textContent = item.title || "公众号题";
+  $("extViewDay").textContent = item.day || "";
+  $("extViewQ").innerHTML = (item.question_images || []).map((rel, index) =>
+    '<img src="' + extImageUrl(qid, "q", index + 1, false) + '" alt="题目">'
+  ).join("");
+  $("extViewA").innerHTML = (item.answer_images || []).map((rel, index) =>
+    '<img src="' + extImageUrl(qid, "a", index + 1, false) + '" alt="答案">'
+  ).join("");
+  $("extViewA").classList.add("hidden");
+  $("extViewToggle").textContent = "看答案";
+  $("extView").classList.remove("hidden");
+}
+
+async function printExt(scope) {
+  const button = scope === "unprinted" ? $("extPrint") : $("extPrintAll");
+  button.disabled = true;
+  const old = button.textContent;
+  button.textContent = "生成中…";
+  try {
+    const res = await fetch("/api/ext/print?scope=" + scope, { cache: "no-store" });
+    if (!res.ok) {
+      let message = res.statusText;
+      try { message = (await res.json()).detail || message; } catch (err) { /* not JSON */ }
+      throw new Error(message);
+    }
+    const blob = await res.blob();
+    const name = decodeURIComponent(res.headers.get("X-Print-Filename")
+      || "岩土-公众号题.pdf");
+    const href = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = href;
+    link.download = name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(href), 2000);
+    toast("已生成：" + name);
+    loadExt();
+  } catch (err) {
+    toast("生成失败：" + err.message);
+  } finally {
+    button.disabled = false;
+    button.textContent = old;
+  }
+}
+
+$("quickExt").addEventListener("click", openExtSheet);
+$("extClose").addEventListener("click", () => $("extSheet").classList.add("hidden"));
+$("extSheet").addEventListener("click", (event) => {
+  if (event.target === $("extSheet")) $("extSheet").classList.add("hidden");
+});
+$("extQFiles").addEventListener("change", extPickHint);
+$("extAFiles").addEventListener("change", extPickHint);
+$("extPaste").addEventListener("click", () => $("extPaste").focus());
+document.addEventListener("paste", handleExtPaste);
+$("extImport").addEventListener("click", importExt);
+$("extPrint").addEventListener("click", () => printExt("unprinted"));
+$("extPrintAll").addEventListener("click", () => printExt("all"));
+$("extViewClose").addEventListener("click", () => $("extView").classList.add("hidden"));
+$("extView").addEventListener("click", (event) => {
+  if (event.target === $("extView")) $("extView").classList.add("hidden");
+});
+$("extViewToggle").addEventListener("click", () => {
+  const answers = $("extViewA");
+  const hidden = answers.classList.toggle("hidden");
+  $("extViewToggle").textContent = hidden ? "看答案" : "收起答案";
+});
 
 // --- daily briefing -------------------------------------------------------
 

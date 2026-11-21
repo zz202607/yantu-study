@@ -264,6 +264,23 @@ CREATE TABLE IF NOT EXISTS day_packs (
     summary TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS idx_day_packs_day ON day_packs(day DESC, id DESC);
+-- External questions: the WeChat daily homework pairs (question page + answer
+-- page).  Images live under data/ext/<qid>/; this table only indexes them.
+CREATE TABLE IF NOT EXISTS ext_questions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    qid TEXT NOT NULL UNIQUE,
+    day TEXT NOT NULL,
+    title TEXT NOT NULL DEFAULT '',
+    kind TEXT NOT NULL DEFAULT 'case',
+    source TEXT NOT NULL DEFAULT 'wechat',
+    question_images TEXT NOT NULL,
+    answer_images TEXT NOT NULL,
+    question_text TEXT NOT NULL DEFAULT '',
+    answer_text TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL,
+    printed_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_ext_day ON ext_questions(day DESC, id DESC);
 CREATE TABLE IF NOT EXISTS review_log (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     session_id INTEGER NOT NULL REFERENCES review_sessions(id) ON DELETE CASCADE,
@@ -406,6 +423,7 @@ class Store:
         self.db_path = self.root / "wrongbook.db"
         self.orig_dir = self.root / "attachments" / "orig"
         self.thumb_dir = self.root / "attachments" / "thumb"
+        self.ext_dir = self.root / "ext"
         self.backup_dir = self.root / "backups"
         self._lock = threading.RLock()
         self._init()
@@ -3204,6 +3222,125 @@ class Store:
             target.close()
             conn.close()
 
+    # -- external WeChat daily homework ------------------------------------
+
+    @staticmethod
+    def _ext_dict(row):
+        if not row:
+            return None
+        item = dict(row)
+        for key in ("question_images", "answer_images"):
+            try:
+                item[key] = json.loads(item.get(key) or "[]")
+            except (TypeError, ValueError):
+                item[key] = []
+        return item
+
+    def next_ext_qid(self, day):
+        """`W2026-11-19-1`, `-2`, ... never reusing a deleted sequence."""
+        conn = self._connect()
+        try:
+            for seq in range(1, 1000):
+                qid = "W%s-%d" % (str(day), seq)
+                found = conn.execute(
+                    "SELECT 1 FROM ext_questions WHERE qid = ?", (qid,)
+                ).fetchone()
+                if not found:
+                    return qid
+        finally:
+            conn.close()
+        raise ValueError("这一天的外题编号用完了")
+
+    def add_ext_question(self, row):
+        qid = str(row.get("qid") or "").strip().upper()
+        if not qid:
+            raise ValueError("外题缺少题号")
+        conn = self._connect()
+        try:
+            with conn:
+                conn.execute(
+                    "INSERT INTO ext_questions"
+                    " (qid, day, title, kind, source, question_images,"
+                    "  answer_images, question_text, answer_text, created_at)"
+                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (
+                        qid,
+                        str(row.get("day") or ""),
+                        str(row.get("title") or ""),
+                        str(row.get("kind") or "case"),
+                        str(row.get("source") or "wechat"),
+                        json.dumps(row.get("question_images") or [], ensure_ascii=False),
+                        json.dumps(row.get("answer_images") or [], ensure_ascii=False),
+                        str(row.get("question_text") or ""),
+                        str(row.get("answer_text") or ""),
+                        now_iso(),
+                    ),
+                )
+                found = conn.execute(
+                    "SELECT * FROM ext_questions WHERE qid = ?", (qid,)
+                ).fetchone()
+        finally:
+            conn.close()
+        return self._ext_dict(found)
+
+    def ext_question(self, qid):
+        conn = self._connect()
+        try:
+            row = conn.execute(
+                "SELECT * FROM ext_questions WHERE qid = ?",
+                (str(qid or "").strip().upper(),),
+            ).fetchone()
+        finally:
+            conn.close()
+        return self._ext_dict(row)
+
+    def ext_questions(self, days=None, limit=200, unprinted=False):
+        sql = "SELECT * FROM ext_questions WHERE 1 = 1"
+        args = []
+        if days:
+            sql += " AND day >= ?"
+            args.append(str(days))
+        if unprinted:
+            sql += " AND printed_at IS NULL"
+        sql += " ORDER BY day DESC, id DESC LIMIT ?"
+        args.append(max(1, min(int(limit or 200), 1000)))
+        conn = self._connect()
+        try:
+            rows = conn.execute(sql, args).fetchall()
+        finally:
+            conn.close()
+        return [self._ext_dict(row) for row in rows]
+
+    def mark_ext_printed(self, qids):
+        qids = [str(qid).strip().upper() for qid in qids or [] if qid]
+        if not qids:
+            return 0
+        marks = ",".join("?" for _ in qids)
+        conn = self._connect()
+        try:
+            with conn:
+                cur = conn.execute(
+                    "UPDATE ext_questions SET printed_at = ?"
+                    " WHERE qid IN (%s)" % marks,
+                    [now_iso()] + qids,
+                )
+                return cur.rowcount
+        finally:
+            conn.close()
+
+    def delete_ext_question(self, qid):
+        qid = str(qid or "").strip().upper()
+        item = self.ext_question(qid)
+        if not item:
+            return None
+        conn = self._connect()
+        try:
+            with conn:
+                conn.execute("DELETE FROM ext_questions WHERE qid = ?", (qid,))
+        finally:
+            conn.close()
+        return item
+
     def backup(self, dest=None):
         """Consistent SQLite snapshot plus attachments, in one zip."""
         self.backup_dir.mkdir(parents=True, exist_ok=True)
@@ -3234,6 +3371,13 @@ class Store:
                         continue
                     for path in sorted(folder.rglob("*.jpg")):
                         zf.write(path, path.relative_to(self.root).as_posix())
+                ext = self.root / "ext"
+                ext_files = (
+                    [path for path in sorted(ext.rglob("*")) if path.is_file()]
+                    if ext.exists() else []
+                )
+                for path in ext_files:
+                    zf.write(path, path.relative_to(self.root).as_posix())
                 zf.writestr(
                     "manifest.json",
                     json.dumps(
@@ -3244,6 +3388,7 @@ class Store:
                             "attempts": counts["total"],
                             "photos": len(originals),
                             "reports": len(report_files),
+                            "ext_images": len(ext_files),
                         },
                         ensure_ascii=False,
                         indent=2,
@@ -3315,6 +3460,11 @@ class Store:
                 shutil.rmtree(attach)
             if (tmp / "attachments").exists():
                 shutil.copytree(tmp / "attachments", attach)
+            ext = data_dir / "ext"
+            if ext.exists():
+                shutil.rmtree(ext)
+            if (tmp / "ext").exists():
+                shutil.copytree(tmp / "ext", ext)
         return {
             "attempts": attempts,
             "photos": photos,
