@@ -37,7 +37,7 @@
 
 ## 验证
 
-- LAN 直接访问 `http://192.168.1.93:8000/`：有「今天这么走」「记今天做了多少题」。
+- LAN 直接访问 `http://192.168.1.10:8000/`：有「今天这么走」「记今天做了多少题」。
 - 无头 Chrome（新 profile）：meta 与 `/api/version` 相等；`touch index.html`
   后调用 `checkAppBuild()`，页面 reload，meta 变为新 build；SW 控制器存在，
   cache 只有 `yantu-shell-v7`；无 JS 异常。

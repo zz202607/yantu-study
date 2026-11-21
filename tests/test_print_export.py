@@ -40,14 +40,37 @@ def test_mixed_c_z_sheet_separates_answers(tmp_path):
     doc = pymupdf.open(out)
     try:
         assert doc.page_count == stats["pages"]
-        first = doc[0].get_text()
+        first = doc[0].get_text().replace("\xa0", " ")
         assert "题面" in first
+        assert "题面 第 1/" in first
         answer_pages = [
-            doc[i].get_text()
+            doc[i].get_text().replace("\xa0", " ")
             for i in range(stats["question_pages"], doc.page_count)
         ]
         assert answer_pages
         assert all("答案" in text for text in answer_pages)
+        assert "答案 第 1/" in answer_pages[0]
+    finally:
+        doc.close()
+
+
+def test_page_numbers_restart_for_answers():
+    """Covers stay blank; questions and answers each run 1..N on their own."""
+    from app.print_export import _stamp
+
+    doc = pymupdf.open()
+    for _ in range(6):
+        doc.new_page(width=595, height=842)
+    # 0 cover, 1 question, 2 day cover, 3 question, 4-5 answers
+    _stamp(doc, "今日卷", 4, skip_pages={0, 2})
+    texts = [page.get_text().replace("\xa0", " ") for page in doc]
+    try:
+        assert texts[0].strip() == ""
+        assert "题面 第 1/2 页" in texts[1]
+        assert texts[2].strip() == ""
+        assert "题面 第 2/2 页" in texts[3]
+        assert "答案 第 1/2 页" in texts[4]
+        assert "答案 第 2/2 页" in texts[5]
     finally:
         doc.close()
 

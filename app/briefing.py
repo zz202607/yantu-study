@@ -143,6 +143,7 @@ def _drill_task(store, activity, baseline):
         "title": title,
         "detail": detail,
         "route": "drill",
+        "active_id": active.get("id") if active else None,
         "minutes": 40,
         "done": done,
         "optional": True,
@@ -297,7 +298,94 @@ def _plan_task(plan, activity, now, review_count=0, pack=None):
     }
 
 
-def build(store, settings, *, now=None, reading=None, baseline=None, plan=None):
+def _retest_todo(retest, now):
+    """The December full-paper retest, shown until both halves are recorded."""
+    if not retest:
+        return None
+    halves = {row.get("half"): row for row in retest.get("halves") or []}
+    pending = [half for half in ("A", "P")
+               if not (halves.get(half) or {}).get("recorded")]
+    if not pending:
+        return None
+    due = now.replace(month=12, day=15, hour=0, minute=0, second=0,
+                      microsecond=0)
+    days = (due.date() - now.date()).days
+    if days > 0:
+        detail = "12 月 15 日 · 还剩 %d 天；先打印两半题面，答案封存。" % days
+    elif days == 0:
+        detail = "就是今天：两半各 180 分钟，做完再记四个数。"
+    else:
+        detail = "已过计划日 %d 天；尽快补做，2025 已做基线。" % abs(days)
+    return {
+        "key": "retest_2024",
+        "title": "2024 整卷复测",
+        "detail": detail,
+        "action": "retest",
+        "days_left": days,
+        "pending": pending,
+    }
+
+
+def _backlog(store, baseline, retest, now):
+    """Long-term leftovers the daily sheet should keep putting in front.
+
+    These are not "today's tasks": they stay until the underlying state
+    changes (triage row written, question in the wrong book, drill finished,
+    retest half recorded), so they cannot be ticked off by opening a page.
+    """
+    items = (((baseline or {}).get("quadrants") or {}).get("items")) or []
+    skipped = [row for row in items if row.get("quadrant") == "skipped"]
+    untriaged = [row for row in skipped if not row.get("triage")]
+    no_idea = [row for row in skipped if row.get("triage") == "no_idea"]
+    no_idea_new = [row for row in no_idea
+                   if not store.get_attempt_by_qid(row.get("qid"))]
+    no_time = [row for row in skipped if row.get("triage") == "no_time"]
+    slow = [row for row in items if row.get("quadrant") == "slow"]
+
+    out = []
+    if untriaged:
+        out.append({
+            "key": "triage_skipped",
+            "title": "%d 道放弃题还没分流" % len(untriaged),
+            "detail": "点「没时间」或「不会」，一题一秒；分完才知道该补哪边。",
+            "action": "triage_skipped",
+            "count": len(untriaged),
+        })
+    elif no_idea_new:
+        out.append({
+            "key": "import_no_idea",
+            "title": "%d 道「不会」的题还没入错题本" % len(no_idea_new),
+            "detail": "分流已经做完；入本后才会按 1/7/15/30 天安排复习。",
+            "action": "import_no_idea",
+            "count": len(no_idea_new),
+        })
+
+    pool = slow + no_time
+    active = store.active_drill("timed")
+    finished = store.list_drills(limit=5, mode="timed", finished=True)
+    drill_done = any(row.get("source") in ("slow", "skipped")
+                     for row in finished)
+    if len(pool) >= 5 and not active and not drill_done:
+        # Prefer the five overtime questions; fall back to the "ran out of
+        # time" pile when there are not enough slow ones for a 5-question set.
+        source = "slow" if len(slow) >= 5 else "skipped"
+        out.append({
+            "key": "drill_baseline",
+            "title": "超时 / 没时间题 %d 道，练一组" % len(pool),
+            "detail": "5 题 × 8 分钟硬停，每题先写首步；计时到点就停。",
+            "action": "drill_baseline",
+            "source": source,
+            "count": min(5, len(pool)),
+        })
+
+    retest_todo = _retest_todo(retest, now)
+    if retest_todo:
+        out.append(retest_todo)
+    return out
+
+
+def build(store, settings, *, now=None, reading=None, baseline=None,
+          plan=None, retest=None):
     now = now or datetime.now().astimezone()
     day = now.strftime("%Y-%m-%d")
     activity = store.day_activity(day)
@@ -335,6 +423,7 @@ def build(store, settings, *, now=None, reading=None, baseline=None, plan=None):
             "reasons": overview.get("reasons") or {},
         },
         "tasks": tasks,
+        "backlog": _backlog(store, baseline, retest, now),
         "done_count": sum(1 for task in tasks if task["done"]),
         "total_count": len(tasks),
         "lead": lead,

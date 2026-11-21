@@ -1,15 +1,17 @@
-"""One-click launcher: start the local server, open the desktop browser, and
-show a QR code for the phone.  Running it twice reuses the running server.
+"""One-click launcher: start the local server and open the page that shows the
+phone QR.  Running it twice reuses the running server.
 
-    py -3 tools/launch.py            # start (if needed), open browser, show QR
-    py -3 tools/launch.py --no-open  # no browser / image window (for scripts)
+The QR is rendered inside the page, so there is no second image window; the
+page also knows about a Tailscale entry when one is logged in and reachable.
+
+    py -3 tools/launch.py            # start (if needed), open the page + QR
+    py -3 tools/launch.py --no-open  # no browser (for scripts)
     py -3 tools/launch.py --stop     # stop the process listening on the port
 """
 
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import socket
 import subprocess
@@ -93,40 +95,10 @@ def stop_server(port):
     return out.returncode
 
 
-def shell_build(port):
-    """The running page's build id, used to keep a scanned URL out of caches.
-
-    WeChat's built-in browser keeps its own page snapshots and ignores most
-    cache headers; a URL that changes with the shell is the reliable escape.
-    """
-    try:
-        with urllib.request.urlopen(
-            "http://127.0.0.1:%d/api/version" % port, timeout=2.0
-        ) as res:
-            data = json.loads(res.read().decode("utf-8"))
-        return str(data.get("build") or "")
-    except (OSError, ValueError):
-        return ""
-
-
-def show_qr(url, open_image=True):
-    """Save a scannable PNG and (optionally) open it in the default viewer."""
-    try:
-        import segno
-    except ImportError:
-        print("未安装 segno，无法生成二维码：py -3 -m pip install segno==1.6.6")
-        return
-    path = CACHE / "phone_access.png"
-    segno.make(url, error="m").save(path, scale=12, border=3)
-    print("二维码：%s" % path)
-    if open_image and os.name == "nt":
-        os.startfile(path)  # noqa: S606 - open the generated PNG
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", type=int, default=int(os.environ.get("PORT", "8000")))
-    parser.add_argument("--no-open", action="store_true", help="do not open browser or image")
+    parser.add_argument("--no-open", action="store_true", help="do not open the browser")
     parser.add_argument("--stop", action="store_true", help="stop the server on this port")
     args = parser.parse_args()
     port = args.port
@@ -146,20 +118,14 @@ def main():
             return 1
         print("服务已启动（后台运行）。")
 
-    # A versioned URL bypasses WeChat/browser page snapshots; the shell also
-    # no-stores, but a changing address is what actually moves WeChat.
-    build = shell_build(port)
-    suffix = "/?v=" + build if build.isdigit() else ""
-    local = "http://localhost:%d%s" % (port, suffix)
+    local = "http://localhost:%d/?qr=1" % port
     lan = lan_ip()
-    print("电脑：%s" % local)
+    print("电脑：%s（打开后会弹出手机二维码）" % local)
     if lan == "127.0.0.1":
         print("未找到手机可用的局域网地址；请检查 Wi-Fi，或用 YANTU_HOST 指定。")
     else:
-        phone = "http://%s:%d%s" % (lan, port, suffix)
-        print("手机：%s" % phone)
-        show_qr(phone, open_image=not args.no_open)
-    print("换网络后重新运行 start.bat 即可生成新二维码。")
+        print("手机：http://%s:%d/  页面里的二维码用同一个地址" % (lan, port))
+    print("换网后重开 start.bat 会换新地址；Tailscale 登录后页面里多一个固定入口。")
 
     if not args.no_open:
         webbrowser.open(local)

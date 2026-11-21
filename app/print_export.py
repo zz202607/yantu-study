@@ -124,22 +124,37 @@ def _split_z(full_path, tmp_dir, qid, engine, ocr_lock):
 
 
 def _stamp(doc, title, answer_from, cover_pages=0, skip_pages=None):
+    """Stamp the header and footer, numbering questions and answers separately.
+
+    The answer block restarts at 1, so a sealed answer sheet can be handled on
+    its own ("答案 第 3/8 页") without borrowing the question sheet's numbering.
+    Covers are left blank and are not counted in either sequence.
+    """
     skip = set(range(cover_pages)) | set(skip_pages or ())
-    for i, page in enumerate(doc):
-        if i in skip:
-            continue
-        suffix = " · 答案" if i >= answer_from else " · 题面"
-        MPS.text_line(page, title + suffix, 40, 9, color=(0.25, 0.25, 0.25))
-        MPS.text_line(
-            page, "第 %d/%d 页" % (i + 1, doc.page_count), 40, 9, right=True,
-            color=(0.25, 0.25, 0.25),
-        )
-        page.draw_line(
-            pymupdf.Point(MPS.MARGIN, 48),
-            pymupdf.Point(MPS.A4[0] - MPS.MARGIN, 48),
-            color=(0.6, 0.6, 0.6),
-            width=0.5,
-        )
+    parts = (
+        ("题面", [i for i in range(doc.page_count)
+                 if i < answer_from and i not in skip]),
+        ("答案", [i for i in range(doc.page_count)
+                 if i >= answer_from and i not in skip]),
+    )
+    for part, indices in parts:
+        total = len(indices)
+        for number, i in enumerate(indices, 1):
+            page = doc[i]
+            MPS.text_line(
+                page, "%s · %s" % (title, part), 40, 9,
+                color=(0.25, 0.25, 0.25),
+            )
+            MPS.text_line(
+                page, "%s 第 %d/%d 页" % (part, number, total), 40, 9,
+                right=True, color=(0.25, 0.25, 0.25),
+            )
+            page.draw_line(
+                pymupdf.Point(MPS.MARGIN, 48),
+                pymupdf.Point(MPS.A4[0] - MPS.MARGIN, 48),
+                color=(0.6, 0.6, 0.6),
+                width=0.5,
+            )
 
 
 def _cover_page(doc, cover, title):

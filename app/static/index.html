@@ -230,6 +230,23 @@
   .sheet-actions { display: flex; gap: 8px; margin-top: 12px; }
   .sheet-actions .primary { flex: 1; padding: 12px; }
   .sheet-actions .ghost { flex: 0 0 auto; }
+  /* phone QR card: one window, no separate image viewer */
+  #phoneSheet { align-items: center; }
+  #phoneSheet .sheet-panel { max-width: 460px; border-radius: 16px; }
+  .phone-panel { max-height: 92vh; overflow: auto; }
+  .phone-tabs { justify-content: center; }
+  .phone-qr {
+    display: block; width: 248px; height: 248px; margin: 4px auto 8px;
+    border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 4px;
+  }
+  .phone-url {
+    text-align: center; font-size: 12px; color: var(--muted);
+    word-break: break-all; margin: 0 0 8px;
+  }
+  .phone-url code { font-size: 12px; }
+  .phone-actions { display: flex; gap: 8px; justify-content: center; }
+  .phone-state { font-size: 12px; line-height: 1.55; margin: 8px 0 0; color: var(--muted); }
+  .phone-state.warn { color: var(--warn); }
   .check { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--muted); margin-top: 10px; }
   .detail-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
   .detail-head h2 { font-size: 18px; margin: 0; }
@@ -592,6 +609,12 @@
     cursor: pointer;
   }
   .qa-mic { margin: 6px 0 0; font-size: 11.5px; }
+  .qa-voice { display: flex; align-items: center; gap: 8px; margin: 7px 0 2px; }
+  #qaPtt { touch-action: none; user-select: none; -webkit-user-select: none; flex: 0 0 auto; }
+  #qaPtt.recording {
+    background: #fdecea; border-color: #b3261e; color: #b3261e; font-weight: 700;
+  }
+  .qa-voice .hint { flex: 1; min-width: 0; }
   header .head-print {
     flex: 0 0 auto; border: 1px solid rgba(255,255,255,.35);
     background: rgba(255,255,255,.12); color: #fff; border-radius: 8px;
@@ -1199,6 +1222,9 @@
     .nav button { padding: 6px 9px; font-size: 13px; }
     select { padding: 6px 6px; font-size: 12.5px; }
   }
+  @media (max-width: 760px) {
+    header .phone-only { display: none; }
+  }
   @media (max-width: 380px) {
     .nav button { padding: 6px 7px; font-size: 12px; }
     .cand { min-width: 84px; padding: 9px 11px; }
@@ -1209,6 +1235,7 @@
 <header>
   <h1>岩土学习驾驶舱 <span class="badge">M14</span></h1>
   <span id="examChip" class="exam-chip">D-—</span>
+  <button id="headerPhone" class="head-print phone-only" type="button" aria-label="显示手机扫码二维码">扫码</button>
   <button id="headerBriefing" class="head-print" type="button" aria-label="今日任务">今日</button>
   <button id="headerPrint" class="head-print" type="button" aria-label="打印">打印</button>
   <select id="family" aria-label="当前册别">
@@ -1241,6 +1268,7 @@
       <h3>今天扎实的一点</h3>
       <p id="dashEncourage">正在读取学习记录…</p>
       <small id="dashEvidence"></small>
+      <button id="dashRetry" class="ghost small hidden" type="button">重新连接</button>
     </div>
 
     <div class="dash-stats">
@@ -1700,7 +1728,11 @@
     <div class="qa-thread" id="qaThread"></div>
     <div class="qa-suggest" id="qaSuggest"></div>
     <textarea id="qaInput" rows="2" maxlength="500" placeholder="写下你的疑问，比如：这一步为什么这么取？"></textarea>
-    <p class="hint qa-mic">手机可直接点键盘上的 🎤 说话；网页内按住说话要等 HTTPS 版。</p>
+    <div class="qa-voice">
+      <button id="qaPtt" class="ghost small" type="button" disabled>🎙 按住说话</button>
+      <span class="hint" id="qaVoiceState">正在检查本机语音识别…</span>
+    </div>
+    <p class="hint qa-mic">识别不准可以直接改字；不想用语音就点键盘上的 🎤。</p>
     <div class="sheet-actions">
       <span class="hint" id="qaQuota"></span>
       <span class="grow"></span>
@@ -1738,6 +1770,13 @@
     </div>
     <p class="hint" id="briefLead">正在读取今天的学习记录…</p>
     <div id="briefTasks"></div>
+    <div id="briefBacklog" class="hidden">
+      <div class="section-head" style="margin-top:10px">
+        <h2>该补的账</h2>
+        <span class="hint">做完才会消失</span>
+      </div>
+      <div id="briefBacklogItems"></div>
+    </div>
     <div class="toolbar wrap" style="margin:8px 0 4px">
       <button id="briefPrintToday" type="button" class="primary">打印今天的卷</button>
       <button id="briefHand" type="button" class="ghost">补单题手写</button>
@@ -1785,8 +1824,13 @@
       <input type="date" id="setBaselineDue">
     </label>
     <p class="hint">倒计时、周目标、基线提醒都会随这里更新。</p>
-    <p class="hint">手机用浏览器菜单「添加到主屏幕」即可当 App 打开；局域网 HTTP 下系统不会弹自动安装提示。</p>
+    <p class="hint">手机用浏览器菜单「添加到主屏幕」即可当 App 打开；局域网 HTTP 不会弹自动安装，接 Tailscale HTTPS 后才会。</p>
     <p class="hint">页面版本：<span id="appBuild">—</span> · 回到 App 会自动检查新版本</p>
+    <div class="storage-box">
+      <div class="storage-line"><b>手机访问</b><span id="settingsPhoneState">扫码 / 固定入口</span></div>
+      <p class="hint">同一 Wi-Fi 扫码即可；登录 Tailscale 后可用固定地址，换网不用重扫。</p>
+      <button id="settingsPhone" class="ghost small" type="button">显示二维码</button>
+    </div>
     <div class="storage-box">
       <div class="storage-line"><b>照片存储</b><span id="storageText">读取中…</span></div>
       <p class="hint">新照片压到 2400px q85；每题默认保留最近 2 张过程照片。标记原图不会被清理。</p>
@@ -1795,6 +1839,27 @@
     <div class="sheet-actions">
       <button id="settingsCancel" class="ghost">取消</button>
       <button id="settingsSave" class="primary">保存</button>
+    </div>
+  </div>
+</div>
+
+<div id="phoneSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="phoneTitle">
+  <div class="sheet-panel phone-panel">
+    <div class="sheet-head">
+      <h3 id="phoneTitle">手机打开</h3>
+      <span class="hint" id="phoneBuild"></span>
+    </div>
+    <p class="hint">扫完收起即可；主屏图标装好后，日常不用再扫码。</p>
+    <div class="chips phone-tabs" id="phoneTabs"></div>
+    <img id="phoneQr" class="phone-qr hidden" alt="手机访问二维码">
+    <p class="phone-url"><code id="phoneUrl">—</code></p>
+    <div class="phone-actions">
+      <button id="phoneCopy" class="ghost small" type="button">复制地址</button>
+      <button id="phoneReload" class="ghost small" type="button">重新检测</button>
+    </div>
+    <p class="phone-state" id="phoneState"></p>
+    <div class="sheet-actions">
+      <button id="phoneClose" class="primary" type="button">收起</button>
     </div>
   </div>
 </div>
@@ -3503,7 +3568,25 @@ function pct(value) {
   return value == null ? "—" : Math.round(value * 100) + "%";
 }
 
+let homeFailed = false;
+
+function homeNetworkHint(message) {
+  const network = !navigator.onLine
+    || /Failed to fetch|NetworkError|Load failed|ERR_/i.test(String(message || ""));
+  if (!network) return "读取学习数据失败：" + message;
+  if (location.hostname.endsWith(".ts.net")) {
+    return "连不上电脑：手机上的 Tailscale 没连上。打开 Tailscale 确认已连接，"
+      + "再点「重新连接」；在家也可以改用局域网入口。";
+  }
+  if (location.protocol === "http:" && !["localhost", "127.0.0.1"].includes(location.hostname)) {
+    return "连不上电脑：这个桌面图标是局域网地址，换 Wi-Fi 或用流量会失效。"
+      + "在家请连同一个 Wi-Fi；出门请用 Tailscale HTTPS 入口重新添加到桌面。";
+  }
+  return "连不上电脑：检查电脑上的服务是否在运行，以及手机和电脑是否在同一网络。";
+}
+
 async function loadHome() {
+  const retry = $("dashRetry");
   try {
     // The path needs today's task states; fetching both together keeps the
     // home screen from rendering a step that is already done.
@@ -3523,12 +3606,27 @@ async function loadHome() {
     // A stale sheet from yesterday must not mark today's steps.
     state.briefing = brief && (!data.day || brief.day === data.day)
       ? brief : null;
+    homeFailed = false;
+    retry.classList.add("hidden");
     renderHome(data);
   } catch (err) {
-    $("dashEncourage").textContent = "读取学习数据失败：" + err.message;
+    homeFailed = true;
+    $("dashEncourage").textContent = homeNetworkHint(err.message);
     $("dashEvidence").textContent = "";
+    retry.classList.remove("hidden");
   }
 }
+
+$("dashRetry").addEventListener("click", () => {
+  const retry = $("dashRetry");
+  retry.disabled = true;
+  $("dashEncourage").textContent = "正在重新连接…";
+  loadHome().finally(() => { retry.disabled = false; });
+});
+window.addEventListener("online", () => { if (homeFailed) loadHome(); });
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && homeFailed) loadHome();
+});
 
 function renderHome(d) {
   const c = d.countdown || {};
@@ -4024,6 +4122,7 @@ function renderQaSuggest() {
 async function openQaSheet(qid) {
   qid = String(qid || "").trim();
   if (!qid) return;
+  stopVoice(false);
   state.qa = { qid, busy: false, data: null, thread: [] };
   $("qaTitle").textContent = "问 AI · " + qid;
   $("qaState").textContent = "读取记录…";
@@ -4035,6 +4134,7 @@ async function openQaSheet(qid) {
   $("qaSend").disabled = true;
   renderQaSuggest();
   $("qaSheet").classList.remove("hidden");
+  updatePttState();
   try {
     const res = await fetch("/api/qa/" + encodeURIComponent(qid));
     const data = await res.json();
@@ -4073,6 +4173,270 @@ async function openQaSheet(qid) {
     $("qaLead").textContent = err.message;
   }
 }
+
+// ---- push-to-talk: record locally, transcribe on this PC -----------------
+let sttStatusPromise = null;
+const voice = {
+  holding: false, starting: false, recording: false, processing: false,
+  stream: null, ctx: null, source: null, processor: null, mute: null,
+  chunks: [], rate: 16000, started: 0, timer: null,
+};
+
+function loadSttStatus() {
+  if (!sttStatusPromise) {
+    sttStatusPromise = fetch("/api/stt", { cache: "no-store" })
+      .then((res) => res.json().then((data) => {
+        if (!res.ok) throw new Error(data.detail || res.statusText);
+        return data;
+      }))
+      .catch((err) => {
+        sttStatusPromise = null;
+        throw err;
+      });
+  }
+  return sttStatusPromise;
+}
+
+function voiceHint(text, warn) {
+  const el = $("qaVoiceState");
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = warn ? "#b3261e" : "";
+}
+
+async function updatePttState() {
+  const button = $("qaPtt");
+  if (!button) return;
+  if (!window.isSecureContext) {
+    button.disabled = true;
+    voiceHint("网页内说话需要 HTTPS：用 Tailscale 入口，或电脑本机 localhost", true);
+    return;
+  }
+  try {
+    const status = await loadSttStatus();
+    button.disabled = !status.ready;
+    voiceHint(status.ready
+      ? "按住说话，松手转文字（本机识别，音频不出电脑）"
+      : (status.detail || "本机语音识别不可用"), !status.ready);
+  } catch (err) {
+    button.disabled = true;
+    voiceHint("语音识别不可用：" + err.message, true);
+  }
+}
+
+function cleanupVoice() {
+  if (voice.processor) {
+    try { voice.processor.onaudioprocess = null; voice.processor.disconnect(); } catch (err) { /* gone */ }
+  }
+  if (voice.source) { try { voice.source.disconnect(); } catch (err) { /* gone */ } }
+  if (voice.mute) { try { voice.mute.disconnect(); } catch (err) { /* gone */ } }
+  if (voice.stream) {
+    voice.stream.getTracks().forEach((track) => track.stop());
+  }
+  if (voice.ctx && voice.ctx.state !== "closed") {
+    voice.ctx.close().catch(() => {});
+  }
+  voice.stream = voice.ctx = voice.source = voice.processor = voice.mute = null;
+}
+
+async function startVoice() {
+  if (voice.recording || voice.starting || voice.processing) return;
+  voice.holding = true;
+  voice.starting = true;
+  const button = $("qaPtt");
+  try {
+    const status = await loadSttStatus();
+    if (!status.ready) {
+      toast(status.detail || "本机语音识别不可用");
+      cleanupVoice();
+      return;
+    }
+    if (!window.isSecureContext || !navigator.mediaDevices
+        || !navigator.mediaDevices.getUserMedia) {
+      toast("按住说话需要 HTTPS；请用 Tailscale 入口或电脑本机");
+      cleanupVoice();
+      return;
+    }
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        channelCount: 1, echoCancellation: true,
+        noiseSuppression: true, autoGainControl: true,
+      },
+    });
+    if (!voice.holding) {
+      stream.getTracks().forEach((track) => track.stop());
+      cleanupVoice();
+      return;
+    }
+    voice.stream = stream;
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) {
+      toast("这个浏览器不支持录音");
+      cleanupVoice();
+      return;
+    }
+    // The pointerdown handler creates the context inside the user gesture, so
+    // Android/iOS do not leave it suspended after the permission prompt.
+    const ctx = voice.ctx || new Ctx();
+    voice.ctx = ctx;
+    await ctx.resume();
+    const source = ctx.createMediaStreamSource(stream);
+    const processor = ctx.createScriptProcessor(4096, 1, 1);
+    const mute = ctx.createGain();
+    mute.gain.value = 0;
+    voice.source = source;
+    voice.processor = processor;
+    voice.mute = mute;
+    voice.chunks = [];
+    voice.rate = ctx.sampleRate || 16000;
+    voice.started = performance.now();
+    voice.recording = true;
+    processor.onaudioprocess = (event) => {
+      if (!voice.recording) return;
+      voice.chunks.push(new Float32Array(event.inputBuffer.getChannelData(0)));
+    };
+    source.connect(processor);
+    processor.connect(mute);
+    mute.connect(ctx.destination);
+    button.classList.add("recording");
+    button.textContent = "松手结束 0:00";
+    voiceHint("正在听… 松手后在本机转文字");
+    voice.timer = setInterval(() => {
+      const seconds = (performance.now() - voice.started) / 1000;
+      button.textContent = "松手结束 " + formatClock(seconds);
+      if (seconds >= 45) stopVoice(true);
+    }, 250);
+  } catch (err) {
+    cleanupVoice();
+    voice.recording = false;
+    button.classList.remove("recording");
+    button.textContent = "🎙 按住说话";
+    if (err && err.name === "NotAllowedError") {
+      voiceHint("麦克风被拒绝：在浏览器/系统设置里允许本页使用麦克风", true);
+    } else {
+      voiceHint("录音失败：" + (err.message || err), true);
+    }
+  } finally {
+    voice.starting = false;
+  }
+}
+
+function encodeVoiceWav(chunks, inputRate, targetRate) {
+  let length = 0;
+  for (const chunk of chunks) length += chunk.length;
+  const merged = new Float32Array(length);
+  let offset = 0;
+  for (const chunk of chunks) { merged.set(chunk, offset); offset += chunk.length; }
+  let samples = merged;
+  if (Math.abs(inputRate - targetRate) > 1 && merged.length) {
+    const target = Math.max(1, Math.round(merged.length * targetRate / inputRate));
+    const out = new Float32Array(target);
+    const ratio = (merged.length - 1) / Math.max(1, target - 1);
+    for (let i = 0; i < target; i++) {
+      const pos = i * ratio;
+      const left = Math.floor(pos);
+      const right = Math.min(merged.length - 1, left + 1);
+      const frac = pos - left;
+      out[i] = merged[left] * (1 - frac) + merged[right] * frac;
+    }
+    samples = out;
+  }
+  const buffer = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buffer);
+  const write = (at, text) => {
+    for (let i = 0; i < text.length; i++) view.setUint8(at + i, text.charCodeAt(i));
+  };
+  write(0, "RIFF");
+  view.setUint32(4, 36 + samples.length * 2, true);
+  write(8, "WAVE");
+  write(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, targetRate, true);
+  view.setUint32(28, targetRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  write(36, "data");
+  view.setUint32(40, samples.length * 2, true);
+  let at = 44;
+  for (let i = 0; i < samples.length; i++) {
+    const value = Math.max(-1, Math.min(1, samples[i]));
+    view.setInt16(at, value < 0 ? value * 0x8000 : value * 0x7fff, true);
+    at += 2;
+  }
+  return new Blob([view], { type: "audio/wav" });
+}
+
+async function sendVoice(blob) {
+  voice.processing = true;
+  const button = $("qaPtt");
+  button.disabled = true;
+  voiceHint("识别中…（本机，首次加载模型约 3 秒）");
+  try {
+    const res = await fetch("/api/stt", {
+      method: "POST",
+      headers: { "Content-Type": "audio/wav" },
+      body: blob,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    const input = $("qaInput");
+    const text = String(data.text || "").trim();
+    input.value = input.value.trim() ? input.value.trim() + " " + text : text;
+    input.focus();
+    voiceHint("已转文字（" + data.duration + " 秒），改完点「问 AI」");
+  } catch (err) {
+    voiceHint("识别失败：" + err.message + "；可用键盘麦克风", true);
+    toast("语音识别失败；可以用键盘麦克风");
+  } finally {
+    voice.processing = false;
+    button.disabled = false;
+    button.textContent = "🎙 按住说话";
+  }
+}
+
+function stopVoice(send) {
+  voice.holding = false;
+  if (!voice.recording) return;
+  voice.recording = false;
+  if (voice.timer) {
+    clearInterval(voice.timer);
+    voice.timer = null;
+  }
+  const seconds = (performance.now() - voice.started) / 1000;
+  const chunks = voice.chunks;
+  const rate = voice.rate;
+  cleanupVoice();
+  const button = $("qaPtt");
+  button.classList.remove("recording");
+  button.textContent = "🎙 按住说话";
+  if (!send || seconds < 0.35) {
+    voiceHint("太短了，按住多说一句");
+    return;
+  }
+  sendVoice(encodeVoiceWav(chunks, rate, 16000));
+}
+
+$("qaPtt").addEventListener("pointerdown", (event) => {
+  if (event.button != null && event.button !== 0) return;
+  event.preventDefault();
+  try { $("qaPtt").setPointerCapture(event.pointerId); } catch (err) { /* older browsers */ }
+  if (window.isSecureContext && !voice.ctx && !voice.processing) {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) {
+        voice.ctx = new Ctx();
+        voice.ctx.resume().catch(() => {});
+      }
+    } catch (err) { /* startVoice reports the real failure */ }
+  }
+  startVoice();
+});
+for (const name of ["pointerup", "pointercancel", "lostpointercapture"]) {
+  $("qaPtt").addEventListener(name, () => stopVoice(true));
+}
+$("qaPtt").addEventListener("contextmenu", (event) => event.preventDefault());
 
 async function sendQa() {
   const qa = state.qa;
@@ -4133,10 +4497,14 @@ async function sendQa() {
 }
 
 $("qaClose").addEventListener("click", () => {
+  stopVoice(false);
   $("qaSheet").classList.add("hidden");
 });
 $("qaSheet").addEventListener("click", (event) => {
-  if (event.target === $("qaSheet")) $("qaSheet").classList.add("hidden");
+  if (event.target === $("qaSheet")) {
+    stopVoice(false);
+    $("qaSheet").classList.add("hidden");
+  }
 });
 $("qaSend").addEventListener("click", sendQa);
 $("qaInput").addEventListener("keydown", (event) => {
@@ -7477,6 +7845,121 @@ $("pageSheet").addEventListener("click", (event) => {
 
 // --- settings and baseline -----------------------------------------------
 
+// ---- phone QR card: the QR lives in the page, not in a second window ----
+let phoneTargetId = "";
+let phoneData = null;
+let phoneAutoHint = false;
+
+async function openPhoneSheet(refresh) {
+  $("phoneSheet").classList.remove("hidden");
+  await loadPhoneTargets(!!refresh);
+}
+
+function closePhoneSheet() {
+  $("phoneSheet").classList.add("hidden");
+  if (phoneAutoHint) {
+    phoneAutoHint = false;
+    toast("二维码随时可点顶部「扫码」重新打开");
+    // start.bat opens /?qr=1, which used to suppress the daily sheet.
+    // Once the QR card is dismissed, show today's tasks (once per day).
+    const onlyQr = [...params.keys()].every((key) => key === "qr" || key === "v");
+    if (onlyQr) setTimeout(() => autoBriefing(true), 250);
+  }
+}
+
+function phoneHint(data) {
+  const ts = (data && data.tailscale) || {};
+  if (ts.state === "running" && ts.https) return "";
+  return ts.hint || "";
+}
+
+function renderPhoneTargets() {
+  const data = phoneData;
+  const tabs = $("phoneTabs");
+  tabs.innerHTML = "";
+  if (!data) return;
+  data.targets.forEach((item) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "chip" + (item.id === phoneTargetId ? " on" : "");
+    button.textContent = item.label;
+    button.addEventListener("click", () => {
+      phoneTargetId = item.id;
+      renderPhoneTargets();
+    });
+    tabs.appendChild(button);
+  });
+  const target = data.targets.find((item) => item.id === phoneTargetId) || null;
+  $("phoneBuild").textContent = "页面版本 " + (data.build || "—");
+  if (!target) {
+    $("phoneQr").classList.add("hidden");
+    $("phoneUrl").textContent = "—";
+    $("phoneCopy").disabled = true;
+    $("phoneState").textContent = phoneHint(data) || "没有可用的手机地址。";
+    $("phoneState").classList.add("warn");
+    return;
+  }
+  $("phoneQr").src = "/qr.png?target=" + encodeURIComponent(target.id)
+    + "&b=" + encodeURIComponent(data.build || "");
+  $("phoneQr").classList.remove("hidden");
+  $("phoneUrl").textContent = target.url;
+  $("phoneCopy").disabled = false;
+  const hint = phoneHint(data);
+  $("phoneState").textContent = [target.note, hint].filter(Boolean).join("。");
+  $("phoneState").classList.toggle("warn", !!hint);
+}
+
+async function loadPhoneTargets(refresh) {
+  $("phoneState").textContent = "正在检测手机入口…";
+  $("phoneState").classList.remove("warn");
+  $("phoneQr").classList.add("hidden");
+  $("phoneCopy").disabled = true;
+  try {
+    const res = await fetch("/api/phone" + (refresh ? "?refresh=1" : ""), {
+      cache: "no-store",
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    phoneData = data;
+    const ids = data.targets.map((item) => item.id);
+    if (!ids.includes(phoneTargetId)) {
+      phoneTargetId = data.preferred || ids[0] || "";
+    }
+    renderPhoneTargets();
+    $("settingsPhoneState").textContent = data.targets.length
+      ? data.targets.length + " 个入口" : "只有本机";
+  } catch (err) {
+    phoneData = null;
+    $("phoneTabs").innerHTML = "";
+    $("phoneQr").classList.add("hidden");
+    $("phoneUrl").textContent = "—";
+    $("phoneState").textContent = "读取手机入口失败：" + err.message;
+    $("phoneState").classList.add("warn");
+    $("settingsPhoneState").textContent = "读取失败";
+  }
+}
+
+$("headerPhone").addEventListener("click", () => openPhoneSheet(false));
+$("settingsPhone").addEventListener("click", () => {
+  $("settingsSheet").classList.add("hidden");
+  openPhoneSheet(false);
+});
+$("phoneReload").addEventListener("click", () => loadPhoneTargets(true));
+$("phoneClose").addEventListener("click", closePhoneSheet);
+$("phoneSheet").addEventListener("click", (event) => {
+  if (event.target === $("phoneSheet")) closePhoneSheet();
+});
+$("phoneCopy").addEventListener("click", async () => {
+  const text = $("phoneUrl").textContent || "";
+  if (!text || text === "—") return;
+  try {
+    await navigator.clipboard.writeText(text);
+    toast("地址已复制");
+  } catch (err) {
+    toast("复制失败：可长按地址手动复制");
+  }
+});
+
 async function openSettings() {
   try {
     const res = await fetch("/api/settings");
@@ -8793,12 +9276,95 @@ function renderBriefTasks(tasks) {
   }
 }
 
+function renderBacklog(items) {
+  const box = $("briefBacklogItems");
+  const wrap = $("briefBacklog");
+  box.innerHTML = "";
+  wrap.classList.toggle("hidden", !(items || []).length);
+  for (const item of items || []) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "action brief-task";
+    button.innerHTML =
+      '<span class="icon">欠</span>'
+      + '<span class="txt"><b>' + escapeHtml(item.title || "") + "</b>"
+      + "<span>" + escapeHtml(item.detail || "") + "</span></span>"
+      + '<span class="go">' + (item.action === "retest" ? "准备 ›" : "去做 ›")
+      + "</span>";
+    button.addEventListener("click", () => runBacklog(item));
+    box.appendChild(button);
+  }
+}
+
+async function importBacklogNoIdea() {
+  if (!confirm("把分流为「不会」的弃题加入错题本？已经在里面的会跳过。")) return;
+  let added = 0;
+  let skipped = 0;
+  try {
+    for (const half of ["A", "P"]) {
+      const res = await fetch("/api/baseline/" + half + "/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "skipped", triage: "no_idea" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || res.statusText);
+      added += Number(data.added) || 0;
+      skipped += Number(data.skipped) || 0;
+    }
+    toast(added
+      ? "已加入 " + added + " 题" + (skipped ? " · 跳过 " + skipped + " 道已在库" : "")
+      : (skipped ? "这 " + skipped + " 题都已在错题本" : "没有可加入的题"));
+    refreshNavCount();
+    loadHome();
+  } catch (err) {
+    toast("加入失败：" + err.message);
+  }
+}
+
+function openRetestPlan() {
+  openData("plan");
+  let tries = 0;
+  const timer = setInterval(() => {
+    const box = $("planRetest");
+    if (box && box.children.length) {
+      clearInterval(timer);
+      box.scrollIntoView({ behavior: "smooth", block: "center" });
+    } else if (++tries > 24) {
+      clearInterval(timer);
+    }
+  }, 150);
+}
+
+async function openBacklogTriage() {
+  try {
+    if (!state.baseline.data) await loadBaselineData();
+    openQuadrantSheet("skipped");
+  } catch (err) {
+    toast("读取基线失败：" + err.message);
+  }
+}
+
+function runBacklog(item) {
+  closeBriefing();
+  if (item.action === "triage_skipped") return openBacklogTriage();
+  if (item.action === "import_no_idea") return importBacklogNoIdea();
+  if (item.action === "drill_baseline") {
+    return startDrill("timed", {
+      mode: "timed", source: item.source || "slow", count: item.count || 5,
+    });
+  }
+  if (item.action === "retest") return openRetestPlan();
+  toast("这个待办还没有入口");
+}
+
 function renderBriefing(data) {
   const c = data.countdown || {};
   $("briefDate").textContent = (data.day || "") + " " + (data.weekday || "")
     + (c.days_left != null ? " · D-" + Math.max(0, c.days_left) : "");
   $("briefLead").textContent = data.lead || "";
   renderBriefTasks(data.tasks || []);
+  renderBacklog(data.backlog || []);
   const first = (data.manual || [])[0];
   $("briefSteps").innerHTML = first
     ? "<h4>" + escapeHtml(first.title || "") + "</h4><ol>"
@@ -8858,7 +9424,9 @@ function openBriefTask(task) {
   closeBriefing();
   if (task.route === "pack") return openDayPackSheet();
   if (task.route === "review") return startReview();
-  if (task.route === "drill") return openTraining();
+  if (task.route === "drill") {
+    return task.active_id ? openDrillSession(task.active_id) : openTraining();
+  }
   if (task.route === "reading") {
     if (task.code_key) {
       state.reading.pending = { code: task.code_key, stop: task.stop_id || "" };
@@ -8869,9 +9437,10 @@ function openBriefTask(task) {
   show("dash");
 }
 
-async function autoBriefing() {
+async function autoBriefing(force) {
   // A deep link (?qid= / ?tab=) is an explicit destination; do not cover it.
-  if (location.search) return;
+  // `force` is used after the startup QR card, which is not a deep link.
+  if (!force && location.search) return;
   try {
     const res = await fetch("/api/briefing");
     if (!res.ok) return;
@@ -9402,6 +9971,10 @@ if (deep) {
   if (query) searchHandbook(query);
   const half = (params.get("baseline") || "").toUpperCase();
   if (half === "A" || half === "P") openBaselineSheet(half);
+}
+if (params.get("qr") === "1") {
+  phoneAutoHint = true;
+  openPhoneSheet(false);
 }
 </script>
 </body>
