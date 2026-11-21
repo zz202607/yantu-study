@@ -26,11 +26,12 @@ from pathlib import Path
 from urllib.parse import quote
 
 import numpy as np
-from fastapi import Body, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Body, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import (
-    FileResponse, HTMLResponse, JSONResponse, StreamingResponse,
+    FileResponse, HTMLResponse, JSONResponse, Response, StreamingResponse,
 )
 from PIL import Image, ImageOps
+from starlette.concurrency import run_in_threadpool
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -38,7 +39,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 import crop_question as CQ  # noqa: E402
 import recognize_qid as RQ  # noqa: E402
-from app import analytics, baseline as baseline_app, briefing as briefing_app, clauses as clauses_app, daypack as daypack_app, drill as drill_app, plan as study_plan, qa as qa_app, reading as reading_app, report as report_app, standards  # noqa: E402
+from app import analytics, asr as asr_app, baseline as baseline_app, briefing as briefing_app, clauses as clauses_app, daypack as daypack_app, drill as drill_app, phone as phone_app, plan as study_plan, qa as qa_app, reading as reading_app, report as report_app, standards  # noqa: E402
 from app.answer_ocr import analyze_crop  # noqa: E402
 from app.net import lan_ip  # noqa: E402
 from app.catalog import Catalog  # noqa: E402
@@ -256,6 +257,15 @@ def app_build():
         return "0"
 
 
+def request_port(request):
+    """The port a phone should dial, even when uvicorn was started without PORT."""
+    host = request.headers.get("host", "")
+    tail = host.rsplit(":", 1)[-1] if ":" in host else ""
+    if tail.isdigit():
+        return int(tail)
+    return int(os.environ.get("PORT", "8000"))
+
+
 @app.get("/")
 def index():
     """Serve the shell with its build id and no HTTP cache.
@@ -274,6 +284,36 @@ def index():
 def app_version():
     return JSONResponse(
         {"build": app_build()},
+        headers={"Cache-Control": "no-store, max-age=0"},
+    )
+
+
+@app.get("/api/phone")
+def phone_access(request: Request, refresh: int = 0):
+    """URLs for the phone QR card; the QR is rendered in the page, not a window."""
+    data = phone_app.payload(
+        request_port(request), lan_ip(), app_build(), force=bool(refresh)
+    )
+    return JSONResponse(data, headers={"Cache-Control": "no-store, max-age=0"})
+
+
+@app.get("/qr.png")
+def phone_qr(request: Request, target: str):
+    """A scannable PNG for one target; only known targets, never raw text."""
+    data = phone_app.payload(request_port(request), lan_ip(), app_build())
+    url = next((item["url"] for item in data["targets"] if item["id"] == target), "")
+    if not url:
+        raise HTTPException(404, "没有这个手机入口")
+    try:
+        import segno
+
+        buffer = io.BytesIO()
+        segno.make(url, error="m").save(buffer, kind="png", scale=10, border=2)
+    except Exception as exc:  # noqa: BLE001 - segno is optional at import time
+        raise HTTPException(500, "二维码生成失败：%s" % exc)
+    return Response(
+        buffer.getvalue(),
+        media_type="image/png",
         headers={"Cache-Control": "no-store, max-age=0"},
     )
 
@@ -360,9 +400,13 @@ def briefing():
         plan_view = study_plan.overview(store, DATA, conf)
     except Exception:  # noqa: BLE001 - the daily sheet still has review
         plan_view = None
+    try:
+        retest_view = _retest_payload(RETEST_DEFAULT_YEAR)
+    except Exception:  # noqa: BLE001 - the retest is a future reminder
+        retest_view = None
     return briefing_app.build(
         store, conf, reading=reading_view, baseline=baseline_view(),
-        plan=plan_view,
+        plan=plan_view, retest=retest_view,
     )
 
 
@@ -1600,6 +1644,32 @@ def qa_delete(qid: str):
     """Forget this question's AI thread (the key and quota stay)."""
     key = _qa_key(qid)
     return {"ok": store.qa_clear(key)}
+
+
+@app.get("/api/stt")
+def stt_status():
+    """Is the local speech model ready?  Cheap; does not load the model."""
+    return asr_app.status()
+
+
+@app.post("/api/stt")
+async def stt(request: Request):
+    """Transcribe one WAV clip on this PC; the audio is discarded afterwards."""
+    length = request.headers.get("content-length")
+    try:
+        size = int(length or 0)
+    except (TypeError, ValueError):
+        size = 0
+    if size > asr_app.MAX_BYTES:
+        raise HTTPException(413, "录音太长（上限 %d MB）"
+                            % (asr_app.MAX_BYTES // 1024 // 1024))
+    data = await request.body()
+    try:
+        return await run_in_threadpool(asr_app.transcribe, data)
+    except asr_app.ASRUnavailable as exc:
+        raise HTTPException(503, str(exc))
+    except asr_app.ASRError as exc:
+        raise HTTPException(400, str(exc))
 
 
 @app.get("/api/handwriting/targets")

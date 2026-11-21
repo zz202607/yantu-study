@@ -406,6 +406,69 @@
     从未做过的旧卷（superseded）排除
   - 真实库副本：11-20 卷（13 题）核对后目标 **5 → 11 条**；**pytest 379 条全绿**；
     见 `docs/journal/2026-11-20-handwriting-after-check.md`
+- **手机入口单窗口 + Tailscale 固定入口（11-20）**：二维码镶进页面，start.bat 不再弹两个窗口
+  - `start.bat` / `launch.py` 只开一个浏览器窗口（`/?qr=1`）；二维码由页面现画，
+    顶部「手机」、设置页「显示二维码」随时再开，扫完收起
+  - 服务端新 `GET /api/phone`（局域网 + Tailscale 候选）与 `GET /qr.png?target=…`
+    （segno 现画、`no-store`、只接受已知入口，不接收任意文本）
+  - **Tailscale**：读 `tailscale status --json`，依次探测 HTTPS MagicDNS → HTTP 名称 →
+    `100.x` IP，探测通过才展示；HTTPS 默认为固定入口（secure context：真 PWA + 网页内语音）。
+    未装/未登录/没开 serve 时不会给出打不开的入口，卡片直接写下一步
+  - `tools/tailscale_setup.py --status/--login/--serve/--reset`；局域网入口始终保留。
+    首次 `--serve` 需在 Tailscale 管理台启用 Serve/HTTPS（脚本打印一次性链接，
+    或 DNS → HTTPS Certificates）；未启用时脚本 15 s 超时并给出链接，不抛栈
+  - 验证：pytest **391 条全绿**（新增 12 条纯逻辑）；8011 端口实测 `/api/phone`、
+    `/qr.png`（OpenCV 解码回原 URL）、无头 Edge 1000×900 打开 `?qr=1`：单窗口、二维码、
+    状态文案完整、JS 语法检查通过
+  - **Tailscale 已接通（11-21）**：PC 登录 `你的 Tailscale 账号`
+    （`your-machine.your-tailnet.ts.net`，100.x.x.x），手机（100.x.x.x）
+    加入同一 tailnet；Serve 已启用，`https://your-machine.your-tailnet.ts.net/api/version`
+    实测 200（curl + Python 绕代理 8/8）；卡片默认入口切到 Tailscale HTTPS，
+    局域网入口保留
+  - **代理坑**：本机 Windows 系统代理 `127.0.0.1:7890`（Clash）会让默认 urllib/Edge
+    访问 tailnet 域名失败；`app/phone.py` 探测已显式 `ProxyHandler({})` 绕过，手机端不受影响。
+    PC 浏览器若要直开 tailnet 域名需在代理放行 `*.ts.net`（未改系统设置）
+  - 见 `docs/journal/2026-11-20-phone-entry-embed.md`
+- **页码分区 + 扫码随时重开（11-21）**：打印卷的页码不再整本连号
+  - `_stamp` 改为两套编号：题面 `题面 第 k/Q 页`、答案 `答案 第 k/A 页`，各自从 1 起；
+    总封面与周包每日小封面都不编号、也不占号（Q/A 只数实际印题页/答案页）
+  - 答案页封存后可以单独抽出来看，页码不会与题面串号；周包题面仍按整包连续
+  - 顶部二维码入口「手机」改名「扫码」；`?qr=1` 自动弹出的卡片关闭时 toast 提示
+    「二维码随时可点顶部「扫码」重新打开」；设置页入口保留
+  - 验证：**pytest 392 条全绿**（新增 1 条编号单测 + mixed 卷页脚断言）；
+    无头 Edge + CDP 实点：`?qr=1` 自动弹出 → 收起出现 toast → 顶部「扫码」重开卡片，
+    默认 `https://your-machine.your-tailnet.ts.net/`；内联 JS `node --check` 通过
+  - 见 `docs/journal/2026-11-21-print-numbering-qr-reopen.md`
+- **按住说话 + 该补的账（11-21）**：语音在本机转文字；每天的遗留任务给直达按钮
+  - **按住说话**：问 AI 面板新增按钮；浏览器录 16 kHz 单声道 WAV → `POST /api/stt`
+    → 本机 **SenseVoice int8**（sherpa-onnx）转文字；音频只存在内存，不落盘、不出电脑；
+    首次加载模型约 1.9 s，3 秒语音约 0.15–0.25 s；上限 45 秒 / 8 MB
+  - 识别结果先填进输入框，可改字再问；手机键盘 🎤 仍可用作兜底
+  - 小词表纠错常见误听（父母/父魔/覆膜阻力 → 负摩阻力），并清理重复问号；
+    其他技术词仍可能听错，界面明确写「可改字」
+  - 模型 `.cache/asr/sensevoice/`（gitignore）；`tools/fetch_asr_model.py`
+    从 hf-mirror 续传（230 MB，一次性，无 API 费用）；依赖 `sherpa-onnx==2.0.2`
+  - **该补的账**：每日任务单新增固定区，读基线/训练/复测真实状态，做完自动消失
+    - 16 道放弃题分流 → 点「去做」直达四象限「放弃」页，逐题点没时间/不会
+    - 「不会」的题批量入本 → 一次 POST 两半，已在库自动跳过
+    - 超时/没时间题 → 点「去做」直接开 5 题 × 8 分钟限时拆解（来源 slow/skipped）
+    - **2024 整卷复测** → 12 月 15 日前显示 D-天数，点「准备」到两半 PDF/录入区
+    - 有未完成训练时，今日任务「续做上次的训练」直接打开那一组，不再只跳计划页
+    - `start.bat` 的 `/?qr=1` 以前会压掉每日弹窗；现在收起二维码后补开当天任务单
+      （仅 `qr`/`v` 参数时生效，不抢 `?qid=` / `?tab=` 深链）
+  - 验证：**pytest 403 条全绿**（新增 7 条 ASR、4 条 briefing/backlog）；
+    真实 HTTP `POST /api/stt` 用 SenseVoice 自带中文样本 → 正确文本；
+    无头 Edge + CDP：今日弹窗出现 16 道分流 + 2024 复测，点开四象限 16 行，
+    点「续做上次的训练」直接进训练；假麦克风喂真实语音 WAV 完整走通
+    「按住说话 → 3.62 秒 → 已转文字」；内联 JS `node --check` 通过
+  - 见 `docs/journal/2026-11-21-voice-and-backlog.md`
+- **手机离线提示（11-21）**：桌面图标打开报「读取学习数据失败」
+  - 现场诊断：PC 服务和 Tailscale Serve 正常（`/api/home` 200），但 tailnet 里手机
+    手机 **offline 36 分钟**；PWA 外壳从 Service Worker 缓存打开，API 连不上
+  - 首页读取失败不再只显示 `Failed to fetch`：按来源分流提示——`.ts.net` 提示
+    「手机 Tailscale 没连上」，局域网 HTTP 提示「换 Wi-Fi 会失效，出门用 Tailscale 入口」；
+    新增「重新连接」按钮；`online` / 回到前台自动重试
+  - 见 `docs/journal/2026-11-21-voice-and-backlog.md` 末尾
 - **下一步（基线后 6 周）**：
   1. 本周先把 16 道放弃题分流；5 道超时题走「限时拆解 · 会但慢」
   2. 每天 1 组认题卡（8 题 × 30 秒），优先弱项原型；错的原型回原型卡

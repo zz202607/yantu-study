@@ -170,6 +170,90 @@ def test_drill_task_only_when_unfinished_or_drillable(tmp_path):
     assert drill["done"] is False
 
 
+def backlog(data, action):
+    return next(row for row in data["backlog"] if row["action"] == action)
+
+
+def test_backlog_starts_with_triage_then_moves_to_import(tmp_path):
+    store = new_store(tmp_path)
+    rows = [
+        {"qid": "A2025-A-1", "half": "A", "quadrant": "skipped", "triage": ""},
+        {"qid": "A2025-P-2", "half": "P", "quadrant": "skipped", "triage": ""},
+    ]
+    baseline = {"quadrants": {"items": rows}}
+    data = build(store, Settings(tmp_path).load(), now=BASE, baseline=baseline)
+    triage = backlog(data, "triage_skipped")
+    assert triage["count"] == 2
+    assert all(row["action"] != "import_no_idea" for row in data["backlog"])
+
+    triaged = [dict(row, triage="no_idea") for row in rows]
+    data = build(
+        store, Settings(tmp_path).load(), now=BASE,
+        baseline={"quadrants": {"items": triaged}},
+    )
+    import_row = backlog(data, "import_no_idea")
+    assert import_row["count"] == 2
+
+    add(store, ["A2025-A-1"])
+    data = build(
+        store, Settings(tmp_path).load(), now=BASE,
+        baseline={"quadrants": {"items": triaged}},
+    )
+    assert backlog(data, "import_no_idea")["count"] == 1
+
+
+def test_backlog_offers_a_slow_drill_once_until_one_finishes(tmp_path, monkeypatch):
+    store = new_store(tmp_path)
+    rows = [{"qid": "C3-%d" % n, "half": "P", "quadrant": "slow"}
+            for n in range(1, 6)]
+    baseline = {"quadrants": {"items": rows}}
+    data = build(store, Settings(tmp_path).load(), now=BASE, baseline=baseline)
+    drill = backlog(data, "drill_baseline")
+    assert drill["source"] == "slow"
+    assert drill["count"] == 5
+
+    monkeypatch.setattr(store, "list_drills",
+                        lambda **kwargs: [{"source": "slow"}])
+    data = build(store, Settings(tmp_path).load(), now=BASE, baseline=baseline)
+    assert all(row["action"] != "drill_baseline" for row in data["backlog"])
+
+
+def test_backlog_keeps_the_december_retest_until_both_halves_are_in(tmp_path):
+    store = new_store(tmp_path)
+    retest = {"halves": [
+        {"half": "A", "recorded": False},
+        {"half": "P", "recorded": True},
+    ]}
+    data = build(
+        store, Settings(tmp_path).load(), now=BASE, retest=retest,
+    )
+    row = backlog(data, "retest")
+    assert row["days_left"] == 41  # 2026-11-04 -> 2026-12-15
+    assert row["pending"] == ["A"]
+
+    retest = {"halves": [
+        {"half": "A", "recorded": True},
+        {"half": "P", "recorded": True},
+    ]}
+    data = build(
+        store, Settings(tmp_path).load(), now=BASE, retest=retest,
+    )
+    assert all(row["action"] != "retest" for row in data["backlog"])
+
+
+def test_resume_task_points_straight_at_the_open_drill(tmp_path):
+    store = new_store(tmp_path)
+    session = store.start_drill(
+        day="2026-11-04", mode="timed", source="mixed", source_key=None,
+        minutes_per_question=8, queue=["C1-%d" % n for n in range(1, 6)],
+        note="",
+    )
+    data = build(store, Settings(tmp_path).load(), now=BASE)
+    row = task(data, "drill")
+    assert row["active_id"] == session["id"]
+    assert row["title"] == "续做上次的训练"
+
+
 def test_daily_new_target_spreads_the_rest_of_the_week():
     plan = {"week": {"target": 35, "attempted": 21}}
     monday = datetime(2026, 11, 2, 9, 0, tzinfo=TZ)
