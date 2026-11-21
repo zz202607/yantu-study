@@ -1692,6 +1692,7 @@ async def ext_import(
     day: str = Form(""),
     title: str = Form(""),
     kind: str = Form("case"),
+    source: str = Form("wechat"),
 ):
     """One pair; the answer page alone is enough (it contains the question)."""
     question = question or []
@@ -1732,7 +1733,8 @@ async def ext_import(
             with _ocr_lock:
                 return ext_app.import_pair(
                     store, DATA, q_paths, a_paths,
-                    day=day, title=title, kind=kind, engine=RQ.engine(),
+                    day=day, title=title, kind=kind, source=source,
+                    engine=RQ.engine(),
                 )
 
         item = await run_in_threadpool(run_import)
@@ -1748,9 +1750,11 @@ async def ext_import(
 
 
 @app.get("/api/ext/print")
-def ext_print(scope: str = "unprinted"):
+def ext_print(scope: str = "unprinted", source: str = ""):
     try:
-        data, filename, qids = ext_app.build_pdf(store, DATA, scope=scope)
+        data, filename, qids = ext_app.build_pdf(
+            store, DATA, scope=scope, source=source or None
+        )
     except ext_app.ExtError as exc:
         raise HTTPException(400, str(exc))
     except Exception as exc:  # noqa: BLE001
