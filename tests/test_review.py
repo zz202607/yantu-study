@@ -322,12 +322,17 @@ def test_existing_m2_database_migrates_in_place(tmp_path):
             "SELECT name FROM sqlite_master WHERE type = 'table'"
             " AND name = 'qa_messages'"
         ).fetchone()
-    assert version == "11"
+        mock = check.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table'"
+            " AND name = 'mock_runs'"
+        ).fetchone()
+    assert version == "12"
     assert triage == ("baseline_triage",)
     assert drill == ("drill_sessions",)
     assert reading == ("reading_progress",)
     assert packs == ("day_packs",)
     assert qa == ("qa_messages",)
+    assert mock == ("mock_runs",)
 
 
 def test_remark_wrong_resets_a_mastered_question(tmp_path):

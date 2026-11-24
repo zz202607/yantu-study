@@ -336,6 +336,35 @@ CREATE TABLE IF NOT EXISTS qa_messages (
 CREATE INDEX IF NOT EXISTS idx_qa_messages_thread ON qa_messages(thread_id, id);
 CREATE INDEX IF NOT EXISTS idx_qa_messages_cache ON qa_messages(cache_key);
 CREATE INDEX IF NOT EXISTS idx_qa_messages_day ON qa_messages(created_at);
+-- Full-paper mock: 25 questions on a 180-minute clock.  The per-question
+-- mark (A/B/C) and seconds are the whole point -- the review compares the
+-- 7.2-minute budget with the actual clock and shows which "偏" question
+-- should have been cut before it ate three normal questions' time.
+CREATE TABLE IF NOT EXISTS mock_runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    year INTEGER NOT NULL,
+    half TEXT NOT NULL,
+    day TEXT NOT NULL,
+    minutes INTEGER NOT NULL DEFAULT 180,
+    status TEXT NOT NULL DEFAULT 'running',
+    note TEXT NOT NULL DEFAULT '',
+    started_at TEXT NOT NULL,
+    finished_at TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_mock_day ON mock_runs(day DESC, id DESC);
+CREATE TABLE IF NOT EXISTS mock_items (
+    run_id INTEGER NOT NULL REFERENCES mock_runs(id) ON DELETE CASCADE,
+    qid TEXT NOT NULL,
+    seq INTEGER NOT NULL,
+    mark TEXT,
+    result TEXT,
+    seconds REAL,
+    note TEXT NOT NULL DEFAULT '',
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY (run_id, qid)
+);
 INSERT OR IGNORE INTO meta(key, value) VALUES ('schema_version', '4');
 """
 
@@ -522,7 +551,7 @@ class Store:
             " WHERE baseline_half IN ('A', 'P')"
         )
         conn.execute(
-            "UPDATE meta SET value = '11' WHERE key = 'schema_version'"
+            "UPDATE meta SET value = '12' WHERE key = 'schema_version'"
         )
 
     # -- photos -----------------------------------------------------------
@@ -3075,6 +3104,182 @@ class Store:
                     conn.execute(
                         "DELETE FROM baseline_triage WHERE year = ? AND half = ?",
                         (int(year), half),
+                    )
+                return cur.rowcount > 0
+            finally:
+                conn.close()
+
+    # -- mock papers ------------------------------------------------------
+
+    @staticmethod
+    def _mock_run_dict(row):
+        return {
+            "id": row["id"],
+            "year": row["year"],
+            "half": row["half"],
+            "day": row["day"],
+            "minutes": row["minutes"],
+            "status": row["status"],
+            "note": row["note"],
+            "started_at": row["started_at"],
+            "finished_at": row["finished_at"],
+            "created_at": row["created_at"],
+            "updated_at": row["updated_at"],
+        }
+
+    @staticmethod
+    def _mock_item_dict(row):
+        return {
+            "qid": row["qid"],
+            "seq": row["seq"],
+            "mark": row["mark"],
+            "result": row["result"],
+            "seconds": row["seconds"],
+            "note": row["note"],
+        }
+
+    def start_mock_run(self, year, half, day, qids, minutes=180):
+        """Create one mock paper and its empty per-question rows."""
+        stamp = now_iso()
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    cur = conn.execute(
+                        "INSERT INTO mock_runs"
+                        " (year, half, day, minutes, status, started_at,"
+                        "  created_at, updated_at)"
+                        " VALUES (?, ?, ?, ?, 'running', ?, ?, ?)",
+                        (int(year), half, str(day), int(minutes),
+                         stamp, stamp, stamp),
+                    )
+                    run_id = cur.lastrowid
+                    conn.executemany(
+                        "INSERT INTO mock_items (run_id, qid, seq, updated_at)"
+                        " VALUES (?, ?, ?, ?)",
+                        [(run_id, qid, seq + 1, stamp)
+                         for seq, qid in enumerate(qids)],
+                    )
+            finally:
+                conn.close()
+        return self.mock_run(run_id)
+
+    def mock_run(self, run_id):
+        """One paper with its 25 rows, or None when the id is unknown."""
+        conn = self._connect()
+        try:
+            row = conn.execute(
+                "SELECT * FROM mock_runs WHERE id = ?", (int(run_id),)
+            ).fetchone()
+            if row is None:
+                return None
+            items = [
+                self._mock_item_dict(item)
+                for item in conn.execute(
+                    "SELECT * FROM mock_items WHERE run_id = ? ORDER BY seq",
+                    (int(run_id),),
+                )
+            ]
+        finally:
+            conn.close()
+        run = self._mock_run_dict(row)
+        run["items"] = items
+        return run
+
+    def recent_mock_runs(self, limit=10):
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                "SELECT * FROM mock_runs ORDER BY id DESC LIMIT ?",
+                (int(limit),),
+            ).fetchall()
+        finally:
+            conn.close()
+        return [self._mock_run_dict(row) for row in rows]
+
+    def update_mock_item(self, run_id, seq, fields):
+        """Patch one row.  Only the keys present in ``fields`` are written."""
+        allowed = {"mark", "result", "seconds", "note"}
+        unknown = set(fields) - allowed
+        if unknown:
+            raise ValueError("未知字段：%s" % ", ".join(sorted(unknown)))
+        values = {}
+        if "mark" in fields:
+            mark = fields["mark"]
+            if mark not in (None, "", "A", "B", "C"):
+                raise ValueError("标记只能是 A / B / C")
+            values["mark"] = mark or None
+        if "result" in fields:
+            result = fields["result"]
+            if result not in (None, "", "correct", "wrong", "skipped"):
+                raise ValueError("结果只能是 对 / 错 / 弃")
+            values["result"] = result or None
+        if "seconds" in fields:
+            seconds = fields["seconds"]
+            if seconds in (None, ""):
+                values["seconds"] = None
+            else:
+                try:
+                    seconds = float(seconds)
+                except (TypeError, ValueError):
+                    raise ValueError("用时必须是秒数")
+                values["seconds"] = max(0.0, min(seconds, 7200.0))
+        if "note" in fields:
+            values["note"] = str(fields["note"] or "").strip()[:NOTE_MAX]
+        stamp = now_iso()
+        values["updated_at"] = stamp
+        assignments = ", ".join("%s = ?" % key for key in values)
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    cur = conn.execute(
+                        "UPDATE mock_items SET " + assignments
+                        + " WHERE run_id = ? AND seq = ?",
+                        (*values.values(), int(run_id), int(seq)),
+                    )
+                    if cur.rowcount == 0:
+                        raise ValueError("这道题不在本次模拟里")
+                    conn.execute(
+                        "UPDATE mock_runs SET updated_at = ? WHERE id = ?",
+                        (stamp, int(run_id)),
+                    )
+            finally:
+                conn.close()
+        return self.mock_run(run_id)
+
+    def finish_mock_run(self, run_id, note=None):
+        stamp = now_iso()
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    if note is None:
+                        cur = conn.execute(
+                            "UPDATE mock_runs SET status = 'done',"
+                            " finished_at = ?, updated_at = ? WHERE id = ?",
+                            (stamp, stamp, int(run_id)),
+                        )
+                    else:
+                        cur = conn.execute(
+                            "UPDATE mock_runs SET status = 'done',"
+                            " finished_at = ?, updated_at = ?, note = ?"
+                            " WHERE id = ?",
+                            (stamp, stamp, str(note)[:NOTE_MAX], int(run_id)),
+                        )
+                    if cur.rowcount == 0:
+                        raise ValueError("模拟记录不存在")
+            finally:
+                conn.close()
+        return self.mock_run(run_id)
+
+    def delete_mock_run(self, run_id):
+        with self._lock:
+            conn = self._connect()
+            try:
+                with conn:
+                    cur = conn.execute(
+                        "DELETE FROM mock_runs WHERE id = ?", (int(run_id),)
                     )
                 return cur.rowcount > 0
             finally:
