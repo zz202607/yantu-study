@@ -894,6 +894,59 @@
   .drill-row .res.wrong, .drill-row .res.overtime { color: var(--warn); }
   .drill-row .res.abandoned { color: var(--muted); }
   .drill-row .step { color: var(--muted); line-height: 1.45; }
+  /* --- full-paper mock: clock + marks + missed skips --- */
+  .sheet-panel.mock-panel { max-height: 94vh; overflow: auto; }
+  .mock-clock-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
+  .mock-clock { border: 1px solid var(--line); border-radius: 11px; padding: 8px; text-align: center; background: var(--paper); }
+  .mock-clock b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
+  .mock-clock span { font-size: 10.5px; color: var(--muted); }
+  .mock-clock.warn b { color: var(--warn); }
+  .mock-clock.over b { color: #b3261e; }
+  .mock-progress { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 10px; }
+  .mock-cell {
+    width: 26px; height: 26px; border-radius: 7px; border: 1px solid var(--line);
+    background: #fff; font-size: 10.5px; display: grid; place-items: center;
+    color: var(--muted); font-variant-numeric: tabular-nums;
+  }
+  .mock-cell.current { border-color: var(--accent); color: var(--accent); font-weight: 700; box-shadow: 0 0 0 2px rgba(22,103,217,.15); }
+  .mock-cell.done { background: #eef7f2; border-color: #b9d9c9; color: var(--good); }
+  .mock-cell.skip { background: var(--paper); color: var(--muted); text-decoration: line-through; }
+  .mock-cell.c-mark { border-color: #ecd3ae; }
+  .mock-question { border: 1px solid var(--line); border-radius: 13px; padding: 12px; background: #fff; }
+  .mock-qhead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .mock-qhead b { font-size: 16px; }
+  .mock-marks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin: 10px 0; }
+  .mock-marks button {
+    border: 1px solid var(--line); background: var(--paper); color: var(--ink);
+    border-radius: 10px; padding: 9px 4px; font-family: inherit; font-size: 12px;
+  }
+  .mock-marks button b { display: block; font-size: 15px; }
+  .mock-marks button.on { border-color: var(--accent); background: rgba(22,103,217,.07); color: var(--accent); }
+  .mock-actions { display: grid; grid-template-columns: 1.6fr 1fr; gap: 8px; }
+  .mock-actions button { padding: 13px 8px; font-size: 14px; border-radius: 11px; }
+  .mock-actions button.warn { border-color: #ecd3ae; background: #fff7ea; color: var(--warn); }
+  .mock-foot { display: flex; gap: 7px; justify-content: space-between; margin-top: 10px; }
+  .mock-running { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px dashed var(--accent); border-radius: 10px; background: rgba(22,103,217,.05); font-size: 12px; margin-bottom: 8px; }
+  .mock-running button { margin-left: auto; }
+  .mock-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin: 8px 0; }
+  .mock-stat { border: 1px solid var(--line); border-radius: 10px; padding: 7px; text-align: center; background: #fff; }
+  .mock-stat b { display: block; font-size: 17px; font-variant-numeric: tabular-nums; }
+  .mock-stat span { font-size: 10.5px; color: var(--muted); }
+  .mock-advice { margin-top: 9px; padding: 9px 11px; border-radius: 10px; background: var(--paper); border: 1px solid var(--line); font-size: 12.5px; line-height: 1.55; }
+  .mock-rows { border: 1px solid var(--line); border-radius: 11px; overflow: hidden; margin-top: 8px; }
+  .mock-row { display: grid; grid-template-columns: 34px 62px 44px 1fr; gap: 6px; padding: 7px 9px; border-bottom: 1px solid var(--line); font-size: 11.5px; align-items: center; }
+  .mock-row:last-child { border-bottom: 0; }
+  .mock-row .n { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+  .mock-row .t { font-variant-numeric: tabular-nums; color: var(--muted); }
+  .mock-row .m { font-size: 10px; border-radius: 999px; padding: 1px 6px; text-align: center; border: 1px solid var(--line); color: var(--muted); }
+  .mock-row .m.A { border-color: #b9d9c9; color: var(--good); }
+  .mock-row .m.B { border-color: #c9d9ee; color: var(--accent); }
+  .mock-row .m.C { border-color: #ecd3ae; color: var(--warn); }
+  .mock-row .pick { display: flex; gap: 4px; justify-content: flex-end; }
+  .mock-row .pick button { border: 1px solid var(--line); background: #fff; border-radius: 7px; padding: 4px 8px; font-family: inherit; font-size: 11px; }
+  .mock-row .pick button.on.ok { border-color: #b9d9c9; background: #eef7f2; color: var(--good); }
+  .mock-row .pick button.on.bad { border-color: #e7c3c0; background: #fdf1f0; color: #b3261e; }
+  .mock-row .pick button.on.skip { background: var(--paper); color: var(--muted); text-decoration: line-through; }
   .standard-card { border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px; margin-bottom: 9px; background: #fff; }
   .standard-card.flash { animation: flash 1.4s ease; }
   @keyframes flash { 0% { box-shadow: 0 0 0 3px rgba(22,103,217,.3); } 100% { box-shadow: none; } }
@@ -2108,6 +2161,54 @@
   </div>
 </div>
 
+<div id="mockSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="mockTitle">
+  <div class="sheet-panel mock-panel">
+    <div class="sheet-head">
+      <h3 id="mockTitle">整卷模拟</h3>
+      <span class="hint" id="mockHint">25 题 · 180 分钟</span>
+    </div>
+    <div class="mock-clock-row">
+      <div class="mock-clock" id="mockRemainBox"><b id="mockRemain">—</b><span>剩余（分）</span></div>
+      <div class="mock-clock"><b id="mockElapsed">—</b><span>已用（分）</span></div>
+      <div class="mock-clock" id="mockQBox"><b id="mockQClock">—</b><span>本题（分）</span></div>
+    </div>
+    <div class="mock-progress" id="mockProgress"></div>
+    <div class="mock-question">
+      <div class="mock-qhead">
+        <b id="mockSeq">第 1 / 25 题</b>
+        <span class="hint" id="mockQid"></span>
+      </div>
+      <div class="mock-marks" id="mockMarks"></div>
+      <div class="mock-actions">
+        <button id="mockDone" class="primary" type="button">做完了 ›</button>
+        <button id="mockSkip" class="warn" type="button">跳过 ⤼</button>
+      </div>
+    </div>
+    <div class="mock-foot">
+      <button id="mockClose" class="ghost small" type="button">收起（计时继续）</button>
+      <button id="mockFinish" class="ghost small" type="button">结束并复盘</button>
+    </div>
+  </div>
+</div>
+
+<div id="mockReviewSheet" class="sheet hidden" role="dialog" aria-modal="true" aria-labelledby="mrTitle">
+  <div class="sheet-panel baseline-sheet">
+    <div class="sheet-head">
+      <h3 id="mrTitle">模拟复盘</h3>
+      <span class="hint" id="mrHint">逐题回填结果</span>
+    </div>
+    <div id="mrStats"></div>
+    <div class="panel-title">逐题结果</div>
+    <div id="mrItems" class="mock-rows"></div>
+    <p class="hint" style="margin-top:8px">做对的题也要点「对」；跳过和超时的题按考试标准自评过程分。</p>
+    <div class="sheet-actions">
+      <button id="mrDelete" class="ghost danger hidden" type="button">删除本次</button>
+      <button id="mrClose" class="ghost" type="button">关闭</button>
+      <button id="mrSave" class="primary" type="button">保存结果</button>
+    </div>
+  </div>
+</div>
+
 <div id="readRoom" class="read-room hidden" role="dialog" aria-modal="true" aria-label="规范精读">
   <div class="rr-bar">
     <button id="rrExit" type="button" class="ghost small">‹ 退出</button>
@@ -2304,6 +2405,19 @@ const state = {
     year: 2024,
     half: null,         // "A" or "P" while the sheet is open
     busy: false,
+  },
+  mock: {
+    data: null,         // /api/mock payload
+    run: null,          // full run while the clock is open
+    review: null,       // review payload while the review sheet is open
+    seq: 1,             // current question
+    mark: null,         // A/B/C chosen for the current question
+    itemStarted: 0,     // ms; per-question clock
+    timer: null,
+    busy: false,
+    year: 2026,
+    half: "A",
+    results: {},        // seq -> { result, mark, seconds } draft in the review
   },
   review: {
     session: null,
@@ -4913,11 +5027,12 @@ async function loadPlan() {
   $("dataPlan").innerHTML =
     '<div class="status"><span class="spinner"></span>读取计划…</div>';
   try {
-    const [res, baseRes, drillRes, retestRes] = await Promise.all([
+    const [res, baseRes, drillRes, retestRes, mockRes] = await Promise.all([
       fetch("/api/plan"),
       fetch("/api/baseline"),
       fetch("/api/drill/overview"),
       fetch("/api/retest?year=" + state.retest.year),
+      fetch("/api/mock"),
     ]);
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || res.statusText);
@@ -4925,6 +5040,7 @@ async function loadPlan() {
     state.baseline.data = baseRes.ok ? await baseRes.json() : null;
     state.drill.overview = drillRes.ok ? await drillRes.json() : null;
     state.retest.data = retestRes.ok ? await retestRes.json() : null;
+    state.mock.data = mockRes.ok ? await mockRes.json() : null;
     renderPlan(data);
   } catch (err) {
     $("dataPlan").innerHTML =
@@ -4971,6 +5087,8 @@ function renderPlan(d) {
     + '<div id="planBaseline" class="baseline-panel"></div>');
   html.push('<div class="panel-title">整卷复测 · 2024</div>'
     + '<div id="planRetest" class="baseline-panel"></div>');
+  html.push('<div class="panel-title">整卷模拟 · 考场推演</div>'
+    + '<div id="planMock" class="baseline-panel"></div>');
   html.push('<div class="panel-title">把清单变成训练</div>'
     + '<div id="planDrill" class="drill-panel"></div>');
   html.push('<div class="panel-title">阶段目标</div><div class="cat-table">');
@@ -5040,6 +5158,7 @@ function renderPlan(d) {
   box.innerHTML = html.join("");
   renderBaselinePanel();
   renderRetestPanel();
+  renderMockPanel();
   renderDrillPanel();
   $("planSession").addEventListener("click", openSessionSheet);
   $("planPrint").addEventListener("click", openPrintSheet);
@@ -5355,6 +5474,446 @@ $("rtDelete").addEventListener("click", deleteRetest);
 $("retestSheet").addEventListener("click", (event) => {
   if (event.target === $("retestSheet")) $("retestSheet").classList.add("hidden");
 });
+
+$("mockDone").addEventListener("click", () => mockTurn("done"));
+$("mockSkip").addEventListener("click", () => mockTurn("skip"));
+$("mockFinish").addEventListener("click", endMock);
+$("mockClose").addEventListener("click", () => {
+  $("mockSheet").classList.add("hidden");
+  renderMockPanel();
+});
+$("mockReviewSheet").addEventListener("click", (event) => {
+  if (event.target === $("mockReviewSheet")) {
+    $("mockReviewSheet").classList.add("hidden");
+  }
+});
+$("mrClose").addEventListener("click", () => {
+  $("mockReviewSheet").classList.add("hidden");
+  loadPlan();
+});
+$("mrSave").addEventListener("click", saveMockResults);
+$("mrDelete").addEventListener("click", deleteMockRun);
+
+// --- full-paper mock: clock + A/B/C + skip review ------------------------
+
+function mockMinutes(seconds) {
+  return seconds == null || !Number.isFinite(Number(seconds))
+    ? "—" : (Number(seconds) / 60).toFixed(1);
+}
+
+function mockLevel(seq) {
+  const d = state.mock.data || {};
+  const run = state.mock.run || {};
+  const year = run.year || state.mock.year;
+  const half = run.half || state.mock.half;
+  return ((d.levels || {})[String(year)] || {})[half]?.[String(seq)] || null;
+}
+
+function renderMockPanel() {
+  const box = $("planMock");
+  if (!box) return;
+  const d = state.mock.data;
+  if (!d) {
+    box.innerHTML = '<div class="empty">整卷模拟数据没加载；刷新计划页再试。</div>';
+    return;
+  }
+  const html = [];
+  const running = (d.runs || []).find((row) => row.status === "running");
+  if (running) {
+    html.push('<div class="mock-running"><span><b>进行中</b> · '
+      + running.year + " " + (running.half === "A" ? "上午" : "下午")
+      + " · 已录 " + (running.graded || 0) + " 题</span>"
+      + '<button type="button" class="primary small" data-mock-resume="'
+      + running.id + '">继续</button></div>');
+  }
+  const years = d.years || [];
+  const papers = (d.papers || {})[String(state.mock.year)] || {};
+  let paperLine;
+  if (papers[state.mock.half] && state.mock.year <= 2024) {
+    paperLine = '<a class="ghost small" href="/api/retest/file/'
+      + state.mock.year + "/" + state.mock.half
+      + '" target="_blank" rel="noopener">题面 PDF</a>';
+  } else if (state.mock.year === 2026) {
+    paperLine = '<span class="hint">题面去「公众号题」页打印 2026 上午/下午真题</span>';
+  } else {
+    paperLine = '<span class="hint">题面未生成：tools/print_exam.py --year '
+      + state.mock.year + "</span>";
+  }
+  html.push('<div class="drill-card"><div class="head"><b>开一场整卷</b>'
+    + '<span class="hint">25 题 · 180 分钟 · 8 分钟硬上限</span></div>'
+    + '<div class="controls">'
+    + '<select id="mockYear" aria-label="年份">'
+    + years.map((year) => '<option value="' + year + '"'
+      + (year === state.mock.year ? " selected" : "") + ">" + year + "</option>").join("")
+    + "</select>"
+    + '<select id="mockHalf" aria-label="场次">'
+    + '<option value="A"' + (state.mock.half === "A" ? " selected" : "")
+    + ">上午卷</option>"
+    + '<option value="P"' + (state.mock.half === "P" ? " selected" : "")
+    + ">下午卷</option></select>"
+    + '<button id="mockStart" class="start primary" type="button">开始模拟</button>'
+    + "</div>"
+    + '<div class="last">' + paperLine + "</div>"
+    + '<div class="last">做题前先按 A（会且快）/ B（会但要算）/ C（偏、难）'
+    + "标一题；跳过的题自动记 C。复盘只看三件事：A 判断准不准、"
+    + "该跳没跳浪费多少分钟、偏题认没认出来。</div></div>");
+  const done = (d.runs || []).filter((row) => row.status !== "running");
+  if (!done.length) {
+    html.push('<div class="empty">还没有模拟记录。第一场建议用 2024 或 2026 卷。</div>');
+  }
+  for (const row of done.slice(0, 6)) {
+    html.push('<div class="session-row"><span class="main"><b>'
+      + escapeHtml(row.day) + " · " + row.year + " "
+      + (row.half === "A" ? "上午" : "下午") + " · "
+      + (row.score ?? "—") + "/50</b><span> 作 " + (row.graded || 0)
+      + " · 对 " + (row.correct || 0) + " · 弃 " + (row.skipped || 0)
+      + " · 平均 " + mockMinutes(row.avg_seconds) + " 分/题</span></span>"
+      + '<button type="button" class="ghost small" data-mock-open="'
+      + row.id + '">复盘</button></div>');
+  }
+  box.innerHTML = html.join("");
+  const start = $("mockStart");
+  if (start) start.addEventListener("click", startMock);
+  const yearSelect = $("mockYear");
+  if (yearSelect) {
+    yearSelect.addEventListener("change", () => {
+      state.mock.year = Number(yearSelect.value);
+      renderMockPanel();
+    });
+  }
+  const halfSelect = $("mockHalf");
+  if (halfSelect) {
+    halfSelect.addEventListener("change", () => {
+      state.mock.half = halfSelect.value;
+      renderMockPanel();
+    });
+  }
+  for (const button of box.querySelectorAll("[data-mock-resume]")) {
+    button.addEventListener("click", () => resumeMock(Number(button.dataset.mockResume)));
+  }
+  for (const button of box.querySelectorAll("[data-mock-open]")) {
+    button.addEventListener("click", () => openMockReview(Number(button.dataset.mockOpen)));
+  }
+}
+
+async function startMock() {
+  if (state.mock.busy) return;
+  state.mock.year = Number($("mockYear").value);
+  state.mock.half = $("mockHalf").value;
+  state.mock.busy = true;
+  const button = $("mockStart");
+  if (button) button.disabled = true;
+  try {
+    const res = await fetch("/api/mock/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ year: state.mock.year, half: state.mock.half }),
+    });
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.detail || res.statusText);
+    state.mock.data = payload.mock;
+    beginMockClock(payload.run, true);
+  } catch (err) {
+    toast("开始失败：" + err.message);
+  } finally {
+    state.mock.busy = false;
+    if (button) button.disabled = false;
+  }
+}
+
+async function resumeMock(runId) {
+  try {
+    const res = await fetch("/api/mock/" + runId);
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.detail || res.statusText);
+    beginMockClock(payload.run, false);
+  } catch (err) {
+    toast("恢复失败：" + err.message);
+  }
+}
+
+function beginMockClock(run, fresh) {
+  state.mock.run = run;
+  const items = run.items || [];
+  const pending = items.find((item) => item.result == null && item.seconds == null);
+  state.mock.seq = pending ? pending.seq : (fresh ? 1 : 1);
+  state.mock.mark = null;
+  state.mock.itemStarted = Date.now();
+  $("mockSheet").classList.remove("hidden");
+  renderMockSheet();
+  startMockTimer();
+}
+
+function stopMockTimer() {
+  if (state.mock.timer) {
+    clearInterval(state.mock.timer);
+    state.mock.timer = null;
+  }
+}
+
+function startMockTimer() {
+  stopMockTimer();
+  state.mock.timer = setInterval(tickMock, 1000);
+  tickMock();
+}
+
+function tickMock() {
+  const run = state.mock.run;
+  if (!run) return;
+  const started = new Date(run.started_at).getTime();
+  const elapsed = Math.max(0, (Date.now() - started) / 1000);
+  const total = (run.minutes || 180) * 60;
+  const remain = total - elapsed;
+  const question = Math.max(0, (Date.now() - state.mock.itemStarted) / 1000);
+  if ($("mockElapsed")) $("mockElapsed").textContent = (elapsed / 60).toFixed(1);
+  if ($("mockRemain")) $("mockRemain").textContent = (Math.max(0, remain) / 60).toFixed(1);
+  if ($("mockQClock")) $("mockQClock").textContent = (question / 60).toFixed(1);
+  const remainBox = $("mockRemainBox");
+  if (remainBox) {
+    remainBox.classList.toggle("warn", remain <= 15 * 60 && remain > 0);
+    remainBox.classList.toggle("over", remain <= 0);
+  }
+  const qBox = $("mockQBox");
+  if (qBox) {
+    qBox.classList.toggle("warn", question > 8 * 60);
+    qBox.classList.toggle("over", question > 10 * 60);
+  }
+}
+
+function renderMockSheet() {
+  const run = state.mock.run;
+  if (!run) return;
+  const seq = state.mock.seq;
+  $("mockTitle").textContent = run.year + " · "
+    + (run.half === "A" ? "上午卷" : "下午卷") + " 整卷模拟";
+  $("mockHint").textContent = "第 " + seq + " / 25 题";
+  $("mockSeq").textContent = "第 " + seq + " / 25 题";
+  $("mockQid").textContent = "A" + run.year + "-" + run.half + "-" + seq;
+  const bySeq = {};
+  for (const item of run.items || []) bySeq[item.seq] = item;
+  const cells = [];
+  for (let i = 1; i <= 25; i++) {
+    const item = bySeq[i] || {};
+    const classes = ["mock-cell"];
+    if (i === seq) classes.push("current");
+    if (item.result === "skipped") classes.push("skip");
+    else if (item.result || item.seconds != null) classes.push("done");
+    if (item.mark === "C") classes.push("c-mark");
+    cells.push('<span class="' + classes.join(" ") + '">' + i + "</span>");
+  }
+  $("mockProgress").innerHTML = cells.join("");
+  const marks = (state.mock.data && state.mock.data.marks) || {};
+  $("mockMarks").innerHTML = ["A", "B", "C"].map((key) =>
+    '<button type="button" data-mock-mark="' + key + '" class="'
+    + (state.mock.mark === key ? "on" : "") + '"><b>' + key + "</b>"
+    + escapeHtml(marks[key] || key) + "</button>").join("");
+  for (const button of $("mockMarks").querySelectorAll("[data-mock-mark]")) {
+    button.addEventListener("click", () => {
+      state.mock.mark = state.mock.mark === button.dataset.mockMark
+        ? null : button.dataset.mockMark;
+      renderMockSheet();
+    });
+  }
+}
+
+async function mockTurn(action) {
+  if (state.mock.busy || !state.mock.run) return;
+  const run = state.mock.run;
+  const seq = state.mock.seq;
+  const seconds = Math.max(1, Math.round((Date.now() - state.mock.itemStarted) / 1000));
+  const body = { seq: seq, action: action, seconds: seconds };
+  if (state.mock.mark) body.mark = state.mock.mark;
+  state.mock.busy = true;
+  try {
+    const res = await fetch("/api/mock/" + run.id + "/item", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.detail || res.statusText);
+    state.mock.run = payload.run;
+    if (seq >= 25) {
+      await endMock();
+      return;
+    }
+    state.mock.seq = seq + 1;
+    state.mock.mark = null;
+    state.mock.itemStarted = Date.now();
+    renderMockSheet();
+    tickMock();
+  } catch (err) {
+    toast("记录失败：" + err.message);
+  } finally {
+    state.mock.busy = false;
+  }
+}
+
+async function endMock() {
+  const run = state.mock.run;
+  if (!run) return;
+  stopMockTimer();
+  state.mock.busy = true;
+  try {
+    const res = await fetch("/api/mock/" + run.id + "/finish", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.detail || res.statusText);
+    state.mock.data = payload.mock;
+    state.mock.run = null;
+    $("mockSheet").classList.add("hidden");
+    renderMockPanel();
+    openMockReview(payload.run.id);
+  } catch (err) {
+    toast("结束失败：" + err.message);
+  } finally {
+    state.mock.busy = false;
+  }
+}
+
+async function openMockReview(runId) {
+  try {
+    const res = await fetch("/api/mock/" + runId);
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.detail || res.statusText);
+    state.mock.selectedRun = payload.run.id;
+    state.mock.review = payload.review;
+    state.mock.results = {};
+    for (const item of payload.run.items) {
+      state.mock.results[item.seq] = {
+        result: item.result, mark: item.mark, seconds: item.seconds,
+      };
+    }
+    renderMockReview();
+    $("mockReviewSheet").classList.remove("hidden");
+  } catch (err) {
+    toast("复盘加载失败：" + err.message);
+  }
+}
+
+function renderMockReview() {
+  const rv = state.mock.review;
+  if (!rv) return;
+  $("mrTitle").textContent = "模拟复盘 · " + rv.year + " " + rv.half_name;
+  $("mrHint").textContent = (rv.score ?? "—") + " / 50 · 全卷过线 60";
+  const html = [];
+  html.push('<div class="mock-stats">'
+    + '<div class="mock-stat"><b>' + (rv.score ?? "—") + '</b><span>本半得分</span></div>'
+    + '<div class="mock-stat"><b>' + rv.correct + '</b><span>做对</span></div>'
+    + '<div class="mock-stat"><b>' + rv.wrong + '</b><span>做错</span></div>'
+    + '<div class="mock-stat"><b>' + rv.skipped + '</b><span>跳过</span></div>'
+    + "</div>");
+  html.push('<div class="mock-stats">'
+    + '<div class="mock-stat"><b>' + mockMinutes(rv.total_seconds) + '</b><span>总用时（分）</span></div>'
+    + '<div class="mock-stat"><b>' + mockMinutes(rv.avg_seconds) + '</b><span>平均（分/题）</span></div>'
+    + '<div class="mock-stat"><b>' + (rv.over_budget || []).length + '</b><span>超 7.2 分预算</span></div>'
+    + '<div class="mock-stat"><b>' + (rv.missed_skips || []).length + '</b><span>该跳没跳</span></div>'
+    + "</div>");
+  const quad = rv.quadrants || {};
+  html.push('<div class="mock-stats">'
+    + '<div class="mock-stat"><b>' + (quad.fast || []).length + '</b><span>会且快</span></div>'
+    + '<div class="mock-stat"><b>' + (quad.slow || []).length + '</b><span>会但慢</span></div>'
+    + '<div class="mock-stat"><b>' + (quad.wrong || []).length + '</b><span>做错</span></div>'
+    + '<div class="mock-stat"><b>' + (quad.skipped || []).length + '</b><span>放弃</span></div>'
+    + "</div>");
+  const marks = rv.marks || {};
+  const markLines = ["A", "B", "C"].map((key) => {
+    const row = marks[key] || {};
+    const accuracy = row.accuracy == null ? "—" : Math.round(row.accuracy * 100) + "%";
+    return key + " 标 " + (row.count || 0) + " 题 · 对 " + (row.correct || 0)
+      + " · 正确率 " + accuracy + " · 平均 " + mockMinutes(row.avg_seconds) + " 分";
+  });
+  html.push('<div class="mock-advice">' + markLines.map(escapeHtml).join("<br>"));
+  if (rv.bias && rv.bias.total) {
+    html.push("<br>偏题识别：" + rv.bias.recognized + " / " + rv.bias.total
+      + "（2026 考点分布标「偏」的题）");
+  }
+  if ((rv.advice || []).length) {
+    html.push("<br>");
+    html.push(rv.advice.map((line) => "· " + escapeHtml(line)).join("<br>"));
+  }
+  html.push("</div>");
+  $("mrStats").innerHTML = html.join("");
+
+  const rows = [];
+  for (let seq = 1; seq <= 25; seq++) {
+    const draft = state.mock.results[seq] || {};
+    const level = ((state.mock.data || {}).levels || {})[String(rv.year)]?.[rv.half]?.[String(seq)] || null;
+    const tag = level ? (level.freq || "") + (level.level || "") : "";
+    const pick = ["correct", "wrong", "skipped"].map((key) => {
+      const label = { correct: "对", wrong: "错", skipped: "弃" }[key];
+      const cls = key === "correct" ? "ok" : key === "wrong" ? "bad" : "skip";
+      return '<button type="button" data-mock-result="' + key + '" data-seq="' + seq + '" class="'
+        + (draft.result === key ? "on " + cls : "") + '">' + label + "</button>";
+    }).join("");
+    rows.push('<div class="mock-row"><span class="n">' + seq + "</span>"
+      + '<span class="m ' + escapeHtml(draft.mark || "") + '">'
+      + escapeHtml(draft.mark || "—") + (tag ? " " + escapeHtml(tag) : "") + "</span>"
+      + '<span class="t">' + mockMinutes(draft.seconds) + " 分</span>"
+      + '<span class="pick">' + pick + "</span></div>");
+  }
+  $("mrItems").innerHTML = rows.join("");
+  for (const button of $("mrItems").querySelectorAll("[data-mock-result]")) {
+    button.addEventListener("click", () => {
+      const seq = Number(button.dataset.seq);
+      const entry = state.mock.results[seq] || {};
+      entry.result = entry.result === button.dataset.mockResult
+        ? null : button.dataset.mockResult;
+      state.mock.results[seq] = entry;
+      renderMockReview();
+    });
+  }
+  $("mrDelete").classList.toggle("hidden", !state.mock.selectedRun);
+}
+
+async function saveMockResults() {
+  const runId = state.mock.selectedRun;
+  if (!runId || state.mock.busy) return;
+  const items = Object.entries(state.mock.results || {}).map(([seq, row]) => ({
+    seq: Number(seq), result: row.result,
+  })).filter((row) => row.result);
+  state.mock.busy = true;
+  $("mrSave").disabled = true;
+  try {
+    const res = await fetch("/api/mock/" + runId + "/results", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ items: items }),
+    });
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.detail || res.statusText);
+    state.mock.review = payload.review;
+    renderMockReview();
+    toast("已保存 " + items.length + " 题结果");
+  } catch (err) {
+    toast("保存失败：" + err.message);
+  } finally {
+    state.mock.busy = false;
+    $("mrSave").disabled = false;
+  }
+}
+
+async function deleteMockRun() {
+  const runId = state.mock.selectedRun;
+  if (!runId || state.mock.busy) return;
+  if (!confirm("删除这次模拟？逐题记录一起删除。")) return;
+  try {
+    const res = await fetch("/api/mock/" + runId, { method: "DELETE" });
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.detail || res.statusText);
+    state.mock.data = payload.mock;
+    state.mock.review = null;
+    state.mock.selectedRun = null;
+    $("mockReviewSheet").classList.add("hidden");
+    renderMockPanel();
+    toast("已删除模拟记录");
+  } catch (err) {
+    toast("删除失败：" + err.message);
+  }
+}
 
 // --- M9.2 training: timed drills + recognition cards ----------------------
 

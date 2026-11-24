@@ -39,7 +39,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 import crop_question as CQ  # noqa: E402
 import recognize_qid as RQ  # noqa: E402
-from app import analytics, asr as asr_app, baseline as baseline_app, briefing as briefing_app, clauses as clauses_app, daypack as daypack_app, drill as drill_app, extbank as ext_app, phone as phone_app, plan as study_plan, qa as qa_app, reading as reading_app, report as report_app, standards  # noqa: E402
+from app import analytics, asr as asr_app, baseline as baseline_app, briefing as briefing_app, clauses as clauses_app, daypack as daypack_app, drill as drill_app, extbank as ext_app, mock as mock_app, phone as phone_app, plan as study_plan, qa as qa_app, reading as reading_app, report as report_app, standards  # noqa: E402
 from app.answer_ocr import analyze_crop  # noqa: E402
 from app.net import lan_ip  # noqa: E402
 from app.catalog import Catalog  # noqa: E402
@@ -638,6 +638,74 @@ def retest_file(year: int, half: str):
             404, "%d 年%s卷还没生成：py -3 tools/print_exam.py --year %d"
             % (year, "上午" if key == "A" else "下午", year))
     return FileResponse(path, media_type="application/pdf", filename=path.name)
+
+
+# --- full-paper mock: clock + per-question A/B/C + skip review ---------------
+
+
+@app.get("/api/mock")
+def get_mock():
+    return mock_app.overview(store)
+
+
+@app.post("/api/mock/start")
+def post_mock_start(payload: dict = Body(...)):
+    try:
+        run = mock_app.start(store, payload)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    return {"run": run, "mock": mock_app.overview(store)}
+
+
+@app.get("/api/mock/{run_id}")
+def get_mock_run(run_id: int):
+    run = store.mock_run(run_id)
+    if run is None:
+        raise HTTPException(404, "模拟记录不存在")
+    return {"run": run, "review": mock_app.review(run)}
+
+
+@app.post("/api/mock/{run_id}/item")
+def post_mock_item(run_id: int, payload: dict = Body(...)):
+    try:
+        run = mock_app.record(store, run_id, payload)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    return {"run": run}
+
+
+@app.put("/api/mock/{run_id}/results")
+def put_mock_results(run_id: int, payload: dict = Body(...)):
+    try:
+        run = mock_app.save_results(store, run_id, payload)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    return {"run": run, "review": mock_app.review(run)}
+
+
+@app.post("/api/mock/{run_id}/finish")
+def post_mock_finish(run_id: int, payload: dict = Body(default={})):
+    try:
+        run = store.finish_mock_run(run_id, (payload or {}).get("note"))
+    except ValueError as exc:
+        raise HTTPException(404, str(exc))
+    return {"run": run, "review": mock_app.review(run),
+            "mock": mock_app.overview(store)}
+
+
+@app.get("/api/mock/{run_id}/review")
+def get_mock_review(run_id: int):
+    run = store.mock_run(run_id)
+    if run is None:
+        raise HTTPException(404, "模拟记录不存在")
+    return {"run": run, "review": mock_app.review(run)}
+
+
+@app.delete("/api/mock/{run_id}")
+def delete_mock_run(run_id: int):
+    if not store.delete_mock_run(run_id):
+        raise HTTPException(404, "模拟记录不存在")
+    return {"deleted": True, "mock": mock_app.overview(store)}
 
 
 def _import_baseline(half, kind, triage=None):

@@ -77,7 +77,7 @@ class QAStoreTest(unittest.TestCase):
             }
         finally:
             conn.close()
-        self.assertEqual(version, "11")
+        self.assertEqual(version, "12")
         self.assertEqual(tables, {"qa_threads", "qa_messages"})
 
     def test_exchange_history_cache_and_quota(self):
